@@ -1,4 +1,4 @@
-INSERT INTO users (first_name, last_name, email, phone_number, password, role, user_type)
+INSERT INTO users (first_name, last_name, email, phone_number, password, role, type)
 VALUES
   ('Anna', 'Petrenko', 'anna.petrenko@example.com', '+15125550101', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.7uqqQ8m', 'USER', 'CLIENT'),
   ('Dmitry', 'Sokolov', 'dmitry.sokolov@example.com', '+15035550102', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.7uqqQ8m', 'USER', 'CLIENT'),

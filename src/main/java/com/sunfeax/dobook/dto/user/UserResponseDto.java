@@ -12,6 +12,6 @@ public record UserResponseDto(
     String email,
     String phoneNumber,
     UserRole role,
-    UserType userType,
+    UserType type,
     LocalDateTime createdAt) {
 }

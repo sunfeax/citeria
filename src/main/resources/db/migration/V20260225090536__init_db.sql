@@ -6,10 +6,10 @@ CREATE TABLE users (
   phone_number VARCHAR(20) UNIQUE,
   password VARCHAR(255) NOT NULL,
   role VARCHAR(20) NOT NULL DEFAULT 'USER',
-  user_type VARCHAR(20) NOT NULL DEFAULT 'CLIENT',
+  type VARCHAR(20) NOT NULL DEFAULT 'CLIENT',
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT users_role_chk CHECK (role IN ('USER', 'ADMIN')),
-  CONSTRAINT users_user_type_chk CHECK (user_type IN ('CLIENT', 'SPECIALIST'))
+  CONSTRAINT users_type_chk CHECK (type IN ('CLIENT', 'SPECIALIST'))
 );
 
 CREATE TABLE businesses (

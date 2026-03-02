@@ -7,4 +7,5 @@ import com.sunfeax.dobook.entity.UserEntity;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
+    boolean existsByEmail(String email);
 }
