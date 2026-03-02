@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.sunfeax</groupId>
-	<artifactId>dobook</artifactId>
+	<artifactId>citeria</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>dobook</name>
+	<name>citeria</name>
 	<description>Spring boot booking service project</description>
 	<url/>
 	<licenses>
