@@ -24,7 +24,7 @@ public record UserRegisterRequestDto(
 
     @NotBlank(message = "Phone is required")
     @Size(min = 7, max = 20)
-    String phoneNumber,
+    String phone,
 
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")

@@ -16,7 +16,7 @@ public class UserMapper {
             userEntity.getFirstName(),
             userEntity.getLastName(),
             userEntity.getEmail(),
-            userEntity.getPhoneNumber(),
+            userEntity.getPhone(),
             userEntity.getRole(),
             userEntity.getType(),
             userEntity.getCreatedAt()
@@ -30,7 +30,7 @@ public class UserMapper {
         entity.setFirstName(request.firstName());
         entity.setLastName(request.lastName());
         entity.setEmail(request.email());
-        entity.setPhoneNumber(request.phoneNumber());
+        entity.setPhone(request.phone());
         entity.setPassword(request.password()); // make hash after
         entity.setRole(UserRole.USER);
         entity.setType(request.type());

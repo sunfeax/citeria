@@ -10,7 +10,7 @@ public record UserResponseDto(
     String firstName,
     String lastName,
     String email,
-    String phoneNumber,
+    String phone,
     UserRole role,
     UserType type,
     LocalDateTime createdAt) {
