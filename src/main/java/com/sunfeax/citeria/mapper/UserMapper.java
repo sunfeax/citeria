@@ -23,15 +23,14 @@ public class UserMapper {
         );
     }
 
-    public UserEntity createEntity(UserRegisterRequestDto request) {
+    public UserEntity toEntity(UserRegisterRequestDto request) {
 
         UserEntity entity = new UserEntity();
 
         entity.setFirstName(request.firstName());
         entity.setLastName(request.lastName());
-        entity.setEmail(request.email());
+        entity.setEmail(request.email().toLowerCase());
         entity.setPhone(request.phone());
-        entity.setPassword(request.password()); // make hash after
         entity.setRole(UserRole.USER);
         entity.setType(request.type());
 

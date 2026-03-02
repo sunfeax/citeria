@@ -3,6 +3,7 @@ package com.sunfeax.citeria.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public List<UserResponseDto> getAll() {
@@ -43,7 +45,8 @@ public class UserService {
             throw new UserAlreadyExistsException("Email " + request.email() + " is already taken");
         }
 
-        UserEntity entity = userMapper.createEntity(request);
+        UserEntity entity = userMapper.toEntity(request);
+        entity.setPassword(passwordEncoder.encode(request.password()));
         UserEntity saved = userRepository.save(entity);
 
         return userMapper.toResponseDto(saved);
