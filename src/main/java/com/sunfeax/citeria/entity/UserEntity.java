@@ -17,7 +17,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -56,12 +55,10 @@ public class UserEntity {
     private UserRole role = UserRole.USER;
 
     @Column(name = "type", nullable = false)
-    @NotNull
     @Enumerated(EnumType.STRING)
     private UserType type = UserType.CLIENT;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    @NotNull
     @CreationTimestamp
     private LocalDateTime createdAt;
 

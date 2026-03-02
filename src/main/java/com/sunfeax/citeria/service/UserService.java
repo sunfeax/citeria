@@ -1,7 +1,6 @@
 package com.sunfeax.citeria.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -10,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sunfeax.citeria.dto.user.UserRegisterRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.entity.UserEntity;
+import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.exception.UserAlreadyExistsException;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.repository.UserRepository;
@@ -33,9 +33,10 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<UserResponseDto> getById(Long id) {
+    public UserResponseDto getById(Long id) {
         return userRepository.findById(id)
-            .map(userMapper::toResponseDto);
+            .map(userMapper::toResponseDto)
+            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
     }
 
     @Transactional

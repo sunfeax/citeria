@@ -1,5 +1,7 @@
 package com.sunfeax.citeria.exception;
 
+import jakarta.validation.ConstraintViolationException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
@@ -60,6 +62,26 @@ public class GlobalExceptionHandler {
 
         pd.setTitle("Validation Failed");
         pd.setDetail("Request contains invalid fields.");
+        pd.setProperty("errors", errors);
+        pd.setProperty("timestamp", Instant.now());
+
+        return pd;
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ProblemDetail handleConstraintViolationException(ConstraintViolationException ex) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        ex.getConstraintViolations()
+            .forEach(violation -> errors.putIfAbsent(
+                violation.getPropertyPath().toString(),
+                violation.getMessage())
+            );
+
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+
+        pd.setTitle("Validation Failed");
+        pd.setDetail("Request contains invalid data.");
         pd.setProperty("errors", errors);
         pd.setProperty("timestamp", Instant.now());
 
