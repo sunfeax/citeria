@@ -13,5 +13,6 @@ public record UserResponseDto(
     String phone,
     UserRole role,
     UserType type,
+    Boolean isActive,
     LocalDateTime createdAt) {
 }

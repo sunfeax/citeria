@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,19 +26,34 @@ public class UserController {
 
     private final UserService userService;
 
+    // change to Pageable after 
     @GetMapping
     public List<UserResponseDto> getUsers() {
         return userService.getAll();
     }
 
+    // fetch user by id
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getById(id));
     }
 
+    // register new user
     @PostMapping
     public ResponseEntity<UserResponseDto> register(@Valid @RequestBody UserRegisterRequestDto request) {
         UserResponseDto response = userService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    // soft delete (isActive = 0)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<UserResponseDto> deleteUserById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.deactivateById(id));
+    }
+
+    // hard delete from DB
+    @DeleteMapping("/{id}/hard")
+    public ResponseEntity<UserResponseDto> hardDeleteUserById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.hardDeleteById(id));
     }
 }

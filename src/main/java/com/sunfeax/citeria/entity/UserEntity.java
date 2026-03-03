@@ -58,6 +58,9 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     private UserType type = UserType.CLIENT;
 
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = true;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;

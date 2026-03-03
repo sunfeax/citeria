@@ -21,6 +21,7 @@ public class UserMapper {
             userEntity.getPhone(),
             userEntity.getRole(),
             userEntity.getType(),
+            userEntity.isActive(),
             userEntity.getCreatedAt()
         );
     }

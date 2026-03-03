@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -11,7 +12,10 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
@@ -105,6 +109,28 @@ public class GlobalExceptionHandler {
         pd.setTitle("Validation Failed");
         pd.setDetail("Request contains invalid data.");
         pd.setProperty("errors", errors);
+        pd.setProperty("timestamp", Instant.now());
+
+        return pd;
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+
+        pd.setTitle("Conflict");
+        pd.setDetail("Cannot complete operation: data is linked to other records or duplicates an existing unique value.");
+        pd.setProperty("timestamp", Instant.now());
+
+        return pd;
+    }
+
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    public ProblemDetail handleEndpointNotFound(Exception ex, HttpServletRequest request) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+
+        pd.setTitle("Endpoint Not Found");
+        pd.setDetail("No endpoint for " + request.getMethod() + " " + request.getRequestURI());
         pd.setProperty("timestamp", Instant.now());
 
         return pd;

@@ -56,4 +56,26 @@ public class UserService {
 
         return userMapper.toResponseDto(saved);
     }
+
+    @Transactional
+    public UserResponseDto deactivateById(Long id) {
+        UserEntity user = userRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+
+        user.setActive(false);
+        UserEntity saved = userRepository.save(user);
+
+        return userMapper.toResponseDto(saved);
+    }
+
+    @Transactional
+    public UserResponseDto hardDeleteById(Long id) {
+        UserEntity user = userRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+
+        UserResponseDto deletedUser = userMapper.toResponseDto(user);
+        userRepository.delete(user);
+
+        return deletedUser;
+    }
 }
