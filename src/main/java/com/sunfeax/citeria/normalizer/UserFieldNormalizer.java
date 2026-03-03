@@ -1,17 +1,28 @@
 package com.sunfeax.citeria.normalizer;
 
 import java.util.Locale;
-import java.util.Objects;
 
 import org.springframework.stereotype.Component;
 
-import com.sunfeax.citeria.dto.user.UserRegisterRequestDto;
+import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
+import com.sunfeax.citeria.dto.user.UserPostRequestDto;
 
 @Component
 public class UserFieldNormalizer {
 
-    public UserRegisterRequestDto normalizeRequest(UserRegisterRequestDto request) {
-        return new UserRegisterRequestDto(
+    public UserPostRequestDto normalizePostRequest(UserPostRequestDto request) {
+        return new UserPostRequestDto(
+            normalizeName(request.firstName()),
+            normalizeName(request.lastName()),
+            normalizeEmail(request.email()),
+            normalizePhone(request.phone()),
+            request.password(),
+            request.type()
+        );
+    }
+
+    public UserPatchRequestDto normalizePatchRequest(UserPatchRequestDto request) {
+        return new UserPatchRequestDto(
             normalizeName(request.firstName()),
             normalizeName(request.lastName()),
             normalizeEmail(request.email()),
@@ -31,13 +42,14 @@ public class UserFieldNormalizer {
     }
 
     public String normalizeEmail(String value) {
-        Objects.requireNonNull(value, "Email cannot be null");
+        if (value == null) {
+            return null;
+        }
+
         return value.trim().toLowerCase(Locale.ROOT);
     }
 
     public String normalizePhone(String value) {
-        return value == null
-            ? null
-            : value.replaceAll("[+()\\s\\p{Pd}]", "");
+        return value == null ? null : value.replaceAll("[+()\\s\\p{Pd}]", "");
     }
 }

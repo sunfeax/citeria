@@ -6,7 +6,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sunfeax.citeria.dto.user.UserRegisterRequestDto;
+import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
+import com.sunfeax.citeria.dto.user.UserPostRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
@@ -42,8 +43,8 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponseDto register(UserRegisterRequestDto request) {
-        UserRegisterRequestDto normalizedRequest = userFieldNormalizer.normalizeRequest(request);
+    public UserResponseDto register(UserPostRequestDto request) {
+        UserPostRequestDto normalizedRequest = userFieldNormalizer.normalizePostRequest(request);
 
         if (userRepository.existsByEmail(normalizedRequest.email())) {
             throw new UserAlreadyExistsException("Email " + normalizedRequest.email() + " is already taken");
@@ -53,7 +54,7 @@ public class UserService {
             throw new UserAlreadyExistsException("Phone " + normalizedRequest.phone() + " is already busy");
         }
 
-        UserEntity entity = userMapper.toEntity(normalizedRequest);
+        UserEntity entity = userMapper.createEntity(normalizedRequest);
         entity.setPassword(passwordEncoder.encode(request.password()));
         UserEntity saved = userRepository.save(entity);
 
@@ -81,4 +82,58 @@ public class UserService {
 
         return deletedUser;
     }
+
+    @Transactional
+    public UserResponseDto update(Long id, UserPatchRequestDto request) {
+        UserEntity user = userRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+
+        UserPatchRequestDto normalizedRequest = userFieldNormalizer.normalizePatchRequest(request);
+
+        boolean hasChanges = false;
+
+        if (normalizedRequest.firstName() != null) {
+            user.setFirstName(normalizedRequest.firstName());
+            hasChanges = true;
+        }
+
+        if (normalizedRequest.lastName() != null) {
+            user.setLastName(normalizedRequest.lastName());
+            hasChanges = true;
+        }
+
+        if (normalizedRequest.email() != null) {
+            if (userRepository.existsByEmailAndIdNot(normalizedRequest.email(), id)) {
+                throw new UserAlreadyExistsException("Email " + normalizedRequest.email() + " is already taken");
+            }
+            user.setEmail(normalizedRequest.email());
+            hasChanges = true;
+        }
+
+        if (normalizedRequest.phone() != null) {
+            if (userRepository.existsByPhoneAndIdNot(normalizedRequest.phone(), id)) {
+                throw new UserAlreadyExistsException("Phone " + normalizedRequest.phone() + " is already busy");
+            }
+            user.setPhone(normalizedRequest.phone());
+            hasChanges = true;
+        }
+
+        if (normalizedRequest.password() != null) {
+            user.setPassword(passwordEncoder.encode(normalizedRequest.password()));
+            hasChanges = true;
+        }
+
+        if (normalizedRequest.type() != null) {
+            user.setType(normalizedRequest.type());
+            hasChanges = true;
+        }
+
+        if (!hasChanges) {
+            throw new IllegalArgumentException("No fields to update");
+        }
+
+        UserEntity saved = userRepository.save(user);
+        return userMapper.toResponseDto(saved);
+    }
+
 }

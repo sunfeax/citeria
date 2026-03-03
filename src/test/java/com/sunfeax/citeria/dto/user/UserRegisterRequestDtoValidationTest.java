@@ -13,7 +13,7 @@ import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-class UserRegisterRequestDtoValidationTest {
+class UserPostRequestDtoValidationTest {
 
     private static Validator validator;
 
@@ -24,42 +24,42 @@ class UserRegisterRequestDtoValidationTest {
 
     @Test
     void validPasswordShouldPassValidation() {
-        Set<ConstraintViolation<UserRegisterRequestDto>> violations = validatePassword("Password!");
+        Set<ConstraintViolation<UserPostRequestDto>> violations = validatePassword("Password!");
 
         assertTrue(violations.isEmpty());
     }
 
     @Test
     void passwordShorterThanEightShouldFailValidation() {
-        Set<ConstraintViolation<UserRegisterRequestDto>> violations = validatePassword("Pass!");
+        Set<ConstraintViolation<UserPostRequestDto>> violations = validatePassword("Pass!");
 
         assertTrue(hasPasswordMessage(violations, "Password must be at least 8 characters"));
     }
 
     @Test
     void passwordWithoutUppercaseShouldFailValidation() {
-        Set<ConstraintViolation<UserRegisterRequestDto>> violations = validatePassword("password!");
+        Set<ConstraintViolation<UserPostRequestDto>> violations = validatePassword("password!");
 
         assertTrue(hasPasswordMessage(violations, "Password must contain at least one uppercase letter"));
     }
 
     @Test
     void passwordWithoutSpecialCharacterShouldFailValidation() {
-        Set<ConstraintViolation<UserRegisterRequestDto>> violations = validatePassword("Passworddd");
+        Set<ConstraintViolation<UserPostRequestDto>> violations = validatePassword("Passworddd");
 
         assertTrue(hasPasswordMessage(violations, "Password must contain at least one special character"));
     }
 
     @Test
     void passwordWithSpaceShouldFailValidation() {
-        Set<ConstraintViolation<UserRegisterRequestDto>> violations = validatePassword("Password !");
+        Set<ConstraintViolation<UserPostRequestDto>> violations = validatePassword("Password !");
 
         assertTrue(hasPasswordMessage(violations, "Password must not contain spaces"));
     }
 
     @Test
     void passwordWithNonLatinCharactersShouldFailValidation() {
-        Set<ConstraintViolation<UserRegisterRequestDto>> violations = validatePassword("ПарольA!");
+        Set<ConstraintViolation<UserPostRequestDto>> violations = validatePassword("ПарольA!");
 
         assertTrue(hasPasswordMessage(
             violations,
@@ -67,12 +67,12 @@ class UserRegisterRequestDtoValidationTest {
         ));
     }
 
-    private Set<ConstraintViolation<UserRegisterRequestDto>> validatePassword(String password) {
+    private Set<ConstraintViolation<UserPostRequestDto>> validatePassword(String password) {
         return validator.validate(validRequestWithPassword(password));
     }
 
-    private UserRegisterRequestDto validRequestWithPassword(String password) {
-        return new UserRegisterRequestDto(
+    private UserPostRequestDto validRequestWithPassword(String password) {
+        return new UserPostRequestDto(
             "Anna",
             "Smith",
             "anna.smith@example.com",
@@ -82,7 +82,7 @@ class UserRegisterRequestDtoValidationTest {
         );
     }
 
-    private boolean hasPasswordMessage(Set<ConstraintViolation<UserRegisterRequestDto>> violations, String message) {
+    private boolean hasPasswordMessage(Set<ConstraintViolation<UserPostRequestDto>> violations, String message) {
         return violations.stream()
             .filter(violation -> "password".equals(violation.getPropertyPath().toString()))
             .map(ConstraintViolation::getMessage)

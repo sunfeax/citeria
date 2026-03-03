@@ -2,7 +2,7 @@ package com.sunfeax.citeria.mapper;
 
 import org.springframework.stereotype.Component;
 
-import com.sunfeax.citeria.dto.user.UserRegisterRequestDto;
+import com.sunfeax.citeria.dto.user.UserPostRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.UserRole;
@@ -24,7 +24,7 @@ public class UserMapper {
         );
     }
 
-    public UserEntity toEntity(UserRegisterRequestDto request) {
+    public UserEntity createEntity(UserPostRequestDto request) {
 
         UserEntity entity = new UserEntity();
 
