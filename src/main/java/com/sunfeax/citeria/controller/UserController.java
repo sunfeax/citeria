@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
 import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
 import com.sunfeax.citeria.dto.user.UserPostRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
@@ -59,13 +60,22 @@ public class UserController {
         return ResponseEntity.ok(userService.hardDeleteById(id));
     }
 
-    // update existing user
+    // update profile fields for an existing user
     @PatchMapping("/{id}")
     public ResponseEntity<UserResponseDto> update(
         @PathVariable Long id,
         @Valid @RequestBody UserPatchRequestDto request
     ) {
-        UserResponseDto response = userService.update(id, request);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(userService.update(id, request));
+    }
+
+    // change password for an existing user
+    @PatchMapping("/{id}/password")
+    public ResponseEntity<Void> changePassword(
+        @PathVariable Long id,
+        @Valid @RequestBody UserChangePasswordRequestDto request
+    ) {
+        userService.changePassword(id, request);
+        return ResponseEntity.noContent().build();
     }
 }

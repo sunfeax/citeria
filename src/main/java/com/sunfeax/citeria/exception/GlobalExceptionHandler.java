@@ -83,6 +83,17 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    @ExceptionHandler(InvalidPasswordException.class)
+    public ProblemDetail handleInvalidPasswordException(InvalidPasswordException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+
+        pd.setTitle("Validation Failed");
+        pd.setDetail(ex.getMessage());
+        pd.setProperty("timestamp", Instant.now());
+
+        return pd;
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);

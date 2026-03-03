@@ -6,10 +6,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
 import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
 import com.sunfeax.citeria.dto.user.UserPostRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.entity.UserEntity;
+import com.sunfeax.citeria.exception.InvalidPasswordException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.exception.UserAlreadyExistsException;
 import com.sunfeax.citeria.mapper.UserMapper;
@@ -118,11 +120,6 @@ public class UserService {
             hasChanges = true;
         }
 
-        if (normalizedRequest.password() != null) {
-            user.setPassword(passwordEncoder.encode(normalizedRequest.password()));
-            hasChanges = true;
-        }
-
         if (normalizedRequest.type() != null) {
             user.setType(normalizedRequest.type());
             hasChanges = true;
@@ -136,4 +133,21 @@ public class UserService {
         return userMapper.toResponseDto(saved);
     }
 
+    @Transactional
+    public void changePassword(Long id, UserChangePasswordRequestDto request) {
+        UserEntity user = userRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new InvalidPasswordException("The passwords do not match.");
+        }
+
+        if (request.currentPassword().equals(request.newPassword())) {
+            throw new InvalidPasswordException("The new password must be different.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+    }
 }
+
+
