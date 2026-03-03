@@ -12,6 +12,7 @@ import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.exception.UserAlreadyExistsException;
 import com.sunfeax.citeria.mapper.UserMapper;
+import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
 import com.sunfeax.citeria.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final UserFieldNormalizer userFieldNormalizer;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
@@ -41,16 +43,17 @@ public class UserService {
 
     @Transactional
     public UserResponseDto register(UserRegisterRequestDto request) {
+        UserRegisterRequestDto normalizedRequest = userFieldNormalizer.normalizeRequest(request);
 
-        if (userRepository.existsByEmail(request.email())) {
-            throw new UserAlreadyExistsException("Email " + request.email() + " is already taken");
+        if (userRepository.existsByEmail(normalizedRequest.email())) {
+            throw new UserAlreadyExistsException("Email " + normalizedRequest.email() + " is already taken");
         }
 
-        if (userRepository.existsByPhone(request.phone())) {
-            throw new UserAlreadyExistsException("Phone " + request.phone() + " is already busy");
+        if (userRepository.existsByPhone(normalizedRequest.phone())) {
+            throw new UserAlreadyExistsException("Phone " + normalizedRequest.phone() + " is already busy");
         }
 
-        UserEntity entity = userMapper.toEntity(request);
+        UserEntity entity = userMapper.toEntity(normalizedRequest);
         entity.setPassword(passwordEncoder.encode(request.password()));
         UserEntity saved = userRepository.save(entity);
 

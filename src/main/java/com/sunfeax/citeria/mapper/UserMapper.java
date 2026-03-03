@@ -1,7 +1,5 @@
 package com.sunfeax.citeria.mapper;
 
-import java.util.Locale;
-
 import org.springframework.stereotype.Component;
 
 import com.sunfeax.citeria.dto.user.UserRegisterRequestDto;
@@ -30,18 +28,13 @@ public class UserMapper {
 
         UserEntity entity = new UserEntity();
 
-        entity.setFirstName(normalizeName(request.firstName()));
-        entity.setLastName(normalizeName(request.lastName()));
-        entity.setEmail(request.email().toLowerCase());
+        entity.setFirstName(request.firstName());
+        entity.setLastName(request.lastName());
+        entity.setEmail(request.email());
         entity.setPhone(request.phone());
         entity.setRole(UserRole.USER);
         entity.setType(request.type());
 
         return entity;
-    }
-
-    private String normalizeName(String value) {
-        String trimmed = value.trim().toLowerCase(Locale.ROOT);
-        return trimmed.substring(0, 1).toUpperCase(Locale.ROOT) + trimmed.substring(1);
     }
 }
