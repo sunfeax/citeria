@@ -1,160 +1,115 @@
 package com.sunfeax.citeria.exception;
 
-import java.time.Instant;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.ConstraintViolationException;
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ProblemDetail handleResourceNotFoundException(ResourceNotFoundException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+    private static final String DEFAULT_DETAIL = "No additional details provided";
+    private static final String DATA_INTEGRITY_DETAIL = "Data integrity violation: duplicate or linked record.";
+    private static final String INVALID_JSON_DETAIL = "Invalid JSON format or value.";
+    private static final String VALIDATION_DETAIL = "Request contains invalid fields.";
+    private static final String INTERNAL_ERROR_DETAIL = "An unexpected error occurred.";
 
-        pd.setTitle("Resource Not Found");
-        pd.setDetail(ex.getMessage());
+    private ProblemDetail createDetail(HttpStatus status, String title, String detail, Map<String, Object> properties) {
+        String safeDetail = Optional.ofNullable(detail).orElse(DEFAULT_DETAIL);
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, safeDetail);
+        pd.setTitle(title);
         pd.setProperty("timestamp", Instant.now());
-
-        return pd;
-    }
-
-    @ExceptionHandler(UnauthorizedException.class)
-    public ProblemDetail handleUnauthorizedException(UnauthorizedException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
-
-        pd.setTitle("Unauthorized");
-        pd.setDetail(ex.getMessage());
-        pd.setProperty("timestamp", Instant.now());
-
-        return pd;
-    }
-
-    @ExceptionHandler(PhoneAlreadyBusyException.class)
-    public ProblemDetail handlePhoneAlreadyBusyException(PhoneAlreadyBusyException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);
-
-        pd.setTitle("Conflict");
-        pd.setDetail(ex.getMessage());
-        pd.setProperty("timestamp", Instant.now());
-
-        return pd;
-    }
-
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ProblemDetail handleUserAlreadyExistsException(UserAlreadyExistsException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);
-
-        pd.setTitle("Conflict");
-        pd.setDetail(ex.getMessage());
-        pd.setProperty("timestamp", Instant.now());
-
-        return pd;
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new LinkedHashMap<>();
-
-        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-            errors.putIfAbsent(error.getField(), error.getDefaultMessage());
+        if (properties != null && !properties.isEmpty()) {
+            properties.forEach(pd::setProperty);
         }
-
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-
-        pd.setTitle("Validation Failed");
-        pd.setDetail("Request contains invalid fields.");
-        pd.setProperty("errors", errors);
-        pd.setProperty("timestamp", Instant.now());
-
         return pd;
     }
 
-    @ExceptionHandler(InvalidPasswordException.class)
-    public ProblemDetail handleInvalidPasswordException(InvalidPasswordException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-
-        pd.setTitle("Validation Failed");
-        pd.setDetail(ex.getMessage());
-        pd.setProperty("timestamp", Instant.now());
-
-        return pd;
+    // 404 Not Found
+    @ExceptionHandler({ResourceNotFoundException.class, NoResourceFoundException.class, NoHandlerFoundException.class})
+    public ProblemDetail handleNotFound(Exception ex) {
+        return createDetail(HttpStatus.NOT_FOUND, "Resource Not Found", ex.getMessage(), null);
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ProblemDetail handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-
-        pd.setTitle("Validation Failed");
-        pd.setDetail("Request contains invalid JSON or enum value.");
-        pd.setProperty("timestamp", Instant.now());
-
-        return pd;
-    }
-
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ProblemDetail handleConstraintViolationException(ConstraintViolationException ex) {
-        Map<String, String> errors = new LinkedHashMap<>();
-
-        ex.getConstraintViolations()
-            .forEach(violation -> errors.putIfAbsent(
-                violation.getPropertyPath().toString(),
-                violation.getMessage())
-            );
-
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-
-        pd.setTitle("Validation Failed");
-        pd.setDetail("Request contains invalid data.");
-        pd.setProperty("errors", errors);
-        pd.setProperty("timestamp", Instant.now());
-
-        return pd;
+    // 409 Conflict
+    @ExceptionHandler({PhoneAlreadyBusyException.class, UserAlreadyExistsException.class})
+    public ProblemDetail handleConflict(Exception ex) {
+        return createDetail(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), null);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ProblemDetail handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);
-
-        pd.setTitle("Conflict");
-        pd.setDetail("Cannot complete operation: data is linked to other records or duplicates an existing unique value.");
-        pd.setProperty("timestamp", Instant.now());
-
-        return pd;
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        log.debug("Data integrity violation", ex);
+        return createDetail(HttpStatus.CONFLICT, "Conflict", DATA_INTEGRITY_DETAIL, null);
     }
 
-    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
-    public ProblemDetail handleEndpointNotFound(Exception ex, HttpServletRequest request) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
-
-        pd.setTitle("Endpoint Not Found");
-        pd.setDetail("No endpoint for " + request.getMethod() + " " + request.getRequestURI());
-        pd.setProperty("timestamp", Instant.now());
-
-        return pd;
+    // Validation
+    @ExceptionHandler({
+        MethodArgumentNotValidException.class, 
+        ConstraintViolationException.class, 
+        RequestValidationException.class
+    })
+    public ProblemDetail handleValidationExceptions(Exception ex) {
+        Map<String, String> errors = extractValidationErrors(ex);
+        return createDetail(HttpStatus.BAD_REQUEST, "Validation Failed", VALIDATION_DETAIL, Map.of("errors", errors));
     }
 
+    private Map<String, String> extractValidationErrors(Exception ex) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        switch (ex) {
+            case MethodArgumentNotValidException e -> 
+                e.getBindingResult().getFieldErrors().forEach(err -> 
+                    errors.putIfAbsent(err.getField(), err.getDefaultMessage()));
+            
+            case ConstraintViolationException e -> 
+                e.getConstraintViolations().forEach(v -> 
+                    errors.putIfAbsent(v.getPropertyPath().toString(), v.getMessage()));
+            
+            case RequestValidationException e -> 
+                errors.putAll(e.getErrors());
+            
+            default -> errors.put("request", VALIDATION_DETAIL);
+        }
+
+        return errors;
+    }
+
+    // 400 Bad Request
+    @ExceptionHandler(InvalidPasswordException.class)
+    public ProblemDetail handleBadRequest(InvalidPasswordException ex) {
+        return createDetail(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail handleInvalidJson(HttpMessageNotReadableException ex) {
+        log.debug("Unreadable request payload", ex);
+        return createDetail(HttpStatus.BAD_REQUEST, "Bad Request", INVALID_JSON_DETAIL, null);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ProblemDetail handleUnauthorized(UnauthorizedException ex) {
+        return createDetail(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage(), null);
+    }
+
+    // 500 Internal Server Error
     @ExceptionHandler(Exception.class)
-    public ProblemDetail handleUnhandledException(Exception ex) {
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-        
-        pd.setTitle("Internal Server Error");
-        pd.setDetail("An unexpected error occurred.");
-        pd.setProperty("timestamp", Instant.now());
-
-        return pd;
+    public ProblemDetail handleAll(Exception ex) {
+        log.error("Unhandled exception", ex);
+        return createDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", INTERNAL_ERROR_DETAIL, null);
     }
 }

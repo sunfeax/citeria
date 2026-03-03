@@ -11,11 +11,11 @@ import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
 import com.sunfeax.citeria.dto.user.UserPostRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.entity.UserEntity;
-import com.sunfeax.citeria.exception.InvalidPasswordException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.exception.UserAlreadyExistsException;
 import com.sunfeax.citeria.mapper.UserMapper;
-import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
+import com.sunfeax.citeria.validation.UserFieldNormalizer;
+import com.sunfeax.citeria.validation.ValidationResult;
 import com.sunfeax.citeria.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -136,15 +136,14 @@ public class UserService {
     @Transactional
     public void changePassword(Long id, UserChangePasswordRequestDto request) {
         UserEntity user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
-            throw new InvalidPasswordException("The passwords do not match.");
-        }
-
-        if (request.currentPassword().equals(request.newPassword())) {
-            throw new InvalidPasswordException("The new password must be different.");
-        }
+        new ValidationResult()
+            .addErrorIf(!passwordEncoder.matches(request.currentPassword(), user.getPassword()), 
+                        "currentPassword", "Current password is incorrect.")
+            .addErrorIf(request.currentPassword().equals(request.newPassword()), 
+                        "newPassword", "The new password must be different.")
+            .throwIfHasErrors();
 
         user.setPassword(passwordEncoder.encode(request.newPassword()));
     }

@@ -1,4 +1,4 @@
-package com.sunfeax.citeria.normalizer;
+package com.sunfeax.citeria.validation;
 
 import java.util.Locale;
 
