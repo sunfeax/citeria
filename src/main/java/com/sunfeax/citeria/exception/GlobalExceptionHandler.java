@@ -1,18 +1,18 @@
 package com.sunfeax.citeria.exception;
 
-import jakarta.validation.ConstraintViolationException;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -33,6 +33,17 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
 
         pd.setTitle("Unauthorized");
+        pd.setDetail(ex.getMessage());
+        pd.setProperty("timestamp", Instant.now());
+
+        return pd;
+    }
+
+    @ExceptionHandler(PhoneAlreadyBusyException.class)
+    public ProblemDetail handlePhoneAlreadyBusyException(PhoneAlreadyBusyException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+
+        pd.setTitle("Conflict");
         pd.setDetail(ex.getMessage());
         pd.setProperty("timestamp", Instant.now());
 
@@ -63,6 +74,17 @@ public class GlobalExceptionHandler {
         pd.setTitle("Validation Failed");
         pd.setDetail("Request contains invalid fields.");
         pd.setProperty("errors", errors);
+        pd.setProperty("timestamp", Instant.now());
+
+        return pd;
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+
+        pd.setTitle("Validation Failed");
+        pd.setDetail("Request contains invalid JSON or enum value.");
         pd.setProperty("timestamp", Instant.now());
 
         return pd;

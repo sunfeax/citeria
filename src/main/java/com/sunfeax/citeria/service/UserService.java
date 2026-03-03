@@ -46,6 +46,10 @@ public class UserService {
             throw new UserAlreadyExistsException("Email " + request.email() + " is already taken");
         }
 
+        if (userRepository.existsByPhone(request.phone())) {
+            throw new UserAlreadyExistsException("Phone " + request.phone() + " is already busy");
+        }
+
         UserEntity entity = userMapper.toEntity(request);
         entity.setPassword(passwordEncoder.encode(request.password()));
         UserEntity saved = userRepository.save(entity);
