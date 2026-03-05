@@ -47,8 +47,8 @@ public class PaymentController {
     }
 
     @PostMapping
-    public ResponseEntity<PaymentResponseDto> register(@Valid @RequestBody PaymentPostRequestDto request) {
-        PaymentResponseDto response = paymentService.register(request);
+    public ResponseEntity<PaymentResponseDto> create(@Valid @RequestBody PaymentPostRequestDto request) {
+        PaymentResponseDto response = paymentService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

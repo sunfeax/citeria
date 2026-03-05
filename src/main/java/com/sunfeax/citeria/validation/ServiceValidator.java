@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import com.sunfeax.citeria.dto.service.ServicePatchRequestDto;
 import com.sunfeax.citeria.dto.service.ServicePostRequestDto;
+import com.sunfeax.citeria.entity.ServiceEntity;
 import com.sunfeax.citeria.mapper.ServiceMapper;
 import com.sunfeax.citeria.repository.ServiceRepository;
 
@@ -26,7 +27,14 @@ public class ServiceValidator {
             .throwIfHasErrors();
     }
 
-    public void validateUpdate(Long id, ServicePatchRequestDto request, Long targetBusinessId, String targetServiceName) {
+    public void validateUpdate(Long id, ServiceEntity existingEntity, ServicePatchRequestDto request) {
+        Long targetBusinessId = request.businessId() != null
+            ? request.businessId()
+            : existingEntity.getBusiness().getId();
+        String targetServiceName = request.name() != null
+            ? request.name()
+            : existingEntity.getName();
+
         new ValidationResult()
             .addErrorIf(!serviceMapper.hasAnyPatchField(request), "request", "No fields to update")
             .addErrorIf(

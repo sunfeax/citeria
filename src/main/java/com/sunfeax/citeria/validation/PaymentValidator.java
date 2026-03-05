@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import com.sunfeax.citeria.dto.payment.PaymentPatchRequestDto;
 import com.sunfeax.citeria.dto.payment.PaymentPostRequestDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
+import com.sunfeax.citeria.entity.PaymentEntity;
 import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.mapper.PaymentMapper;
 import com.sunfeax.citeria.repository.PaymentRepository;
@@ -35,10 +36,14 @@ public class PaymentValidator {
 
     public void validateUpdate(
         Long id,
+        PaymentEntity existingEntity,
         PaymentPatchRequestDto request,
-        Long targetAppointmentId,
         AppointmentEntity targetAppointment
     ) {
+        Long targetAppointmentId = request.appointmentId() != null
+            ? request.appointmentId()
+            : existingEntity.getAppointment().getId();
+
         new ValidationResult()
             .addErrorIf(!paymentMapper.hasAnyPatchField(request), "request", "No fields to update")
             .addErrorIf(

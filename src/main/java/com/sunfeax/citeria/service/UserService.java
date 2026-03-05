@@ -57,7 +57,7 @@ public class UserService {
         UserEntity entity = findUserOrThrow(id);
 
         UserPatchRequestDto normalizedRequest = userFieldNormalizer.normalizePatchRequest(request);
-        userValidator.validateUpdate(id, normalizedRequest);
+        userValidator.validateUpdate(id, entity, normalizedRequest);
 
         userMapper.applyPatch(entity, normalizedRequest);
         UserEntity saved = userRepository.save(entity);

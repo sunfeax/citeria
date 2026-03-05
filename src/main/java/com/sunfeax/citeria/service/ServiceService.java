@@ -60,14 +60,7 @@ public class ServiceService {
         ServiceEntity entity = findServiceOrThrow(id);
 
         ServicePatchRequestDto normalizedRequest = serviceFieldNormalizer.normalizePatchRequest(request);
-
-        Long targetBusinessId = normalizedRequest.businessId() == null
-            ? entity.getBusiness().getId()
-            : normalizedRequest.businessId();
-        String targetServiceName = normalizedRequest.name() == null
-            ? entity.getName()
-            : normalizedRequest.name();
-        serviceValidator.validateUpdate(id, normalizedRequest, targetBusinessId, targetServiceName);
+        serviceValidator.validateUpdate(id, entity, normalizedRequest);
 
         BusinessEntity business = normalizedRequest.businessId() == null
             ? null

@@ -35,18 +35,21 @@ public class UserValidator {
             .throwIfHasErrors();
     }
 
-    public void validateUpdate(Long id, UserPatchRequestDto request) {
+    public void validateUpdate(Long id, UserEntity existingEntity, UserPatchRequestDto request) {
+        String targetEmail = request.email() != null ? request.email() : existingEntity.getEmail();
+        String targetPhone = request.phone() != null ? request.phone() : existingEntity.getPhone();
+
         new ValidationResult()
             .addErrorIf(!userMapper.hasAnyPatchField(request), "request", "No fields to update")
             .addErrorIf(
-                request.email() != null && userRepository.existsByEmailAndIdNot(request.email(), id),
+                request.email() != null && userRepository.existsByEmailAndIdNot(targetEmail, id),
                 "email",
-                "Email " + request.email() + " is already taken"
+                "Email " + targetEmail + " is already taken"
             )
             .addErrorIf(
-                request.phone() != null && userRepository.existsByPhoneAndIdNot(request.phone(), id),
+                request.phone() != null && userRepository.existsByPhoneAndIdNot(targetPhone, id),
                 "phone",
-                "Phone " + request.phone() + " is already busy"
+                "Phone " + targetPhone + " is already busy"
             )
             .throwIfHasErrors();
     }

@@ -1,7 +1,5 @@
 package com.sunfeax.citeria.service;
 
-import java.time.LocalDateTime;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,10 +13,10 @@ import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.AppointmentMapper;
-import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
 import com.sunfeax.citeria.repository.AppointmentRepository;
 import com.sunfeax.citeria.repository.SpecialistServiceRepository;
 import com.sunfeax.citeria.repository.UserRepository;
+import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
 import com.sunfeax.citeria.validation.AppointmentValidator;
 
 import lombok.RequiredArgsConstructor;
@@ -53,6 +51,7 @@ public class AppointmentService {
 
         UserEntity client = findClientOrThrow(normalizedRequest.clientId());
         SpecialistServiceEntity specialistService = findSpecialistServiceOrThrow(normalizedRequest.specialistServiceId());
+
         appointmentValidator.validateCreate(normalizedRequest, client, specialistService);
 
         AppointmentEntity entity = appointmentMapper.createEntity(normalizedRequest, client, specialistService);
@@ -64,7 +63,6 @@ public class AppointmentService {
     @Transactional
     public AppointmentResponseDto update(Long id, AppointmentPatchRequestDto request) {
         AppointmentEntity entity = findAppointmentOrThrow(id);
-
         AppointmentPatchRequestDto normalizedRequest = appointmentFieldNormalizer.normalizePatchRequest(request);
 
         UserEntity targetClient = normalizedRequest.clientId() == null
@@ -75,27 +73,7 @@ public class AppointmentService {
             ? entity.getSpecialistService()
             : findSpecialistServiceOrThrow(normalizedRequest.specialistServiceId());
 
-        LocalDateTime targetStartTime = normalizedRequest.startTime() == null
-            ? entity.getStartTime()
-            : normalizedRequest.startTime();
-
-        LocalDateTime targetEndTime = normalizedRequest.endTime() == null
-            ? entity.getEndTime()
-            : normalizedRequest.endTime();
-
-        boolean scheduleChanged = normalizedRequest.specialistServiceId() != null
-            || normalizedRequest.startTime() != null
-            || normalizedRequest.endTime() != null;
-            
-        appointmentValidator.validateUpdate(
-            id,
-            normalizedRequest,
-            targetClient,
-            targetSpecialistService,
-            targetStartTime,
-            targetEndTime,
-            scheduleChanged
-        );
+        appointmentValidator.validateUpdate(id, entity, normalizedRequest, targetClient, targetSpecialistService);
 
         UserEntity clientToApply = normalizedRequest.clientId() == null ? null : targetClient;
         SpecialistServiceEntity specialistServiceToApply =

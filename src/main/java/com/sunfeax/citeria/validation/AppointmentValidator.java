@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.sunfeax.citeria.dto.appointment.AppointmentPatchRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
+import com.sunfeax.citeria.entity.AppointmentEntity;
 import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.UserType;
@@ -63,14 +64,19 @@ public class AppointmentValidator {
     }
 
     public void validateUpdate(
-        Long id,
+        Long appointmentId,
+        AppointmentEntity existingEntity,
         AppointmentPatchRequestDto request,
         UserEntity targetClient,
-        SpecialistServiceEntity targetSpecialistService,
-        LocalDateTime targetStartTime,
-        LocalDateTime targetEndTime,
-        boolean scheduleChanged
+        SpecialistServiceEntity targetSpecialistService
     ) {
+        LocalDateTime targetStartTime = request.startTime() != null ? request.startTime() : existingEntity.getStartTime();
+        LocalDateTime targetEndTime = request.endTime() != null ? request.endTime() : existingEntity.getEndTime();
+
+        boolean scheduleChanged = request.specialistServiceId() != null
+            || request.startTime() != null
+            || request.endTime() != null;
+
         new ValidationResult()
             .addErrorIf(!appointmentMapper.hasAnyPatchField(request), "request", "No fields to update")
             .addErrorIf(
@@ -99,27 +105,45 @@ public class AppointmentValidator {
                 "Service for specialist service with id " + targetSpecialistService.getId() + " is inactive"
             )
             .addErrorIf(
-                (request.startTime() != null || request.endTime() != null)
-                    && targetEndTime != null
-                    && !targetEndTime.isAfter(targetStartTime),
+                targetStartTime != null && targetEndTime != null && !targetEndTime.isAfter(targetStartTime),
                 "time",
                 "End time must be after start time"
             )
             .addErrorIf(
-                targetStartTime != null && scheduleChanged && targetStartTime.isBefore(LocalDateTime.now()),
+                scheduleChanged && targetStartTime != null && targetStartTime.isBefore(LocalDateTime.now()),
                 "startTime",
                 "Start time must be in the future"
             )
             .addErrorIf(
-                scheduleChanged
+                scheduleChanged && targetStartTime != null && targetEndTime != null
                     && appointmentRepository.existsBySpecialistServiceIdAndStartTimeLessThanAndEndTimeGreaterThanAndIdNot(
                         targetSpecialistService.getId(),
                         targetEndTime,
                         targetStartTime,
-                        id
+                        appointmentId
                     ),
                 "time",
                 "Specialist is already booked for this time slot"
+            )
+            .throwIfHasErrors();
+    }
+
+    public void validateRestore(AppointmentEntity appointment) {
+        new ValidationResult()
+            .addErrorIf(
+                appointment.getStartTime().isBefore(LocalDateTime.now()),
+                "startTime",
+                "Cannot restore an appointment in the past"
+            )
+            .addErrorIf(
+                appointmentRepository.existsBySpecialistServiceIdAndStartTimeLessThanAndEndTimeGreaterThanAndIdNot(
+                    appointment.getSpecialistService().getId(),
+                    appointment.getEndTime(),
+                    appointment.getStartTime(),
+                    appointment.getId()
+                ),
+                "time",
+                "Specialist is already booked for this time slot. Cannot restore."
             )
             .throwIfHasErrors();
     }

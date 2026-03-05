@@ -60,7 +60,7 @@ public class BusinessService {
         BusinessEntity entity = findBusinessOrThrow(id);
 
         BusinessPatchRequestDto normalizedRequest = businessFieldNormalizer.normalizePatchRequest(request);
-        businessValidator.validateUpdate(id, normalizedRequest);
+        businessValidator.validateUpdate(id, entity, normalizedRequest);
 
         UserEntity owner = normalizedRequest.ownerId() == null
             ? null

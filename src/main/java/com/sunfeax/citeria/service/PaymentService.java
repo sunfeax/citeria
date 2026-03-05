@@ -44,7 +44,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public PaymentResponseDto register(PaymentPostRequestDto request) {
+    public PaymentResponseDto create(PaymentPostRequestDto request) {
         PaymentPostRequestDto normalizedRequest = paymentFieldNormalizer.normalizePostRequest(request);
 
         AppointmentEntity appointment = findAppointmentOrThrow(normalizedRequest.appointmentId());
@@ -62,14 +62,10 @@ public class PaymentService {
 
         PaymentPatchRequestDto normalizedRequest = paymentFieldNormalizer.normalizePatchRequest(request);
 
-        Long targetAppointmentId = normalizedRequest.appointmentId() == null
-            ? entity.getAppointment().getId()
-            : normalizedRequest.appointmentId();
-
         AppointmentEntity targetAppointment = normalizedRequest.appointmentId() == null
             ? entity.getAppointment()
             : findAppointmentOrThrow(normalizedRequest.appointmentId());
-        paymentValidator.validateUpdate(id, normalizedRequest, targetAppointmentId, targetAppointment);
+        paymentValidator.validateUpdate(id, entity, normalizedRequest, targetAppointment);
 
         AppointmentEntity appointmentToApply = normalizedRequest.appointmentId() == null ? null : targetAppointment;
 

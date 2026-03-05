@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import com.sunfeax.citeria.dto.business.BusinessPatchRequestDto;
 import com.sunfeax.citeria.dto.business.BusinessPostRequestDto;
+import com.sunfeax.citeria.entity.BusinessEntity;
 import com.sunfeax.citeria.mapper.BusinessMapper;
 import com.sunfeax.citeria.repository.BusinessRepository;
 
@@ -26,13 +27,15 @@ public class BusinessValidator {
             .throwIfHasErrors();
     }
 
-    public void validateUpdate(Long id, BusinessPatchRequestDto request) {
+    public void validateUpdate(Long id, BusinessEntity existingEntity, BusinessPatchRequestDto request) {
+        String targetName = request.name() != null ? request.name() : existingEntity.getName();
+
         new ValidationResult()
             .addErrorIf(!businessMapper.hasAnyPatchField(request), "request", "No fields to update")
             .addErrorIf(
-                request.name() != null && businessRepository.existsByNameIgnoreCaseAndIdNot(request.name(), id),
+                request.name() != null && businessRepository.existsByNameIgnoreCaseAndIdNot(targetName, id),
                 "name",
-                "Business with name " + request.name() + " already exists"
+                "Business with name " + targetName + " already exists"
             )
             .throwIfHasErrors();
     }

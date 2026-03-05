@@ -80,7 +80,7 @@ public class SpecialistServiceService {
         ServiceEntity targetService = normalizedRequest.serviceId() == null
             ? entity.getService()
             : findServiceOrThrow(normalizedRequest.serviceId());
-        specialistServiceValidator.validateUpdate(id, normalizedRequest, targetBusiness, targetSpecialist, targetService);
+        specialistServiceValidator.validateUpdate(id, entity, normalizedRequest, targetBusiness, targetSpecialist, targetService);
 
         BusinessEntity businessToApply = normalizedRequest.businessId() == null ? null : targetBusiness;
         UserEntity specialistToApply = normalizedRequest.specialistId() == null ? null : targetSpecialist;

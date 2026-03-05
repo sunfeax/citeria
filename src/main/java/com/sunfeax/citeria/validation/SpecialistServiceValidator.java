@@ -6,6 +6,7 @@ import com.sunfeax.citeria.dto.specialistservice.SpecialistServicePatchRequestDt
 import com.sunfeax.citeria.dto.specialistservice.SpecialistServicePostRequestDto;
 import com.sunfeax.citeria.entity.BusinessEntity;
 import com.sunfeax.citeria.entity.ServiceEntity;
+import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.mapper.SpecialistServiceMapper;
@@ -50,18 +51,29 @@ public class SpecialistServiceValidator {
 
     public void validateUpdate(
         Long id,
+        SpecialistServiceEntity existingEntity,
         SpecialistServicePatchRequestDto request,
         BusinessEntity targetBusiness,
         UserEntity targetSpecialist,
         ServiceEntity targetService
     ) {
+        Long targetBusinessId = request.businessId() != null
+            ? request.businessId()
+            : existingEntity.getBusiness().getId();
+        Long targetSpecialistId = request.specialistId() != null
+            ? request.specialistId()
+            : existingEntity.getSpecialist().getId();
+        Long targetServiceId = request.serviceId() != null
+            ? request.serviceId()
+            : existingEntity.getService().getId();
+
         new ValidationResult()
             .addErrorIf(!specialistServiceMapper.hasAnyPatchField(request), "request", "No fields to update")
             .addErrorIf(
                 specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceIdAndIdNot(
-                    targetBusiness.getId(),
-                    targetSpecialist.getId(),
-                    targetService.getId(),
+                    targetBusinessId,
+                    targetSpecialistId,
+                    targetServiceId,
                     id
                 ),
                 "specialistService",
