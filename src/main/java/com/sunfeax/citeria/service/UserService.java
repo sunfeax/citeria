@@ -1,10 +1,11 @@
 package com.sunfeax.citeria.service;
 
-import java.util.List;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
 import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
@@ -29,11 +30,9 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
-    public List<UserResponseDto> getAll() {
-        return userRepository.findAll()
-            .stream()
-            .map(userMapper::toResponseDto)
-            .toList();
+    public Page<UserResponseDto> getAll(Pageable pageable) {
+        Page<UserEntity> userPage = userRepository.findAll(pageable);
+        return userPage.map(userMapper::toResponseDto);
     }
 
     @Transactional(readOnly = true)
@@ -65,28 +64,6 @@ public class UserService {
         UserEntity saved = userRepository.save(entity);
 
         return userMapper.toResponseDto(saved);
-    }
-
-    @Transactional
-    public UserResponseDto deactivateById(Long id) {
-        UserEntity user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
-
-        user.setActive(false);
-        UserEntity saved = userRepository.save(user);
-
-        return userMapper.toResponseDto(saved);
-    }
-
-    @Transactional
-    public UserResponseDto hardDeleteById(Long id) {
-        UserEntity user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
-
-        UserResponseDto deletedUser = userMapper.toResponseDto(user);
-        userRepository.delete(user);
-
-        return deletedUser;
     }
 
     @Transactional
@@ -131,5 +108,39 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(request.newPassword()));
     }
+
+    @Transactional
+    public UserResponseDto deactivateById(Long id) {
+        UserEntity user = userRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+            
+        user.setActive(false);
+        UserEntity saved = userRepository.save(user);
+
+        return userMapper.toResponseDto(saved);
+    }
+
+    @Transactional
+    public UserResponseDto hardDeleteById(Long id) {
+        UserEntity user = userRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+
+        UserResponseDto deletedUser = userMapper.toResponseDto(user);
+        userRepository.delete(user);
+
+        return deletedUser;
+    }
+
+    @Transactional
+    public UserResponseDto restoreById(Long id) {
+        UserEntity user = userRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+
+        user.setActive(true);
+        UserEntity saved = userRepository.save(user);
+
+        return userMapper.toResponseDto(saved);
+    }
+
 }
 

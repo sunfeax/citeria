@@ -1,7 +1,9 @@
 package com.sunfeax.citeria.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,13 +31,19 @@ public class UserController {
 
     private final UserService userService;
 
-    // change to Pageable after 
+    // get all users
     @GetMapping
-    public List<UserResponseDto> getUsers() {
-        return userService.getAll();
+    public Page<UserResponseDto> getUsers(
+        @PageableDefault(
+            size = 20,
+            sort = "id",
+            direction = Sort.Direction.ASC
+        ) Pageable pageable
+    ) {
+        return userService.getAll(pageable);
     }
 
-    // fetch user by id
+    // get one user by id
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getById(id));
@@ -46,18 +54,6 @@ public class UserController {
     public ResponseEntity<UserResponseDto> register(@Valid @RequestBody UserPostRequestDto request) {
         UserResponseDto response = userService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    // soft delete (isActive = 0)
-    @DeleteMapping("/{id}")
-    public ResponseEntity<UserResponseDto> deactivateById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.deactivateById(id));
-    }
-
-    // hard delete from DB
-    @DeleteMapping("/{id}/hard")
-    public ResponseEntity<UserResponseDto> hardDeleteById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.hardDeleteById(id));
     }
 
     // update profile fields for an existing user
@@ -77,5 +73,23 @@ public class UserController {
     ) {
         userService.changePassword(id, request);
         return ResponseEntity.noContent().build();
+    }
+
+    // soft delete (isActive = 0)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<UserResponseDto> deactivateById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.deactivateById(id));
+    }
+
+    // hard delete from DB
+    @DeleteMapping("/{id}/hard")
+    public ResponseEntity<UserResponseDto> hardDeleteById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.hardDeleteById(id));
+    }
+
+    // restore user (isActive = 1)
+    @PatchMapping("/{id}/restore")
+    public ResponseEntity<UserResponseDto> restoreById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.restoreById(id));
     }
 }
