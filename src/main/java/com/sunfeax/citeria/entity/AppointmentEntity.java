@@ -3,6 +3,7 @@ package com.sunfeax.citeria.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.sunfeax.citeria.enums.AppointmentStatus;
@@ -20,7 +21,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -49,39 +49,32 @@ public class AppointmentEntity {
     private SpecialistServiceEntity specialistService;
 
     @Column(name = "start_time", nullable = false)
-    @NotNull
     private LocalDateTime startTime;
 
     @Column(name = "end_time", nullable = false)
-    @NotNull
     private LocalDateTime endTime;
 
     @Column(name = "status", nullable = false)
-    @NotNull
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status = AppointmentStatus.PENDING;
 
     @Column(name = "payment_method", nullable = false)
-    @NotNull
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod = PaymentMethod.ONLINE;
 
     @Column(name = "price_amount", nullable = false, precision = 12, scale = 2)
-    @NotNull
     @DecimalMin("0.00")
     private BigDecimal priceAmount;
 
     @Column(name = "currency", nullable = false, length = 3)
-    @NotNull
     @Size(min = 3, max = 3)
     private String currency;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    @NotNull
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    @NotNull
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 }

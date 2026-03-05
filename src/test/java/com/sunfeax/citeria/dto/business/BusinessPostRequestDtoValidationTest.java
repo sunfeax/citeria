@@ -8,17 +8,11 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class BusinessPostRequestDtoValidationTest {
 
-    private static Validator validator;
-
-    @BeforeAll
-    static void initValidator() {
-        validator = Validation.buildDefaultValidatorFactory().getValidator();
-    }
+    private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     @Test
     void validRequestShouldPassValidation() {

@@ -16,10 +16,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,41 +39,31 @@ public class BusinessEntity {
     private UserEntity owner;
 
     @Column(name = "name", nullable = false, unique = true)
-    @NotBlank
-    @Size(min = 2, max = 120)
     private String name;
 
     @Column(name = "description")
-    @Size(max = 1000)
     private String description;
 
     @Column(name = "phone", length = 20)
-    @Size(min = 7, max = 20)
     private String phone;
 
     @Column(name = "email", length = 100)
-    @Email
-    @Size(max = 100)
     private String email;
 
     @Column(name = "website", length = 255)
-    @Size(max = 255)
     private String website;
 
     @Column(name = "address", length = 255)
-    @Size(max = 255)
     private String address;
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    @NotNull
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    @NotNull
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
