@@ -3,6 +3,7 @@ package com.sunfeax.citeria.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Column;
@@ -41,7 +42,7 @@ public class BusinessEntity {
     @JoinColumn(name = "owner_user_id", nullable = false)
     private UserEntity owner;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, unique = true)
     @NotBlank
     @Size(min = 2, max = 120)
     private String name;
@@ -72,6 +73,7 @@ public class BusinessEntity {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @NotNull
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
@@ -83,5 +85,5 @@ public class BusinessEntity {
     private List<ServiceEntity> services;
 
     @OneToMany(mappedBy = "business")
-    private List<OfferingEntity> offerings;
+    private List<SpecialistServiceEntity> specialistServices;
 }

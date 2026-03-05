@@ -1,9 +1,8 @@
-package com.sunfeax.citeria.dto.offering;
+package com.sunfeax.citeria.dto.specialistservice;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public record OfferingResponseDto(
+public record SpecialistServiceResponseDto(
     Long id,
     Long businessId,
     String businessName,
@@ -11,8 +10,6 @@ public record OfferingResponseDto(
     String specialistName,
     Long serviceId,
     String serviceName,
-    BigDecimal priceAmount,
-    Integer durationMinutes,
     Boolean isActive,
     LocalDateTime createdAt) {
 }

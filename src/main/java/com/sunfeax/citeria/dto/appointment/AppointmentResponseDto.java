@@ -11,7 +11,7 @@ public record AppointmentResponseDto(
     Long clientId,
     String clientName,
     String clientEmail,
-    Long offeringId,
+    Long specialistServiceId,
     Long specialistId,
     String specialistName,
     Long serviceId,

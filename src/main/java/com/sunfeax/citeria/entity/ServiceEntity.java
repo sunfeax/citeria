@@ -75,5 +75,5 @@ public class ServiceEntity {
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "service")
-    private List<OfferingEntity> offerings;
+    private List<SpecialistServiceEntity> specialistServices;
 }

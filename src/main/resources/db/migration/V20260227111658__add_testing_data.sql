@@ -37,56 +37,46 @@ VALUES
   ((SELECT id FROM businesses WHERE name = 'Lider Coaching Hub' LIMIT 1), 'Interview Preparation', 'Mock interview with feedback.', 40, 60.00, TRUE),
   ((SELECT id FROM businesses WHERE name = 'Lider Coaching Hub' LIMIT 1), 'Leadership Coaching', 'One-on-one leadership development session.', 75, 120.00, TRUE);
 
-INSERT INTO offerings (business_id, specialist_id, service_id, price_amount, duration_minutes, is_active)
+INSERT INTO specialist_services (business_id, specialist_id, service_id, is_active)
 VALUES
   (
     (SELECT id FROM businesses WHERE name = 'PSY Studio' LIMIT 1),
     (SELECT id FROM users WHERE email = 'olga.psychologist@example.com' LIMIT 1),
     (SELECT id FROM services WHERE name = 'Psychology Consultation' LIMIT 1),
-    95.00,
-    60,
     TRUE
   ),
   (
     (SELECT id FROM businesses WHERE name = 'PSY Studio' LIMIT 1),
     (SELECT id FROM users WHERE email = 'olga.psychologist@example.com' LIMIT 1),
     (SELECT id FROM services WHERE name = 'Follow-up Therapy Session' LIMIT 1),
-    80.00,
-    50,
     TRUE
   ),
   (
     (SELECT id FROM businesses WHERE name = 'Lider Coaching Hub' LIMIT 1),
     (SELECT id FROM users WHERE email = 'roman.coach@example.com' LIMIT 1),
     (SELECT id FROM services WHERE name = 'Career Strategy Session' LIMIT 1),
-    70.00,
-    45,
     TRUE
   ),
   (
     (SELECT id FROM businesses WHERE name = 'Lider Coaching Hub' LIMIT 1),
     (SELECT id FROM users WHERE email = 'roman.coach@example.com' LIMIT 1),
     (SELECT id FROM services WHERE name = 'Interview Preparation' LIMIT 1),
-    60.00,
-    40,
     TRUE
   ),
   (
     (SELECT id FROM businesses WHERE name = 'Lider Coaching Hub' LIMIT 1),
     (SELECT id FROM users WHERE email = 'roman.coach@example.com' LIMIT 1),
     (SELECT id FROM services WHERE name = 'Leadership Coaching' LIMIT 1),
-    120.00,
-    75,
     TRUE
   );
 
-INSERT INTO appointments (client_id, offering_id, start_time, end_time, status, payment_method, price_amount)
+INSERT INTO appointments (client_id, specialist_service_id, start_time, end_time, status, payment_method, price_amount)
 VALUES
   (
     (SELECT id FROM users WHERE email = 'dmitry.sokolov@example.com' LIMIT 1),
     (
       SELECT ss.id
-      FROM offerings ss
+      FROM specialist_services ss
       JOIN users u ON u.id = ss.specialist_id
       JOIN services s ON s.id = ss.service_id
       WHERE u.email = 'olga.psychologist@example.com'
@@ -103,7 +93,7 @@ VALUES
     (SELECT id FROM users WHERE email = 'anna.petrenko@example.com' LIMIT 1),
     (
       SELECT ss.id
-      FROM offerings ss
+      FROM specialist_services ss
       JOIN users u ON u.id = ss.specialist_id
       JOIN services s ON s.id = ss.service_id
       WHERE u.email = 'roman.coach@example.com'
@@ -120,7 +110,7 @@ VALUES
     (SELECT id FROM users WHERE email = 'maria.client@example.com' LIMIT 1),
     (
       SELECT ss.id
-      FROM offerings ss
+      FROM specialist_services ss
       JOIN users u ON u.id = ss.specialist_id
       JOIN services s ON s.id = ss.service_id
       WHERE u.email = 'roman.coach@example.com'
@@ -137,7 +127,7 @@ VALUES
     (SELECT id FROM users WHERE email = 'dmitry.sokolov@example.com' LIMIT 1),
     (
       SELECT ss.id
-      FROM offerings ss
+      FROM specialist_services ss
       JOIN users u ON u.id = ss.specialist_id
       JOIN services s ON s.id = ss.service_id
       WHERE u.email = 'olga.psychologist@example.com'
@@ -158,7 +148,7 @@ VALUES
       SELECT a.id
       FROM appointments a
       JOIN users c ON c.id = a.client_id
-      JOIN offerings ss ON ss.id = a.offering_id
+      JOIN specialist_services ss ON ss.id = a.specialist_service_id
       JOIN services s ON s.id = ss.service_id
       WHERE c.email = 'dmitry.sokolov@example.com'
         AND s.name = 'Psychology Consultation'
@@ -173,7 +163,7 @@ VALUES
       SELECT a.id
       FROM appointments a
       JOIN users c ON c.id = a.client_id
-      JOIN offerings ss ON ss.id = a.offering_id
+      JOIN specialist_services ss ON ss.id = a.specialist_service_id
       JOIN services s ON s.id = ss.service_id
       WHERE c.email = 'maria.client@example.com'
         AND s.name = 'Interview Preparation'

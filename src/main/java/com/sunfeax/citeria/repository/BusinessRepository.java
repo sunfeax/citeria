@@ -7,4 +7,6 @@ import com.sunfeax.citeria.entity.BusinessEntity;
 
 @Repository
 public interface BusinessRepository extends JpaRepository<BusinessEntity, Long> {
+    boolean existsByNameIgnoreCase(String name);
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
 }

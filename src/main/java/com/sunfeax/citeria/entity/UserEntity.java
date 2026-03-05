@@ -69,7 +69,7 @@ public class UserEntity {
     private List<BusinessEntity> ownedBusinesses;
 
     @OneToMany(mappedBy = "specialist")
-    private List<OfferingEntity> offerings;
+    private List<SpecialistServiceEntity> specialistServices;
 
     @OneToMany(mappedBy = "client")
     private List<AppointmentEntity> clientAppointments;
