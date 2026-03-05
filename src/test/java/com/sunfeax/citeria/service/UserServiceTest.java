@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -34,8 +34,9 @@ import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.UserMapper;
+import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
 import com.sunfeax.citeria.repository.UserRepository;
-import com.sunfeax.citeria.validation.UserFieldNormalizer;
+import com.sunfeax.citeria.validation.UserValidator;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -49,8 +50,15 @@ class UserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    @InjectMocks
+    private UserValidator userValidator;
+
     private UserService userService;
+
+    @BeforeEach
+    void setUp() {
+        userValidator = new UserValidator(userRepository, userMapper, passwordEncoder);
+        userService = new UserService(userRepository, userMapper, userFieldNormalizer, passwordEncoder, userValidator);
+    }
 
     @Test
     void getAllShouldReturnMappedPage() {

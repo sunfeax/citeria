@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -34,11 +34,12 @@ import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.SpecialistServiceMapper;
+import com.sunfeax.citeria.normalizer.SpecialistServiceFieldNormalizer;
 import com.sunfeax.citeria.repository.BusinessRepository;
 import com.sunfeax.citeria.repository.ServiceRepository;
 import com.sunfeax.citeria.repository.SpecialistServiceRepository;
 import com.sunfeax.citeria.repository.UserRepository;
-import com.sunfeax.citeria.validation.SpecialistServiceFieldNormalizer;
+import com.sunfeax.citeria.validation.SpecialistServiceValidator;
 
 @ExtendWith(MockitoExtension.class)
 class SpecialistServiceServiceTest {
@@ -56,8 +57,23 @@ class SpecialistServiceServiceTest {
     @Mock
     private SpecialistServiceFieldNormalizer specialistServiceFieldNormalizer;
 
-    @InjectMocks
+    private SpecialistServiceValidator specialistServiceValidator;
+
     private SpecialistServiceService specialistServiceService;
+
+    @BeforeEach
+    void setUp() {
+        specialistServiceValidator = new SpecialistServiceValidator(specialistServiceRepository, specialistServiceMapper);
+        specialistServiceService = new SpecialistServiceService(
+            specialistServiceRepository,
+            specialistServiceMapper,
+            businessRepository,
+            userRepository,
+            serviceRepository,
+            specialistServiceFieldNormalizer,
+            specialistServiceValidator
+        );
+    }
 
     @Test
     void getAllShouldReturnMappedPage() {

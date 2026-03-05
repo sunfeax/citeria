@@ -12,9 +12,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -33,9 +33,10 @@ import com.sunfeax.citeria.enums.PaymentStatus;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.PaymentMapper;
+import com.sunfeax.citeria.normalizer.PaymentFieldNormalizer;
 import com.sunfeax.citeria.repository.AppointmentRepository;
 import com.sunfeax.citeria.repository.PaymentRepository;
-import com.sunfeax.citeria.validation.PaymentFieldNormalizer;
+import com.sunfeax.citeria.validation.PaymentValidator;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
@@ -49,8 +50,21 @@ class PaymentServiceTest {
     @Mock
     private PaymentFieldNormalizer paymentFieldNormalizer;
 
-    @InjectMocks
+    private PaymentValidator paymentValidator;
+
     private PaymentService paymentService;
+
+    @BeforeEach
+    void setUp() {
+        paymentValidator = new PaymentValidator(paymentRepository, paymentMapper);
+        paymentService = new PaymentService(
+            paymentRepository,
+            paymentMapper,
+            appointmentRepository,
+            paymentFieldNormalizer,
+            paymentValidator
+        );
+    }
 
     @Test
     void getAllShouldReturnMappedPage() {

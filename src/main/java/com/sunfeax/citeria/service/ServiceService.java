@@ -12,10 +12,10 @@ import com.sunfeax.citeria.entity.BusinessEntity;
 import com.sunfeax.citeria.entity.ServiceEntity;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.ServiceMapper;
+import com.sunfeax.citeria.normalizer.ServiceFieldNormalizer;
 import com.sunfeax.citeria.repository.BusinessRepository;
 import com.sunfeax.citeria.repository.ServiceRepository;
-import com.sunfeax.citeria.validation.ServiceFieldNormalizer;
-import com.sunfeax.citeria.validation.ValidationResult;
+import com.sunfeax.citeria.validation.ServiceValidator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +27,7 @@ public class ServiceService {
     private final ServiceMapper serviceMapper;
     private final BusinessRepository businessRepository;
     private final ServiceFieldNormalizer serviceFieldNormalizer;
+    private final ServiceValidator serviceValidator;
 
     @Transactional(readOnly = true)
     public Page<ServiceResponseDto> getAll(Pageable pageable) {
@@ -44,17 +45,7 @@ public class ServiceService {
     @Transactional
     public ServiceResponseDto create(ServicePostRequestDto request) {
         ServicePostRequestDto normalizedRequest = serviceFieldNormalizer.normalizePostRequest(request);
-
-        new ValidationResult()
-            .addErrorIf(
-                serviceRepository.existsByBusinessIdAndNameIgnoreCase(
-                    normalizedRequest.businessId(),
-                    normalizedRequest.name()
-                ),
-                "name",
-                "Service with name " + normalizedRequest.name() + " already exists in this business"
-            )
-            .throwIfHasErrors();
+        serviceValidator.validateCreate(normalizedRequest);
 
         BusinessEntity business = findBusinessOrThrow(normalizedRequest.businessId());
 
@@ -76,19 +67,7 @@ public class ServiceService {
         String targetServiceName = normalizedRequest.name() == null
             ? entity.getName()
             : normalizedRequest.name();
-
-        new ValidationResult()
-            .addErrorIf(!serviceMapper.hasAnyPatchField(normalizedRequest), "request", "No fields to update")
-            .addErrorIf(
-                serviceRepository.existsByBusinessIdAndNameIgnoreCaseAndIdNot(
-                    targetBusinessId,
-                    targetServiceName,
-                    id
-                ),
-                "name",
-                "Service with name " + targetServiceName + " already exists in this business"
-            )
-            .throwIfHasErrors();
+        serviceValidator.validateUpdate(id, normalizedRequest, targetBusinessId, targetServiceName);
 
         BusinessEntity business = normalizedRequest.businessId() == null
             ? null

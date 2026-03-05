@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -31,9 +31,10 @@ import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.BusinessMapper;
+import com.sunfeax.citeria.normalizer.BusinessFieldNormalizer;
 import com.sunfeax.citeria.repository.BusinessRepository;
 import com.sunfeax.citeria.repository.UserRepository;
-import com.sunfeax.citeria.validation.BusinessFieldNormalizer;
+import com.sunfeax.citeria.validation.BusinessValidator;
 
 @ExtendWith(MockitoExtension.class)
 class BusinessServiceTest {
@@ -47,8 +48,21 @@ class BusinessServiceTest {
     @Mock
     private BusinessFieldNormalizer businessFieldNormalizer;
 
-    @InjectMocks
+    private BusinessValidator businessValidator;
+
     private BusinessService businessService;
+
+    @BeforeEach
+    void setUp() {
+        businessValidator = new BusinessValidator(businessRepository, businessMapper);
+        businessService = new BusinessService(
+            businessRepository,
+            businessMapper,
+            userRepository,
+            businessFieldNormalizer,
+            businessValidator
+        );
+    }
 
     @Test
     void getAllShouldReturnMappedPage() {

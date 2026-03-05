@@ -13,9 +13,9 @@ import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.UserMapper;
+import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
 import com.sunfeax.citeria.repository.UserRepository;
-import com.sunfeax.citeria.validation.UserFieldNormalizer;
-import com.sunfeax.citeria.validation.ValidationResult;
+import com.sunfeax.citeria.validation.UserValidator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +27,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final UserFieldNormalizer userFieldNormalizer;
     private final PasswordEncoder passwordEncoder;
+    private final UserValidator userValidator;
 
     @Transactional(readOnly = true)
     public Page<UserResponseDto> getAll(Pageable pageable) {
@@ -42,19 +43,7 @@ public class UserService {
     @Transactional
     public UserResponseDto register(UserPostRequestDto request) {
         UserPostRequestDto normalizedRequest = userFieldNormalizer.normalizePostRequest(request);
-
-        new ValidationResult()
-            .addErrorIf(
-                userRepository.existsByEmail(normalizedRequest.email()),
-                "email",
-                "Email " + normalizedRequest.email() + " is already taken"
-            )
-            .addErrorIf(
-                userRepository.existsByPhone(normalizedRequest.phone()),
-                "phone",
-                "Phone " + normalizedRequest.phone() + " is already busy"
-            )
-            .throwIfHasErrors();
+        userValidator.validateRegister(normalizedRequest);
 
         UserEntity entity = userMapper.createEntity(normalizedRequest);
         entity.setPassword(passwordEncoder.encode(request.password()));
@@ -68,22 +57,7 @@ public class UserService {
         UserEntity entity = findUserOrThrow(id);
 
         UserPatchRequestDto normalizedRequest = userFieldNormalizer.normalizePatchRequest(request);
-
-        new ValidationResult()
-            .addErrorIf(!userMapper.hasAnyPatchField(normalizedRequest), "request", "No fields to update")
-            .addErrorIf(
-                normalizedRequest.email() != null
-                    && userRepository.existsByEmailAndIdNot(normalizedRequest.email(), id),
-                "email",
-                "Email " + normalizedRequest.email() + " is already taken"
-            )
-            .addErrorIf(
-                normalizedRequest.phone() != null
-                    && userRepository.existsByPhoneAndIdNot(normalizedRequest.phone(), id),
-                "phone",
-                "Phone " + normalizedRequest.phone() + " is already busy"
-            )
-            .throwIfHasErrors();
+        userValidator.validateUpdate(id, normalizedRequest);
 
         userMapper.applyPatch(entity, normalizedRequest);
         UserEntity saved = userRepository.save(entity);
@@ -94,13 +68,7 @@ public class UserService {
     @Transactional
     public void changePassword(Long id, UserChangePasswordRequestDto request) {
         UserEntity user = findUserOrThrow(id);
-
-        new ValidationResult()
-            .addErrorIf(!passwordEncoder.matches(request.currentPassword(), user.getPassword()), 
-                        "currentPassword", "Current password is incorrect.")
-            .addErrorIf(request.currentPassword().equals(request.newPassword()), 
-                        "newPassword", "The new password must be different.")
-            .throwIfHasErrors();
+        userValidator.validatePasswordChange(request, user);
 
         user.setPassword(passwordEncoder.encode(request.newPassword()));
     }

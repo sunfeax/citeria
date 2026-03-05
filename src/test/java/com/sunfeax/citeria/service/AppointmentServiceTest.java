@@ -12,9 +12,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -36,10 +36,11 @@ import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.AppointmentMapper;
+import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
 import com.sunfeax.citeria.repository.AppointmentRepository;
 import com.sunfeax.citeria.repository.SpecialistServiceRepository;
 import com.sunfeax.citeria.repository.UserRepository;
-import com.sunfeax.citeria.validation.AppointmentFieldNormalizer;
+import com.sunfeax.citeria.validation.AppointmentValidator;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentServiceTest {
@@ -55,8 +56,22 @@ class AppointmentServiceTest {
     @Mock
     private AppointmentFieldNormalizer appointmentFieldNormalizer;
 
-    @InjectMocks
+    private AppointmentValidator appointmentValidator;
+
     private AppointmentService appointmentService;
+
+    @BeforeEach
+    void setUp() {
+        appointmentValidator = new AppointmentValidator(appointmentRepository, appointmentMapper);
+        appointmentService = new AppointmentService(
+            appointmentRepository,
+            appointmentMapper,
+            userRepository,
+            specialistServiceRepository,
+            appointmentFieldNormalizer,
+            appointmentValidator
+        );
+    }
 
     @Test
     void getAllShouldReturnMappedPage() {

@@ -1,4 +1,4 @@
-package com.sunfeax.citeria.validation;
+package com.sunfeax.citeria.normalizer;
 
 import org.springframework.stereotype.Component;
 

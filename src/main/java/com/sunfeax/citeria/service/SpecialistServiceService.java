@@ -12,15 +12,14 @@ import com.sunfeax.citeria.entity.BusinessEntity;
 import com.sunfeax.citeria.entity.ServiceEntity;
 import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
-import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.SpecialistServiceMapper;
+import com.sunfeax.citeria.normalizer.SpecialistServiceFieldNormalizer;
 import com.sunfeax.citeria.repository.BusinessRepository;
 import com.sunfeax.citeria.repository.ServiceRepository;
 import com.sunfeax.citeria.repository.SpecialistServiceRepository;
 import com.sunfeax.citeria.repository.UserRepository;
-import com.sunfeax.citeria.validation.SpecialistServiceFieldNormalizer;
-import com.sunfeax.citeria.validation.ValidationResult;
+import com.sunfeax.citeria.validation.SpecialistServiceValidator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +33,7 @@ public class SpecialistServiceService {
     private final UserRepository userRepository;
     private final ServiceRepository serviceRepository;
     private final SpecialistServiceFieldNormalizer specialistServiceFieldNormalizer;
+    private final SpecialistServiceValidator specialistServiceValidator;
 
     @Transactional(readOnly = true)
     public Page<SpecialistServiceResponseDto> getAll(Pageable pageable) {
@@ -55,27 +55,7 @@ public class SpecialistServiceService {
         BusinessEntity business = findBusinessOrThrow(normalizedRequest.businessId());
         UserEntity specialist = findUserOrThrow(normalizedRequest.specialistId());
         ServiceEntity service = findServiceOrThrow(normalizedRequest.serviceId());
-
-        new ValidationResult()
-            .addErrorIf(
-                specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceId(
-                    normalizedRequest.businessId(),
-                    normalizedRequest.specialistId(),
-                    normalizedRequest.serviceId()
-                ),
-                "specialistService",
-                "Specialist service for the same business, specialist and service already exists"
-            )
-            .addErrorIf(specialist.getType() != UserType.SPECIALIST, "specialistId", "User must have SPECIALIST type")
-            .addErrorIf(!specialist.isActive(), "specialistId", "Specialist must be active")
-            .addErrorIf(!business.isActive(), "businessId", "Business must be active")
-            .addErrorIf(!service.isActive(), "serviceId", "Service must be active")
-            .addErrorIf(
-                !service.getBusiness().getId().equals(business.getId()),
-                "serviceId",
-                "Service does not belong to provided business"
-            )
-            .throwIfHasErrors();
+        specialistServiceValidator.validateRegister(normalizedRequest, business, specialist, service);
 
         SpecialistServiceEntity entity = specialistServiceMapper.createEntity(normalizedRequest, business, specialist, service);
         SpecialistServiceEntity saved = specialistServiceRepository.save(entity);
@@ -100,29 +80,7 @@ public class SpecialistServiceService {
         ServiceEntity targetService = normalizedRequest.serviceId() == null
             ? entity.getService()
             : findServiceOrThrow(normalizedRequest.serviceId());
-
-        new ValidationResult()
-            .addErrorIf(!specialistServiceMapper.hasAnyPatchField(normalizedRequest), "request", "No fields to update")
-            .addErrorIf(
-                specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceIdAndIdNot(
-                    targetBusiness.getId(),
-                    targetSpecialist.getId(),
-                    targetService.getId(),
-                    id
-                ),
-                "specialistService",
-                "Specialist service for the same business, specialist and service already exists"
-            )
-            .addErrorIf(targetSpecialist.getType() != UserType.SPECIALIST, "specialistId", "User must have SPECIALIST type")
-            .addErrorIf(!targetSpecialist.isActive(), "specialistId", "Specialist must be active")
-            .addErrorIf(!targetBusiness.isActive(), "businessId", "Business must be active")
-            .addErrorIf(!targetService.isActive(), "serviceId", "Service must be active")
-            .addErrorIf(
-                !targetService.getBusiness().getId().equals(targetBusiness.getId()),
-                "serviceId",
-                "Service does not belong to provided business"
-            )
-            .throwIfHasErrors();
+        specialistServiceValidator.validateUpdate(id, normalizedRequest, targetBusiness, targetSpecialist, targetService);
 
         BusinessEntity businessToApply = normalizedRequest.businessId() == null ? null : targetBusiness;
         UserEntity specialistToApply = normalizedRequest.specialistId() == null ? null : targetSpecialist;

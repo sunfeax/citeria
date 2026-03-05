@@ -13,14 +13,13 @@ import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
 import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
-import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.AppointmentMapper;
+import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
 import com.sunfeax.citeria.repository.AppointmentRepository;
 import com.sunfeax.citeria.repository.SpecialistServiceRepository;
 import com.sunfeax.citeria.repository.UserRepository;
-import com.sunfeax.citeria.validation.AppointmentFieldNormalizer;
-import com.sunfeax.citeria.validation.ValidationResult;
+import com.sunfeax.citeria.validation.AppointmentValidator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +32,7 @@ public class AppointmentService {
     private final UserRepository userRepository;
     private final SpecialistServiceRepository specialistServiceRepository;
     private final AppointmentFieldNormalizer appointmentFieldNormalizer;
+    private final AppointmentValidator appointmentValidator;
 
     @Transactional(readOnly = true)
     public Page<AppointmentResponseDto> getAll(Pageable pageable) {
@@ -53,45 +53,7 @@ public class AppointmentService {
 
         UserEntity client = findClientOrThrow(normalizedRequest.clientId());
         SpecialistServiceEntity specialistService = findSpecialistServiceOrThrow(normalizedRequest.specialistServiceId());
-
-        new ValidationResult()
-            .addErrorIf(client.getType() != UserType.CLIENT, "clientId", "User with id " + client.getId() + " is not a client")
-            .addErrorIf(!client.isActive(), "clientId", "Client with id " + client.getId() + " is inactive")
-            .addErrorIf(
-                !specialistService.isActive(),
-                "specialistServiceId",
-                "Specialist service with id " + specialistService.getId() + " is inactive"
-            )
-            .addErrorIf(
-                !specialistService.getSpecialist().isActive(),
-                "specialistServiceId",
-                "Specialist for specialist service with id " + specialistService.getId() + " is inactive"
-            )
-            .addErrorIf(
-                !specialistService.getService().isActive(),
-                "specialistServiceId",
-                "Service for specialist service with id " + specialistService.getId() + " is inactive"
-            )
-            .addErrorIf(
-                !normalizedRequest.endTime().isAfter(normalizedRequest.startTime()),
-                "time",
-                "End time must be after start time"
-            )
-            .addErrorIf(
-                normalizedRequest.startTime().isBefore(LocalDateTime.now()),
-                "startTime",
-                "Start time must be in the future"
-            )
-            .addErrorIf(
-                appointmentRepository.existsBySpecialistServiceIdAndStartTimeLessThanAndEndTimeGreaterThan(
-                    specialistService.getId(),
-                    normalizedRequest.endTime(),
-                    normalizedRequest.startTime()
-                ),
-                "time",
-                "Specialist is already booked for this time slot"
-            )
-            .throwIfHasErrors();
+        appointmentValidator.validateCreate(normalizedRequest, client, specialistService);
 
         AppointmentEntity entity = appointmentMapper.createEntity(normalizedRequest, client, specialistService);
         AppointmentEntity saved = appointmentRepository.save(entity);
@@ -124,64 +86,16 @@ public class AppointmentService {
         boolean scheduleChanged = normalizedRequest.specialistServiceId() != null
             || normalizedRequest.startTime() != null
             || normalizedRequest.endTime() != null;
-
-        new ValidationResult()
-            .addErrorIf(!appointmentMapper.hasAnyPatchField(normalizedRequest), "request", "No fields to update")
-            .addErrorIf(
-                normalizedRequest.clientId() != null
-                && targetClient.getType() != UserType.CLIENT,
-                "clientId",
-                "User with id " + targetClient.getId() + " is not a client"
-            )
-            .addErrorIf(
-                normalizedRequest.clientId() != null
-                && !targetClient.isActive(),
-                "clientId",
-                "Client with id " + targetClient.getId() + " is inactive"
-            )
-            .addErrorIf(
-                normalizedRequest.specialistServiceId() != null
-                && !targetSpecialistService.isActive(),
-                "specialistServiceId",
-                "Specialist service with id " + targetSpecialistService.getId() + " is inactive"
-            )
-            .addErrorIf(
-                normalizedRequest.specialistServiceId() != null
-                && !targetSpecialistService.getSpecialist().isActive(),
-                "specialistServiceId",
-                "Specialist for specialist service with id " + targetSpecialistService.getId() + " is inactive"
-            )
-            .addErrorIf(
-                normalizedRequest.specialistServiceId() != null
-                && !targetSpecialistService.getService().isActive(),
-                "specialistServiceId",
-                "Service for specialist service with id " + targetSpecialistService.getId() + " is inactive"
-            )
-            .addErrorIf(
-                (normalizedRequest.startTime() != null || normalizedRequest.endTime() != null)
-                && targetEndTime != null
-                && !targetEndTime.isAfter(targetStartTime),
-                "time",
-                "End time must be after start time"
-            )
-            .addErrorIf(
-                targetStartTime != null
-                && scheduleChanged && targetStartTime.isBefore(LocalDateTime.now()),
-                "startTime",
-                "Start time must be in the future"
-            )
-            .addErrorIf(
-                scheduleChanged
-                    && appointmentRepository.existsBySpecialistServiceIdAndStartTimeLessThanAndEndTimeGreaterThanAndIdNot(
-                        targetSpecialistService.getId(),
-                        targetEndTime,
-                        targetStartTime,
-                        id
-                    ),
-                "time",
-                "Specialist is already booked for this time slot"
-            )
-            .throwIfHasErrors();
+            
+        appointmentValidator.validateUpdate(
+            id,
+            normalizedRequest,
+            targetClient,
+            targetSpecialistService,
+            targetStartTime,
+            targetEndTime,
+            scheduleChanged
+        );
 
         UserEntity clientToApply = normalizedRequest.clientId() == null ? null : targetClient;
         SpecialistServiceEntity specialistServiceToApply =

@@ -12,10 +12,10 @@ import com.sunfeax.citeria.entity.BusinessEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.BusinessMapper;
+import com.sunfeax.citeria.normalizer.BusinessFieldNormalizer;
 import com.sunfeax.citeria.repository.BusinessRepository;
 import com.sunfeax.citeria.repository.UserRepository;
-import com.sunfeax.citeria.validation.BusinessFieldNormalizer;
-import com.sunfeax.citeria.validation.ValidationResult;
+import com.sunfeax.citeria.validation.BusinessValidator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +27,7 @@ public class BusinessService {
     private final BusinessMapper businessMapper;
     private final UserRepository userRepository;
     private final BusinessFieldNormalizer businessFieldNormalizer;
+    private final BusinessValidator businessValidator;
 
     @Transactional(readOnly = true)
     public Page<BusinessResponseDto> getAll(Pageable pageable) {
@@ -44,14 +45,7 @@ public class BusinessService {
     @Transactional
     public BusinessResponseDto create(BusinessPostRequestDto request) {
         BusinessPostRequestDto normalizedRequest = businessFieldNormalizer.normalizePostRequest(request);
-
-        new ValidationResult()
-            .addErrorIf(
-                businessRepository.existsByNameIgnoreCase(normalizedRequest.name()),
-                "name",
-                "Business with name " + normalizedRequest.name() + " already exists"
-            )
-            .throwIfHasErrors();
+        businessValidator.validateCreate(normalizedRequest);
 
         UserEntity owner = findOwnerOrThrow(normalizedRequest.ownerId());
 
@@ -66,16 +60,7 @@ public class BusinessService {
         BusinessEntity entity = findBusinessOrThrow(id);
 
         BusinessPatchRequestDto normalizedRequest = businessFieldNormalizer.normalizePatchRequest(request);
-
-        new ValidationResult()
-            .addErrorIf(!businessMapper.hasAnyPatchField(normalizedRequest), "request", "No fields to update")
-            .addErrorIf(
-                normalizedRequest.name() != null
-                    && businessRepository.existsByNameIgnoreCaseAndIdNot(normalizedRequest.name(), id),
-                "name",
-                "Business with name " + normalizedRequest.name() + " already exists"
-            )
-            .throwIfHasErrors();
+        businessValidator.validateUpdate(id, normalizedRequest);
 
         UserEntity owner = normalizedRequest.ownerId() == null
             ? null

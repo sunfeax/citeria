@@ -10,14 +10,13 @@ import com.sunfeax.citeria.dto.payment.PaymentPostRequestDto;
 import com.sunfeax.citeria.dto.payment.PaymentResponseDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
 import com.sunfeax.citeria.entity.PaymentEntity;
-import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.enums.PaymentStatus;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.PaymentMapper;
+import com.sunfeax.citeria.normalizer.PaymentFieldNormalizer;
 import com.sunfeax.citeria.repository.AppointmentRepository;
 import com.sunfeax.citeria.repository.PaymentRepository;
-import com.sunfeax.citeria.validation.PaymentFieldNormalizer;
-import com.sunfeax.citeria.validation.ValidationResult;
+import com.sunfeax.citeria.validation.PaymentValidator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +28,7 @@ public class PaymentService {
     private final PaymentMapper paymentMapper;
     private final AppointmentRepository appointmentRepository;
     private final PaymentFieldNormalizer paymentFieldNormalizer;
+    private final PaymentValidator paymentValidator;
 
     @Transactional(readOnly = true)
     public Page<PaymentResponseDto> getAll(Pageable pageable) {
@@ -48,19 +48,7 @@ public class PaymentService {
         PaymentPostRequestDto normalizedRequest = paymentFieldNormalizer.normalizePostRequest(request);
 
         AppointmentEntity appointment = findAppointmentOrThrow(normalizedRequest.appointmentId());
-
-        new ValidationResult()
-            .addErrorIf(
-                paymentRepository.existsByAppointmentId(normalizedRequest.appointmentId()),
-                "appointmentId",
-                "Payment for appointment id " + normalizedRequest.appointmentId() + " already exists"
-            )
-            .addErrorIf(
-                appointment.getStatus() == AppointmentStatus.CANCELLED,
-                "appointmentId",
-                "Cannot create payment for cancelled appointment"
-            )
-            .throwIfHasErrors();
+        paymentValidator.validateRegister(normalizedRequest, appointment);
 
         PaymentEntity entity = paymentMapper.createEntity(normalizedRequest, appointment);
         PaymentEntity saved = paymentRepository.save(entity);
@@ -81,22 +69,7 @@ public class PaymentService {
         AppointmentEntity targetAppointment = normalizedRequest.appointmentId() == null
             ? entity.getAppointment()
             : findAppointmentOrThrow(normalizedRequest.appointmentId());
-
-        new ValidationResult()
-            .addErrorIf(!paymentMapper.hasAnyPatchField(normalizedRequest), "request", "No fields to update")
-            .addErrorIf(
-                normalizedRequest.appointmentId() != null
-                    && paymentRepository.existsByAppointmentIdAndIdNot(targetAppointmentId, id),
-                "appointmentId",
-                "Payment for appointment id " + targetAppointmentId + " already exists"
-            )
-            .addErrorIf(
-                normalizedRequest.appointmentId() != null
-                    && targetAppointment.getStatus() == AppointmentStatus.CANCELLED,
-                "appointmentId",
-                "Cannot assign payment to cancelled appointment"
-            )
-            .throwIfHasErrors();
+        paymentValidator.validateUpdate(id, normalizedRequest, targetAppointmentId, targetAppointment);
 
         AppointmentEntity appointmentToApply = normalizedRequest.appointmentId() == null ? null : targetAppointment;
 
