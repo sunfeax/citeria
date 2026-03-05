@@ -85,7 +85,7 @@ class AppointmentControllerWebMvcTest {
     }
 
     @Test
-    void registerShouldReturnCreated() throws Exception {
+    void createShouldReturnCreated() throws Exception {
         LocalDateTime start = LocalDateTime.now().plusDays(1).withSecond(0).withNano(0);
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
             10L,
@@ -94,7 +94,7 @@ class AppointmentControllerWebMvcTest {
             start.plusMinutes(60),
             PaymentMethod.ONLINE
         );
-        when(appointmentService.register(any(AppointmentPostRequestDto.class))).thenReturn(appointmentDto(1L));
+        when(appointmentService.create(any(AppointmentPostRequestDto.class))).thenReturn(appointmentDto(1L));
 
         mockMvc.perform(post("/api/appointments")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -105,7 +105,7 @@ class AppointmentControllerWebMvcTest {
     }
 
     @Test
-    void registerShouldReturnBadRequestForInvalidBody() throws Exception {
+    void createShouldReturnBadRequestForInvalidBody() throws Exception {
         String invalidBody = """
             {
               "clientId": 10,
@@ -162,28 +162,10 @@ class AppointmentControllerWebMvcTest {
     }
 
     @Test
-    void deactivateShouldReturnOk() throws Exception {
-        when(appointmentService.deactivateById(1L)).thenReturn(appointmentDto(1L));
+    void deleteShouldReturnOk() throws Exception {
+        when(appointmentService.deleteById(1L)).thenReturn(appointmentDto(1L));
 
         mockMvc.perform(delete("/api/appointments/1"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
-    }
-
-    @Test
-    void hardDeleteShouldReturnOk() throws Exception {
-        when(appointmentService.hardDeleteById(1L)).thenReturn(appointmentDto(1L));
-
-        mockMvc.perform(delete("/api/appointments/1/hard"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
-    }
-
-    @Test
-    void restoreShouldReturnOk() throws Exception {
-        when(appointmentService.restoreById(1L)).thenReturn(appointmentDto(1L));
-
-        mockMvc.perform(patch("/api/appointments/1/restore"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(1));
     }

@@ -86,7 +86,7 @@ class BusinessServiceTest {
     }
 
     @Test
-    void registerShouldSaveBusinessWhenRequestIsValid() {
+    void createShouldSaveBusinessWhenRequestIsValid() {
         UserEntity owner = userEntity(10L);
         BusinessPostRequestDto request = new BusinessPostRequestDto(
             10L, "  Alpha Studio  ", "desc", "+34 555 1234", "test@example.com", "site", "address"
@@ -104,14 +104,14 @@ class BusinessServiceTest {
         when(businessRepository.save(entity)).thenReturn(entity);
         when(businessMapper.toResponseDto(entity)).thenReturn(dto);
 
-        BusinessResponseDto result = businessService.register(request);
+        BusinessResponseDto result = businessService.create(request);
 
         assertEquals(dto, result);
         verify(businessRepository).save(entity);
     }
 
     @Test
-    void registerShouldThrowWhenNameAlreadyExists() {
+    void createShouldThrowWhenNameAlreadyExists() {
         BusinessPostRequestDto request = new BusinessPostRequestDto(
             10L, "Alpha Studio", "desc", null, null, null, null
         );
@@ -122,12 +122,12 @@ class BusinessServiceTest {
         when(businessFieldNormalizer.normalizePostRequest(request)).thenReturn(normalized);
         when(businessRepository.existsByNameIgnoreCase("Alpha Studio")).thenReturn(true);
 
-        assertThrows(RequestValidationException.class, () -> businessService.register(request));
+        assertThrows(RequestValidationException.class, () -> businessService.create(request));
         verify(businessRepository, never()).save(any(BusinessEntity.class));
     }
 
     @Test
-    void registerShouldThrowWhenOwnerNotFound() {
+    void createShouldThrowWhenOwnerNotFound() {
         BusinessPostRequestDto request = new BusinessPostRequestDto(
             77L, "Alpha Studio", "desc", null, null, null, null
         );
@@ -136,7 +136,7 @@ class BusinessServiceTest {
         when(businessRepository.existsByNameIgnoreCase("Alpha Studio")).thenReturn(false);
         when(userRepository.findById(77L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> businessService.register(request));
+        assertThrows(ResourceNotFoundException.class, () -> businessService.create(request));
         verify(businessRepository, never()).save(any(BusinessEntity.class));
     }
 

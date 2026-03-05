@@ -1,11 +1,10 @@
 package com.sunfeax.citeria.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
 import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
@@ -37,9 +36,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserResponseDto getById(Long id) {
-        return userRepository.findById(id)
-            .map(userMapper::toResponseDto)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+        return userMapper.toResponseDto(findUserOrThrow(id));
     }
 
     @Transactional
@@ -68,13 +65,13 @@ public class UserService {
 
     @Transactional
     public UserResponseDto update(Long id, UserPatchRequestDto request) {
-        UserEntity entity = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+        UserEntity entity = findUserOrThrow(id);
 
         UserPatchRequestDto normalizedRequest = userFieldNormalizer.normalizePatchRequest(request);
 
         new ValidationResult()
-            .addErrorIf(!userMapper.hasAnyPatchField(normalizedRequest), "request", "No fields to update")            .addErrorIf(
+            .addErrorIf(!userMapper.hasAnyPatchField(normalizedRequest), "request", "No fields to update")
+            .addErrorIf(
                 normalizedRequest.email() != null
                     && userRepository.existsByEmailAndIdNot(normalizedRequest.email(), id),
                 "email",
@@ -96,8 +93,7 @@ public class UserService {
 
     @Transactional
     public void changePassword(Long id, UserChangePasswordRequestDto request) {
-        UserEntity user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        UserEntity user = findUserOrThrow(id);
 
         new ValidationResult()
             .addErrorIf(!passwordEncoder.matches(request.currentPassword(), user.getPassword()), 
@@ -111,8 +107,7 @@ public class UserService {
 
     @Transactional
     public UserResponseDto deactivateById(Long id) {
-        UserEntity user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+        UserEntity user = findUserOrThrow(id);
             
         user.setActive(false);
         UserEntity saved = userRepository.save(user);
@@ -122,8 +117,7 @@ public class UserService {
 
     @Transactional
     public UserResponseDto hardDeleteById(Long id) {
-        UserEntity user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+        UserEntity user = findUserOrThrow(id);
 
         UserResponseDto deletedUser = userMapper.toResponseDto(user);
         userRepository.delete(user);
@@ -133,8 +127,7 @@ public class UserService {
 
     @Transactional
     public UserResponseDto restoreById(Long id) {
-        UserEntity user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+        UserEntity user = findUserOrThrow(id);
 
         user.setActive(true);
         UserEntity saved = userRepository.save(user);
@@ -142,5 +135,8 @@ public class UserService {
         return userMapper.toResponseDto(saved);
     }
 
+    private UserEntity findUserOrThrow(Long id) {
+        return userRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+    }
 }
-

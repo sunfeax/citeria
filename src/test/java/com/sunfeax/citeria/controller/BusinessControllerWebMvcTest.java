@@ -79,7 +79,7 @@ class BusinessControllerWebMvcTest {
     }
 
     @Test
-    void registerShouldReturnCreated() throws Exception {
+    void createShouldReturnCreated() throws Exception {
         BusinessPostRequestDto request = new BusinessPostRequestDto(
             10L,
             "Alpha Studio",
@@ -89,7 +89,7 @@ class BusinessControllerWebMvcTest {
             "https://studio.example.com",
             "Street 1"
         );
-        when(businessService.register(any(BusinessPostRequestDto.class))).thenReturn(businessDto(1L));
+        when(businessService.create(any(BusinessPostRequestDto.class))).thenReturn(businessDto(1L));
 
         mockMvc.perform(post("/api/businesses")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -100,7 +100,7 @@ class BusinessControllerWebMvcTest {
     }
 
     @Test
-    void registerShouldReturnBadRequestForInvalidBody() throws Exception {
+    void createShouldReturnBadRequestForInvalidBody() throws Exception {
         String invalidBody = """
             {
               "ownerId": 10,

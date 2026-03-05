@@ -13,7 +13,6 @@ import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
 import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
-import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.AppointmentMapper;
@@ -49,7 +48,7 @@ public class AppointmentService {
     }
 
     @Transactional
-    public AppointmentResponseDto register(AppointmentPostRequestDto request) {
+    public AppointmentResponseDto create(AppointmentPostRequestDto request) {
         AppointmentPostRequestDto normalizedRequest = appointmentFieldNormalizer.normalizePostRequest(request);
 
         UserEntity client = findClientOrThrow(normalizedRequest.clientId());
@@ -129,38 +128,45 @@ public class AppointmentService {
         new ValidationResult()
             .addErrorIf(!appointmentMapper.hasAnyPatchField(normalizedRequest), "request", "No fields to update")
             .addErrorIf(
-                normalizedRequest.clientId() != null && targetClient.getType() != UserType.CLIENT,
+                normalizedRequest.clientId() != null
+                && targetClient.getType() != UserType.CLIENT,
                 "clientId",
                 "User with id " + targetClient.getId() + " is not a client"
             )
             .addErrorIf(
-                normalizedRequest.clientId() != null && !targetClient.isActive(),
+                normalizedRequest.clientId() != null
+                && !targetClient.isActive(),
                 "clientId",
                 "Client with id " + targetClient.getId() + " is inactive"
             )
             .addErrorIf(
-                normalizedRequest.specialistServiceId() != null && !targetSpecialistService.isActive(),
+                normalizedRequest.specialistServiceId() != null
+                && !targetSpecialistService.isActive(),
                 "specialistServiceId",
                 "Specialist service with id " + targetSpecialistService.getId() + " is inactive"
             )
             .addErrorIf(
-                normalizedRequest.specialistServiceId() != null && !targetSpecialistService.getSpecialist().isActive(),
+                normalizedRequest.specialistServiceId() != null
+                && !targetSpecialistService.getSpecialist().isActive(),
                 "specialistServiceId",
                 "Specialist for specialist service with id " + targetSpecialistService.getId() + " is inactive"
             )
             .addErrorIf(
-                normalizedRequest.specialistServiceId() != null && !targetSpecialistService.getService().isActive(),
+                normalizedRequest.specialistServiceId() != null
+                && !targetSpecialistService.getService().isActive(),
                 "specialistServiceId",
                 "Service for specialist service with id " + targetSpecialistService.getId() + " is inactive"
             )
             .addErrorIf(
                 (normalizedRequest.startTime() != null || normalizedRequest.endTime() != null)
-                    && !targetEndTime.isAfter(targetStartTime),
+                && targetEndTime != null
+                && !targetEndTime.isAfter(targetStartTime),
                 "time",
                 "End time must be after start time"
             )
             .addErrorIf(
-                scheduleChanged && targetStartTime.isBefore(LocalDateTime.now()),
+                targetStartTime != null
+                && scheduleChanged && targetStartTime.isBefore(LocalDateTime.now()),
                 "startTime",
                 "Start time must be in the future"
             )
@@ -188,33 +194,13 @@ public class AppointmentService {
     }
 
     @Transactional
-    public AppointmentResponseDto deactivateById(Long id) {
-        AppointmentEntity appointment = findAppointmentOrThrow(id);
-
-        appointment.setStatus(AppointmentStatus.CANCELLED);
-        AppointmentEntity saved = appointmentRepository.save(appointment);
-
-        return appointmentMapper.toResponseDto(saved);
-    }
-
-    @Transactional
-    public AppointmentResponseDto hardDeleteById(Long id) {
+    public AppointmentResponseDto deleteById(Long id) {
         AppointmentEntity appointment = findAppointmentOrThrow(id);
 
         AppointmentResponseDto deletedAppointment = appointmentMapper.toResponseDto(appointment);
         appointmentRepository.delete(appointment);
 
         return deletedAppointment;
-    }
-
-    @Transactional
-    public AppointmentResponseDto restoreById(Long id) {
-        AppointmentEntity appointment = findAppointmentOrThrow(id);
-
-        appointment.setStatus(AppointmentStatus.PENDING);
-        AppointmentEntity saved = appointmentRepository.save(appointment);
-
-        return appointmentMapper.toResponseDto(saved);
     }
 
     private AppointmentEntity findAppointmentOrThrow(Long id) {

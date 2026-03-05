@@ -42,7 +42,7 @@ public class ServiceService {
     }
 
     @Transactional
-    public ServiceResponseDto register(ServicePostRequestDto request) {
+    public ServiceResponseDto create(ServicePostRequestDto request) {
         ServicePostRequestDto normalizedRequest = serviceFieldNormalizer.normalizePostRequest(request);
 
         new ValidationResult()

@@ -3,6 +3,8 @@ package com.sunfeax.citeria.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -49,6 +51,7 @@ public class SpecialistServiceEntity {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @NotNull
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "specialistService")

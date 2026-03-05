@@ -81,7 +81,7 @@ class AppointmentServiceTest {
     }
 
     @Test
-    void registerShouldSaveAppointmentWhenRequestIsValid() {
+    void createShouldSaveAppointmentWhenRequestIsValid() {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
@@ -105,14 +105,14 @@ class AppointmentServiceTest {
         when(appointmentRepository.save(entity)).thenReturn(entity);
         when(appointmentMapper.toResponseDto(entity)).thenReturn(dto);
 
-        AppointmentResponseDto result = appointmentService.register(request);
+        AppointmentResponseDto result = appointmentService.create(request);
 
         assertEquals(dto, result);
         verify(appointmentRepository).save(entity);
     }
 
     @Test
-    void registerShouldThrowWhenClientNotFound() {
+    void createShouldThrowWhenClientNotFound() {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
@@ -121,12 +121,12 @@ class AppointmentServiceTest {
         when(appointmentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
         when(userRepository.findById(10L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> appointmentService.register(request));
+        assertThrows(ResourceNotFoundException.class, () -> appointmentService.create(request));
         verify(appointmentRepository, never()).save(any(AppointmentEntity.class));
     }
 
     @Test
-    void registerShouldThrowWhenSpecialistServiceNotFound() {
+    void createShouldThrowWhenSpecialistServiceNotFound() {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
@@ -137,12 +137,12 @@ class AppointmentServiceTest {
         when(userRepository.findById(10L)).thenReturn(Optional.of(client));
         when(specialistServiceRepository.findById(100L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> appointmentService.register(request));
+        assertThrows(ResourceNotFoundException.class, () -> appointmentService.create(request));
         verify(appointmentRepository, never()).save(any(AppointmentEntity.class));
     }
 
     @Test
-    void registerShouldThrowWhenClientHasWrongType() {
+    void createShouldThrowWhenClientHasWrongType() {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
@@ -161,12 +161,12 @@ class AppointmentServiceTest {
             )
         ).thenReturn(false);
 
-        assertThrows(RequestValidationException.class, () -> appointmentService.register(request));
+        assertThrows(RequestValidationException.class, () -> appointmentService.create(request));
         verify(appointmentRepository, never()).save(any(AppointmentEntity.class));
     }
 
     @Test
-    void registerShouldThrowWhenTimeRangeIsInvalid() {
+    void createShouldThrowWhenTimeRangeIsInvalid() {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.minusMinutes(30);
 
@@ -185,12 +185,12 @@ class AppointmentServiceTest {
             )
         ).thenReturn(false);
 
-        assertThrows(RequestValidationException.class, () -> appointmentService.register(request));
+        assertThrows(RequestValidationException.class, () -> appointmentService.create(request));
         verify(appointmentRepository, never()).save(any(AppointmentEntity.class));
     }
 
     @Test
-    void registerShouldThrowWhenSpecialistIsAlreadyBooked() {
+    void createShouldThrowWhenSpecialistIsAlreadyBooked() {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
@@ -209,7 +209,7 @@ class AppointmentServiceTest {
             )
         ).thenReturn(true);
 
-        assertThrows(RequestValidationException.class, () -> appointmentService.register(request));
+        assertThrows(RequestValidationException.class, () -> appointmentService.create(request));
         verify(appointmentRepository, never()).save(any(AppointmentEntity.class));
     }
 
@@ -309,69 +309,24 @@ class AppointmentServiceTest {
     }
 
     @Test
-    void deactivateShouldSetCancelledStatus() {
-        AppointmentEntity entity = appointmentEntity(1L);
-        AppointmentResponseDto dto = appointmentDto(1L);
-
-        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(appointmentRepository.save(entity)).thenReturn(entity);
-        when(appointmentMapper.toResponseDto(entity)).thenReturn(dto);
-
-        AppointmentResponseDto result = appointmentService.deactivateById(1L);
-
-        assertEquals(dto, result);
-        assertEquals(AppointmentStatus.CANCELLED, entity.getStatus());
-    }
-
-    @Test
-    void deactivateShouldThrowWhenAppointmentNotFound() {
-        when(appointmentRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> appointmentService.deactivateById(1L));
-    }
-
-    @Test
-    void hardDeleteShouldDeleteAndReturnDto() {
+    void deleteShouldDeleteAndReturnDto() {
         AppointmentEntity entity = appointmentEntity(1L);
         AppointmentResponseDto dto = appointmentDto(1L);
 
         when(appointmentRepository.findById(1L)).thenReturn(Optional.of(entity));
         when(appointmentMapper.toResponseDto(entity)).thenReturn(dto);
 
-        AppointmentResponseDto result = appointmentService.hardDeleteById(1L);
+        AppointmentResponseDto result = appointmentService.deleteById(1L);
 
         assertEquals(dto, result);
         verify(appointmentRepository).delete(entity);
     }
 
     @Test
-    void hardDeleteShouldThrowWhenAppointmentNotFound() {
+    void deleteShouldThrowWhenAppointmentNotFound() {
         when(appointmentRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> appointmentService.hardDeleteById(1L));
-    }
-
-    @Test
-    void restoreShouldSetPendingStatus() {
-        AppointmentEntity entity = appointmentEntity(1L);
-        entity.setStatus(AppointmentStatus.CANCELLED);
-        AppointmentResponseDto dto = appointmentDto(1L);
-
-        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(appointmentRepository.save(entity)).thenReturn(entity);
-        when(appointmentMapper.toResponseDto(entity)).thenReturn(dto);
-
-        AppointmentResponseDto result = appointmentService.restoreById(1L);
-
-        assertEquals(dto, result);
-        assertEquals(AppointmentStatus.PENDING, entity.getStatus());
-    }
-
-    @Test
-    void restoreShouldThrowWhenAppointmentNotFound() {
-        when(appointmentRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> appointmentService.restoreById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> appointmentService.deleteById(1L));
     }
 
     private LocalDateTime futureStart() {

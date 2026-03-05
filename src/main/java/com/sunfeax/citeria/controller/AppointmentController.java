@@ -47,8 +47,8 @@ public class AppointmentController {
     }
 
     @PostMapping
-    public ResponseEntity<AppointmentResponseDto> register(@Valid @RequestBody AppointmentPostRequestDto request) {
-        AppointmentResponseDto response = appointmentService.register(request);
+    public ResponseEntity<AppointmentResponseDto> create(@Valid @RequestBody AppointmentPostRequestDto request) {
+        AppointmentResponseDto response = appointmentService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -61,17 +61,7 @@ public class AppointmentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<AppointmentResponseDto> deactivateById(@PathVariable Long id) {
-        return ResponseEntity.ok(appointmentService.deactivateById(id));
-    }
-
-    @DeleteMapping("/{id}/hard")
-    public ResponseEntity<AppointmentResponseDto> hardDeleteById(@PathVariable Long id) {
-        return ResponseEntity.ok(appointmentService.hardDeleteById(id));
-    }
-
-    @PatchMapping("/{id}/restore")
-    public ResponseEntity<AppointmentResponseDto> restoreById(@PathVariable Long id) {
-        return ResponseEntity.ok(appointmentService.restoreById(id));
+    public ResponseEntity<AppointmentResponseDto> deleteById(@PathVariable Long id) {
+        return ResponseEntity.ok(appointmentService.deleteById(id));
     }
 }

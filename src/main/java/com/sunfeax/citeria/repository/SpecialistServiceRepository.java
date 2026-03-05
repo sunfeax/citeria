@@ -7,4 +7,11 @@ import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 
 @Repository
 public interface SpecialistServiceRepository extends JpaRepository<SpecialistServiceEntity, Long> {
+    boolean existsByBusinessIdAndSpecialistIdAndServiceId(Long businessId, Long specialistId, Long serviceId);
+    boolean existsByBusinessIdAndSpecialistIdAndServiceIdAndIdNot(
+        Long businessId,
+        Long specialistId,
+        Long serviceId,
+        Long id
+    );
 }

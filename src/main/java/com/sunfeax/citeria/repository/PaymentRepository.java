@@ -7,4 +7,6 @@ import com.sunfeax.citeria.entity.PaymentEntity;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<PaymentEntity, Long> {
+    boolean existsByAppointmentId(Long appointmentId);
+    boolean existsByAppointmentIdAndIdNot(Long appointmentId, Long id);
 }

@@ -87,7 +87,7 @@ class ServiceServiceTest {
     }
 
     @Test
-    void registerShouldSaveServiceWhenRequestIsValid() {
+    void createShouldSaveServiceWhenRequestIsValid() {
         BusinessEntity business = businessEntity(10L);
         ServicePostRequestDto request = new ServicePostRequestDto(
             10L, "  Consultation  ", "desc", 60, BigDecimal.valueOf(95), "eur"
@@ -105,14 +105,14 @@ class ServiceServiceTest {
         when(serviceRepository.save(entity)).thenReturn(entity);
         when(serviceMapper.toResponseDto(entity)).thenReturn(dto);
 
-        ServiceResponseDto result = serviceService.register(request);
+        ServiceResponseDto result = serviceService.create(request);
 
         assertEquals(dto, result);
         verify(serviceRepository).save(entity);
     }
 
     @Test
-    void registerShouldThrowWhenServiceNameExistsInBusiness() {
+    void createShouldThrowWhenServiceNameExistsInBusiness() {
         ServicePostRequestDto request = new ServicePostRequestDto(
             10L, "Consultation", "desc", 60, BigDecimal.valueOf(95), "EUR"
         );
@@ -120,12 +120,12 @@ class ServiceServiceTest {
         when(serviceFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
         when(serviceRepository.existsByBusinessIdAndNameIgnoreCase(10L, "Consultation")).thenReturn(true);
 
-        assertThrows(RequestValidationException.class, () -> serviceService.register(request));
+        assertThrows(RequestValidationException.class, () -> serviceService.create(request));
         verify(serviceRepository, never()).save(any(ServiceEntity.class));
     }
 
     @Test
-    void registerShouldThrowWhenBusinessNotFound() {
+    void createShouldThrowWhenBusinessNotFound() {
         ServicePostRequestDto request = new ServicePostRequestDto(
             10L, "Consultation", "desc", 60, BigDecimal.valueOf(95), "EUR"
         );
@@ -134,7 +134,7 @@ class ServiceServiceTest {
         when(serviceRepository.existsByBusinessIdAndNameIgnoreCase(10L, "Consultation")).thenReturn(false);
         when(businessRepository.findById(10L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> serviceService.register(request));
+        assertThrows(ResourceNotFoundException.class, () -> serviceService.create(request));
         verify(serviceRepository, never()).save(any(ServiceEntity.class));
     }
 

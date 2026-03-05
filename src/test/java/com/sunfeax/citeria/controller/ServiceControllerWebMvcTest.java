@@ -80,7 +80,7 @@ class ServiceControllerWebMvcTest {
     }
 
     @Test
-    void registerShouldReturnCreated() throws Exception {
+    void createShouldReturnCreated() throws Exception {
         ServicePostRequestDto request = new ServicePostRequestDto(
             10L,
             "Consultation",
@@ -89,7 +89,7 @@ class ServiceControllerWebMvcTest {
             BigDecimal.valueOf(95),
             "EUR"
         );
-        when(serviceService.register(any(ServicePostRequestDto.class))).thenReturn(serviceDto(1L, 10L, "Consultation"));
+        when(serviceService.create(any(ServicePostRequestDto.class))).thenReturn(serviceDto(1L, 10L, "Consultation"));
 
         mockMvc.perform(post("/api/services")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -100,7 +100,7 @@ class ServiceControllerWebMvcTest {
     }
 
     @Test
-    void registerShouldReturnBadRequestForInvalidBody() throws Exception {
+    void createShouldReturnBadRequestForInvalidBody() throws Exception {
         String invalidBody = """
             {
               "businessId": 10,

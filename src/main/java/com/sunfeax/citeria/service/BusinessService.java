@@ -42,7 +42,7 @@ public class BusinessService {
     }
 
     @Transactional
-    public BusinessResponseDto register(BusinessPostRequestDto request) {
+    public BusinessResponseDto create(BusinessPostRequestDto request) {
         BusinessPostRequestDto normalizedRequest = businessFieldNormalizer.normalizePostRequest(request);
 
         new ValidationResult()

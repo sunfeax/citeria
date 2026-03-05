@@ -47,8 +47,8 @@ public class ServiceController {
     }
 
     @PostMapping
-    public ResponseEntity<ServiceResponseDto> register(@Valid @RequestBody ServicePostRequestDto request) {
-        ServiceResponseDto response = serviceService.register(request);
+    public ResponseEntity<ServiceResponseDto> create(@Valid @RequestBody ServicePostRequestDto request) {
+        ServiceResponseDto response = serviceService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

@@ -47,8 +47,8 @@ public class BusinessController {
     }
 
     @PostMapping
-    public ResponseEntity<BusinessResponseDto> register(@Valid @RequestBody BusinessPostRequestDto request) {
-        BusinessResponseDto response = businessService.register(request);
+    public ResponseEntity<BusinessResponseDto> create(@Valid @RequestBody BusinessPostRequestDto request) {
+        BusinessResponseDto response = businessService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
