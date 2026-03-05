@@ -35,17 +35,12 @@ public class UserFieldNormalizer {
         if (value == null || (value = value.trim()).isEmpty()) {
             return value;
         }
-
         value = value.toLowerCase(Locale.ROOT);
         return Character.toUpperCase(value.charAt(0)) + value.substring(1);
     }
 
     public String normalizeEmail(String value) {
-        if (value == null) {
-            return null;
-        }
-
-        return value.trim().toLowerCase(Locale.ROOT);
+        return value == null ? null : value.trim().toLowerCase(Locale.ROOT);
     }
 
     public String normalizePhone(String value) {

@@ -2,6 +2,7 @@ package com.sunfeax.citeria.mapper;
 
 import org.springframework.stereotype.Component;
 
+import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
 import com.sunfeax.citeria.dto.user.UserPostRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.entity.UserEntity;
@@ -36,5 +37,33 @@ public class UserMapper {
         entity.setType(request.type());
 
         return entity;
+    }
+
+    public UserEntity applyPatch(UserEntity entity, UserPatchRequestDto request) {
+        if (request.firstName() != null) {
+            entity.setFirstName(request.firstName());
+        }
+        if (request.lastName() != null) {
+            entity.setLastName(request.lastName());
+        }
+        if (request.email() != null) {
+            entity.setEmail(request.email());
+        }
+        if (request.phone() != null) {
+            entity.setPhone(request.phone());
+        }
+        if (request.type() != null) {
+            entity.setType(request.type());
+        }
+    
+        return entity;
+    }
+    
+    public boolean hasAnyPatchField(UserPatchRequestDto request) {
+        return request.firstName() != null
+            || request.lastName() != null
+            || request.email() != null
+            || request.phone() != null
+            || request.type() != null;
     }
 }

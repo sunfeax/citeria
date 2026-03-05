@@ -12,11 +12,10 @@ import com.sunfeax.citeria.dto.user.UserPostRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
-import com.sunfeax.citeria.exception.UserAlreadyExistsException;
 import com.sunfeax.citeria.mapper.UserMapper;
+import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.validation.UserFieldNormalizer;
 import com.sunfeax.citeria.validation.ValidationResult;
-import com.sunfeax.citeria.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -48,13 +47,18 @@ public class UserService {
     public UserResponseDto register(UserPostRequestDto request) {
         UserPostRequestDto normalizedRequest = userFieldNormalizer.normalizePostRequest(request);
 
-        if (userRepository.existsByEmail(normalizedRequest.email())) {
-            throw new UserAlreadyExistsException("Email " + normalizedRequest.email() + " is already taken");
-        }
-
-        if (userRepository.existsByPhone(normalizedRequest.phone())) {
-            throw new UserAlreadyExistsException("Phone " + normalizedRequest.phone() + " is already busy");
-        }
+        new ValidationResult()
+            .addErrorIf(
+                userRepository.existsByEmail(normalizedRequest.email()),
+                "email",
+                "Email " + normalizedRequest.email() + " is already taken"
+            )
+            .addErrorIf(
+                userRepository.existsByPhone(normalizedRequest.phone()),
+                "phone",
+                "Phone " + normalizedRequest.phone() + " is already busy"
+            )
+            .throwIfHasErrors();
 
         UserEntity entity = userMapper.createEntity(normalizedRequest);
         entity.setPassword(passwordEncoder.encode(request.password()));
@@ -87,49 +91,29 @@ public class UserService {
 
     @Transactional
     public UserResponseDto update(Long id, UserPatchRequestDto request) {
-        UserEntity user = userRepository.findById(id)
+        UserEntity entity = userRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
 
         UserPatchRequestDto normalizedRequest = userFieldNormalizer.normalizePatchRequest(request);
 
-        boolean hasChanges = false;
+        new ValidationResult()
+            .addErrorIf(!userMapper.hasAnyPatchField(normalizedRequest), "request", "No fields to update")            .addErrorIf(
+                normalizedRequest.email() != null
+                    && userRepository.existsByEmailAndIdNot(normalizedRequest.email(), id),
+                "email",
+                "Email " + normalizedRequest.email() + " is already taken"
+            )
+            .addErrorIf(
+                normalizedRequest.phone() != null
+                    && userRepository.existsByPhoneAndIdNot(normalizedRequest.phone(), id),
+                "phone",
+                "Phone " + normalizedRequest.phone() + " is already busy"
+            )
+            .throwIfHasErrors();
 
-        if (normalizedRequest.firstName() != null) {
-            user.setFirstName(normalizedRequest.firstName());
-            hasChanges = true;
-        }
+        userMapper.applyPatch(entity, normalizedRequest);
+        UserEntity saved = userRepository.save(entity);
 
-        if (normalizedRequest.lastName() != null) {
-            user.setLastName(normalizedRequest.lastName());
-            hasChanges = true;
-        }
-
-        if (normalizedRequest.email() != null) {
-            if (userRepository.existsByEmailAndIdNot(normalizedRequest.email(), id)) {
-                throw new UserAlreadyExistsException("Email " + normalizedRequest.email() + " is already taken");
-            }
-            user.setEmail(normalizedRequest.email());
-            hasChanges = true;
-        }
-
-        if (normalizedRequest.phone() != null) {
-            if (userRepository.existsByPhoneAndIdNot(normalizedRequest.phone(), id)) {
-                throw new UserAlreadyExistsException("Phone " + normalizedRequest.phone() + " is already busy");
-            }
-            user.setPhone(normalizedRequest.phone());
-            hasChanges = true;
-        }
-
-        if (normalizedRequest.type() != null) {
-            user.setType(normalizedRequest.type());
-            hasChanges = true;
-        }
-
-        if (!hasChanges) {
-            throw new IllegalArgumentException("No fields to update");
-        }
-
-        UserEntity saved = userRepository.save(user);
         return userMapper.toResponseDto(saved);
     }
 
@@ -148,5 +132,4 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.newPassword()));
     }
 }
-
 

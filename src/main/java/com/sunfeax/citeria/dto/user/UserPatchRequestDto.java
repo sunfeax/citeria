@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
 public record UserPatchRequestDto(
     @Nullable
     @Pattern(
-        regexp = "^[\\p{L}]+(?:[-' ][\\p{L}]+)*$",
+        regexp = "^\\s*[\\p{L}]+(?:[-' ][\\p{L}]+)*\\s*$",
         message = "First name must contain letters only"
     )
     @Size(min = 2, max = 50)
@@ -18,7 +18,7 @@ public record UserPatchRequestDto(
 
     @Nullable
     @Pattern(
-        regexp = "^[\\p{L}]+(?:[-' ][\\p{L}]+)*$",
+        regexp = "^\\s*[\\p{L}]+(?:[-' ][\\p{L}]+)*\\s*$",
         message = "Last name must contain letters only"
     )
     @Size(min = 2, max = 50)

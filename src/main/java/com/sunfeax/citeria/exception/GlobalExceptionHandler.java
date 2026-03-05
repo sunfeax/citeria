@@ -1,7 +1,9 @@
 package com.sunfeax.citeria.exception;
 
-import jakarta.validation.ConstraintViolationException;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -13,10 +15,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.time.Instant;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestControllerAdvice
@@ -45,19 +45,13 @@ public class GlobalExceptionHandler {
         return createDetail(HttpStatus.NOT_FOUND, "Resource Not Found", ex.getMessage(), null);
     }
 
-    // 409 Conflict
-    @ExceptionHandler({PhoneAlreadyBusyException.class, UserAlreadyExistsException.class})
-    public ProblemDetail handleConflict(Exception ex) {
-        return createDetail(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), null);
-    }
-
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         log.debug("Data integrity violation", ex);
         return createDetail(HttpStatus.CONFLICT, "Conflict", DATA_INTEGRITY_DETAIL, null);
     }
 
-    // Validation
+    // 400 Bad Request (Validation)
     @ExceptionHandler({
         MethodArgumentNotValidException.class, 
         ConstraintViolationException.class, 
@@ -89,18 +83,13 @@ public class GlobalExceptionHandler {
         return errors;
     }
 
-    // 400 Bad Request
-    @ExceptionHandler(InvalidPasswordException.class)
-    public ProblemDetail handleBadRequest(InvalidPasswordException ex) {
-        return createDetail(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), null);
-    }
-
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleInvalidJson(HttpMessageNotReadableException ex) {
         log.debug("Unreadable request payload", ex);
         return createDetail(HttpStatus.BAD_REQUEST, "Bad Request", INVALID_JSON_DETAIL, null);
     }
-
+    
+    // 401 Unauthorized
     @ExceptionHandler(UnauthorizedException.class)
     public ProblemDetail handleUnauthorized(UnauthorizedException ex) {
         return createDetail(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage(), null);
