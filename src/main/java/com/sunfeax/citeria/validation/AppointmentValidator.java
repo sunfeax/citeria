@@ -9,6 +9,7 @@ import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
 import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
+import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.mapper.AppointmentMapper;
 import com.sunfeax.citeria.repository.AppointmentRepository;
@@ -52,10 +53,11 @@ public class AppointmentValidator {
                 "Start time must be in the future"
             )
             .addErrorIf(
-                appointmentRepository.existsBySpecialistServiceIdAndStartTimeLessThanAndEndTimeGreaterThan(
-                    specialistService.getId(),
+                appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
+                    specialistService.getSpecialist().getId(),
                     request.endTime(),
-                    request.startTime()
+                    request.startTime(),
+                    AppointmentStatus.CANCELLED
                 ),
                 "time",
                 "Specialist is already booked for this time slot"
@@ -72,10 +74,16 @@ public class AppointmentValidator {
     ) {
         LocalDateTime targetStartTime = request.startTime() != null ? request.startTime() : existingEntity.getStartTime();
         LocalDateTime targetEndTime = request.endTime() != null ? request.endTime() : existingEntity.getEndTime();
+        AppointmentStatus targetStatus = request.status() != null ? request.status() : existingEntity.getStatus();
 
         boolean scheduleChanged = request.specialistServiceId() != null
             || request.startTime() != null
             || request.endTime() != null;
+        boolean restoringCancelledAppointment = existingEntity.getStatus() == AppointmentStatus.CANCELLED
+            && targetStatus != AppointmentStatus.CANCELLED;
+        boolean futureScheduleCheckRequired = scheduleChanged || restoringCancelledAppointment;
+        boolean overlapCheckRequired = (scheduleChanged || restoringCancelledAppointment)
+            && targetStatus != AppointmentStatus.CANCELLED;
 
         new ValidationResult()
             .addErrorIf(!appointmentMapper.hasAnyPatchField(request), "request", "No fields to update")
@@ -110,16 +118,17 @@ public class AppointmentValidator {
                 "End time must be after start time"
             )
             .addErrorIf(
-                scheduleChanged && targetStartTime != null && targetStartTime.isBefore(LocalDateTime.now()),
+                futureScheduleCheckRequired && targetStartTime != null && targetStartTime.isBefore(LocalDateTime.now()),
                 "startTime",
                 "Start time must be in the future"
             )
             .addErrorIf(
-                scheduleChanged && targetStartTime != null && targetEndTime != null
-                    && appointmentRepository.existsBySpecialistServiceIdAndStartTimeLessThanAndEndTimeGreaterThanAndIdNot(
-                        targetSpecialistService.getId(),
+                overlapCheckRequired && targetStartTime != null && targetEndTime != null
+                    && appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNotAndIdNot(
+                        targetSpecialistService.getSpecialist().getId(),
                         targetEndTime,
                         targetStartTime,
+                        AppointmentStatus.CANCELLED,
                         appointmentId
                     ),
                 "time",
@@ -136,10 +145,11 @@ public class AppointmentValidator {
                 "Cannot restore an appointment in the past"
             )
             .addErrorIf(
-                appointmentRepository.existsBySpecialistServiceIdAndStartTimeLessThanAndEndTimeGreaterThanAndIdNot(
-                    appointment.getSpecialistService().getId(),
+                appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNotAndIdNot(
+                    appointment.getSpecialist().getId(),
                     appointment.getEndTime(),
                     appointment.getStartTime(),
+                    AppointmentStatus.CANCELLED,
                     appointment.getId()
                 ),
                 "time",

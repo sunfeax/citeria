@@ -24,6 +24,7 @@ public class GlobalExceptionHandler {
 
     private static final String DEFAULT_DETAIL = "No additional details provided";
     private static final String DATA_INTEGRITY_DETAIL = "Data integrity violation: duplicate or linked record.";
+    private static final String OVERLAP_DETAIL = "The specialist is already booked for the selected time period.";
     private static final String INVALID_JSON_DETAIL = "Invalid JSON format or value.";
     private static final String VALIDATION_DETAIL = "Request contains invalid fields.";
     private static final String INTERNAL_ERROR_DETAIL = "An unexpected error occurred.";
@@ -48,6 +49,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         log.debug("Data integrity violation", ex);
+
+        String message = ex.getMostSpecificCause() != null
+            ? ex.getMostSpecificCause().getMessage()
+            : ex.getMessage();
+
+        if (message != null && message.contains("exclude_overlapping_appointments")) {
+            ProblemDetail detail = createDetail(
+                HttpStatus.CONFLICT, 
+                "Slot already booked", 
+                OVERLAP_DETAIL, 
+                null
+            );
+
+            detail.setProperty("field", "time");
+            return detail;
+        }
+
         return createDetail(HttpStatus.CONFLICT, "Conflict", DATA_INTEGRITY_DETAIL, null);
     }
 

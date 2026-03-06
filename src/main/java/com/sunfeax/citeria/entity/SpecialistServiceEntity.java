@@ -15,7 +15,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -50,7 +49,6 @@ public class SpecialistServiceEntity {
     private boolean isActive = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    @NotNull
     @CreationTimestamp
     private LocalDateTime createdAt;
 

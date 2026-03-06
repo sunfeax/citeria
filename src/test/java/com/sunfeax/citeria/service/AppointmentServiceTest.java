@@ -110,10 +110,11 @@ class AppointmentServiceTest {
         when(userRepository.findById(10L)).thenReturn(Optional.of(client));
         when(specialistServiceRepository.findById(100L)).thenReturn(Optional.of(specialistService));
         when(
-            appointmentRepository.existsBySpecialistServiceIdAndStartTimeLessThanAndEndTimeGreaterThan(
-                100L,
+            appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
+                specialistService.getSpecialist().getId(),
                 end,
-                start
+                start,
+                AppointmentStatus.CANCELLED
             )
         ).thenReturn(false);
         when(appointmentMapper.createEntity(request, client, specialistService)).thenReturn(entity);
@@ -169,10 +170,11 @@ class AppointmentServiceTest {
         when(userRepository.findById(10L)).thenReturn(Optional.of(specialistAsClient));
         when(specialistServiceRepository.findById(100L)).thenReturn(Optional.of(specialistService));
         when(
-            appointmentRepository.existsBySpecialistServiceIdAndStartTimeLessThanAndEndTimeGreaterThan(
-                100L,
+            appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
+                specialistService.getSpecialist().getId(),
                 end,
-                start
+                start,
+                AppointmentStatus.CANCELLED
             )
         ).thenReturn(false);
 
@@ -193,10 +195,11 @@ class AppointmentServiceTest {
         when(userRepository.findById(10L)).thenReturn(Optional.of(client));
         when(specialistServiceRepository.findById(100L)).thenReturn(Optional.of(specialistService));
         when(
-            appointmentRepository.existsBySpecialistServiceIdAndStartTimeLessThanAndEndTimeGreaterThan(
-                100L,
+            appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
+                specialistService.getSpecialist().getId(),
                 end,
-                start
+                start,
+                AppointmentStatus.CANCELLED
             )
         ).thenReturn(false);
 
@@ -217,10 +220,11 @@ class AppointmentServiceTest {
         when(userRepository.findById(10L)).thenReturn(Optional.of(client));
         when(specialistServiceRepository.findById(100L)).thenReturn(Optional.of(specialistService));
         when(
-            appointmentRepository.existsBySpecialistServiceIdAndStartTimeLessThanAndEndTimeGreaterThan(
-                100L,
+            appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
+                specialistService.getSpecialist().getId(),
                 end,
-                start
+                start,
+                AppointmentStatus.CANCELLED
             )
         ).thenReturn(true);
 
@@ -273,10 +277,11 @@ class AppointmentServiceTest {
         when(appointmentFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
         when(appointmentMapper.hasAnyPatchField(request)).thenReturn(true);
         when(
-            appointmentRepository.existsBySpecialistServiceIdAndStartTimeLessThanAndEndTimeGreaterThanAndIdNot(
-                entity.getSpecialistService().getId(),
+            appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNotAndIdNot(
+                entity.getSpecialist().getId(),
                 newEnd,
                 newStart,
+                AppointmentStatus.CANCELLED,
                 1L
             )
         ).thenReturn(true);
@@ -306,10 +311,11 @@ class AppointmentServiceTest {
         when(specialistServiceRepository.findById(200L)).thenReturn(Optional.of(newSpecialistService));
         when(appointmentMapper.hasAnyPatchField(request)).thenReturn(true);
         when(
-            appointmentRepository.existsBySpecialistServiceIdAndStartTimeLessThanAndEndTimeGreaterThanAndIdNot(
-                200L,
+            appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNotAndIdNot(
+                newSpecialistService.getSpecialist().getId(),
                 newEnd,
                 newStart,
+                AppointmentStatus.CANCELLED,
                 1L
             )
         ).thenReturn(false);
@@ -395,7 +401,9 @@ class AppointmentServiceTest {
         AppointmentEntity entity = new AppointmentEntity();
         entity.setId(id);
         entity.setClient(clientUser(10L));
-        entity.setSpecialistService(specialistService(100L, true));
+        SpecialistServiceEntity specialistService = specialistService(100L, true);
+        entity.setSpecialist(specialistService.getSpecialist());
+        entity.setSpecialistService(specialistService);
         entity.setStartTime(futureStart());
         entity.setEndTime(futureStart().plusMinutes(60));
         entity.setStatus(AppointmentStatus.PENDING);

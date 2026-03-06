@@ -42,6 +42,7 @@ public class AppointmentMapper {
         AppointmentEntity entity = new AppointmentEntity();
 
         entity.setClient(client);
+        entity.setSpecialist(specialistService.getSpecialist());
         entity.setSpecialistService(specialistService);
         entity.setStartTime(request.startTime());
         entity.setEndTime(request.endTime());
@@ -63,6 +64,7 @@ public class AppointmentMapper {
             entity.setClient(client);
         }
         if (specialistService != null) {
+            entity.setSpecialist(specialistService.getSpecialist());
             entity.setSpecialistService(specialistService);
             entity.setPriceAmount(specialistService.getService().getPriceAmount());
             entity.setCurrency(specialistService.getService().getCurrency());

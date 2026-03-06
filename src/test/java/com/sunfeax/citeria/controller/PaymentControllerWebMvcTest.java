@@ -75,7 +75,7 @@ class PaymentControllerWebMvcTest {
     @Test
     void registerShouldReturnCreated() throws Exception {
         PaymentPostRequestDto request = new PaymentPostRequestDto(10L);
-        when(paymentService.register(any(PaymentPostRequestDto.class))).thenReturn(paymentDto(1L, 10L));
+        when(paymentService.create(any(PaymentPostRequestDto.class))).thenReturn(paymentDto(1L, 10L));
 
         mockMvc.perform(post("/api/payments")
                 .contentType(MediaType.APPLICATION_JSON)

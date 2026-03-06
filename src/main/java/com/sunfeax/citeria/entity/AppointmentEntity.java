@@ -45,6 +45,10 @@ public class AppointmentEntity {
     private UserEntity client;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "specialist_id", nullable = false)
+    private UserEntity specialist;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "specialist_service_id", nullable = false)
     private SpecialistServiceEntity specialistService;
 

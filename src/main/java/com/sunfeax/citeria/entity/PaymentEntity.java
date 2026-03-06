@@ -19,9 +19,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -45,27 +42,20 @@ public class PaymentEntity {
     private AppointmentEntity appointment;
 
     @Column(name = "amount", nullable = false, precision = 12, scale = 2)
-    @NotNull
-    @DecimalMin("0.00")
     private BigDecimal amount;
 
     @Column(name = "currency", nullable = false, length = 3)
-    @NotNull
-    @Size(min = 3, max = 3)
     private String currency;
 
     @Column(name = "status", nullable = false)
-    @NotNull
     @Enumerated(EnumType.STRING)
     private PaymentStatus status = PaymentStatus.PENDING;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    @NotNull
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    @NotNull
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 }

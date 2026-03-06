@@ -1,21 +1,20 @@
 package com.sunfeax.citeria.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -102,7 +101,7 @@ class PaymentServiceTest {
         when(paymentRepository.save(entity)).thenReturn(entity);
         when(paymentMapper.toResponseDto(entity)).thenReturn(dto);
 
-        PaymentResponseDto result = paymentService.register(request);
+        PaymentResponseDto result = paymentService.create(request);
 
         assertEquals(dto, result);
         verify(paymentRepository).save(entity);
@@ -115,7 +114,7 @@ class PaymentServiceTest {
         when(paymentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
         when(appointmentRepository.findById(10L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> paymentService.register(request));
+        assertThrows(ResourceNotFoundException.class, () -> paymentService.create(request));
         verify(paymentRepository, never()).save(any(PaymentEntity.class));
     }
 
@@ -128,7 +127,7 @@ class PaymentServiceTest {
         when(appointmentRepository.findById(10L)).thenReturn(Optional.of(appointment));
         when(paymentRepository.existsByAppointmentId(10L)).thenReturn(true);
 
-        assertThrows(RequestValidationException.class, () -> paymentService.register(request));
+        assertThrows(RequestValidationException.class, () -> paymentService.create(request));
         verify(paymentRepository, never()).save(any(PaymentEntity.class));
     }
 
@@ -141,7 +140,7 @@ class PaymentServiceTest {
         when(appointmentRepository.findById(10L)).thenReturn(Optional.of(appointment));
         when(paymentRepository.existsByAppointmentId(10L)).thenReturn(false);
 
-        assertThrows(RequestValidationException.class, () -> paymentService.register(request));
+        assertThrows(RequestValidationException.class, () -> paymentService.create(request));
         verify(paymentRepository, never()).save(any(PaymentEntity.class));
     }
 
@@ -246,13 +245,6 @@ class PaymentServiceTest {
 
         assertEquals(dto, result);
         assertEquals(PaymentStatus.FAILED, entity.getStatus());
-    }
-
-    @Test
-    void deactivateShouldThrowWhenPaymentNotFound() {
-        when(paymentRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> paymentService.deactivateById(1L));
     }
 
     @Test
