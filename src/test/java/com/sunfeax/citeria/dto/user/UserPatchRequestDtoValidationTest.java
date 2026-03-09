@@ -16,33 +16,33 @@ class UserPatchRequestDtoValidationTest {
 
     @Test
     void emptyPatchShouldPassValidation() {
-        UserPatchRequestDto request = new UserPatchRequestDto(null, null, null, null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, null, null, null);
 
-        Set<ConstraintViolation<UserPatchRequestDto>> violations = validator.validate(request);
+        Set<ConstraintViolation<UserUpdateRequestDto>> violations = validator.validate(request);
 
         assertTrue(violations.isEmpty());
     }
 
     @Test
     void invalidEmailShouldFailValidation() {
-        UserPatchRequestDto request = new UserPatchRequestDto(null, null, "invalid-email", null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, "invalid-email", null, null);
 
-        Set<ConstraintViolation<UserPatchRequestDto>> violations = validator.validate(request);
+        Set<ConstraintViolation<UserUpdateRequestDto>> violations = validator.validate(request);
 
         assertTrue(hasFieldMessage(violations, "email", "Invalid email format"));
     }
 
     @Test
     void invalidFirstNameShouldFailValidation() {
-        UserPatchRequestDto request = new UserPatchRequestDto("123", null, null, null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto("123", null, null, null, null);
 
-        Set<ConstraintViolation<UserPatchRequestDto>> violations = validator.validate(request);
+        Set<ConstraintViolation<UserUpdateRequestDto>> violations = validator.validate(request);
 
         assertTrue(hasFieldMessage(violations, "firstName", "First name must contain letters only"));
     }
 
     private boolean hasFieldMessage(
-        Set<ConstraintViolation<UserPatchRequestDto>> violations,
+        Set<ConstraintViolation<UserUpdateRequestDto>> violations,
         String field,
         String message
     ) {

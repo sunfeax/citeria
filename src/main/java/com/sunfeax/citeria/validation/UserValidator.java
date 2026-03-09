@@ -3,12 +3,12 @@ package com.sunfeax.citeria.validation;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
 import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
-import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
-import com.sunfeax.citeria.dto.user.UserPostRequestDto;
+import com.sunfeax.citeria.dto.user.UserUpdateRequestDto;
 import com.sunfeax.citeria.entity.UserEntity;
-import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.repository.UserRepository;
+import com.sunfeax.citeria.mapper.UserMapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,7 +20,7 @@ public class UserValidator {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public void validateRegister(UserPostRequestDto request) {
+    public void validateRegister(RegisterRequestDto request) {
         new ValidationResult()
             .addErrorIf(
                 userRepository.existsByEmail(request.email()),
@@ -35,7 +35,7 @@ public class UserValidator {
             .throwIfHasErrors();
     }
 
-    public void validateUpdate(Long id, UserEntity existingEntity, UserPatchRequestDto request) {
+    public void validateUpdate(Long id, UserEntity existingEntity, UserUpdateRequestDto request) {
         String targetEmail = request.email() != null ? request.email() : existingEntity.getEmail();
         String targetPhone = request.phone() != null ? request.phone() : existingEntity.getPhone();
 

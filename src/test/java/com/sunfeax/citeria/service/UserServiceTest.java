@@ -25,17 +25,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
-import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
-import com.sunfeax.citeria.dto.user.UserPostRequestDto;
+import com.sunfeax.citeria.dto.user.UserUpdateRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.UserRole;
 import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
+import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
-import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.validation.UserValidator;
 
 @ExtendWith(MockitoExtension.class)
@@ -96,58 +95,8 @@ class UserServiceTest {
     }
 
     @Test
-    void registerShouldThrowWhenEmailAlreadyExists() {
-        UserPostRequestDto request = new UserPostRequestDto(
-            "John", "Snow", "john@example.com", "1234567", "Password!", UserType.CLIENT
-        );
-
-        when(userFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(userRepository.existsByEmail("john@example.com")).thenReturn(true);
-        when(userRepository.existsByPhone("1234567")).thenReturn(false);
-
-        assertThrows(RequestValidationException.class, () -> userService.register(request));
-        verify(userRepository, never()).save(any(UserEntity.class));
-    }
-
-    @Test
-    void registerShouldThrowWhenPhoneAlreadyExists() {
-        UserPostRequestDto request = new UserPostRequestDto(
-            "John", "Snow", "john@example.com", "1234567", "Password!", UserType.CLIENT
-        );
-
-        when(userFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(userRepository.existsByEmail("john@example.com")).thenReturn(false);
-        when(userRepository.existsByPhone("1234567")).thenReturn(true);
-
-        assertThrows(RequestValidationException.class, () -> userService.register(request));
-        verify(userRepository, never()).save(any(UserEntity.class));
-    }
-
-    @Test
-    void registerShouldEncodePasswordAndSave() {
-        UserPostRequestDto request = new UserPostRequestDto(
-            "John", "Snow", "john@example.com", "1234567", "Password!", UserType.CLIENT
-        );
-        UserEntity entity = userEntity(1L);
-        UserResponseDto dto = userResponseDto(1L);
-
-        when(userFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(userRepository.existsByEmail("john@example.com")).thenReturn(false);
-        when(userRepository.existsByPhone("1234567")).thenReturn(false);
-        when(userMapper.createEntity(request)).thenReturn(entity);
-        when(passwordEncoder.encode("Password!")).thenReturn("encoded");
-        when(userRepository.save(entity)).thenReturn(entity);
-        when(userMapper.toResponseDto(entity)).thenReturn(dto);
-
-        UserResponseDto result = userService.register(request);
-
-        assertEquals(dto, result);
-        assertEquals("encoded", entity.getPassword());
-    }
-
-    @Test
     void updateShouldThrowWhenUserNotFound() {
-        UserPatchRequestDto request = new UserPatchRequestDto("John", null, null, null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto("John", null, null, null, null);
 
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
@@ -157,7 +106,7 @@ class UserServiceTest {
     @Test
     void updateShouldThrowWhenNoFieldsProvided() {
         UserEntity entity = userEntity(1L);
-        UserPatchRequestDto request = new UserPatchRequestDto(null, null, null, null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, null, null, null);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
         when(userFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
@@ -169,7 +118,7 @@ class UserServiceTest {
     @Test
     void updateShouldThrowWhenEmailAlreadyTaken() {
         UserEntity entity = userEntity(1L);
-        UserPatchRequestDto request = new UserPatchRequestDto(null, null, "new@example.com", null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, "new@example.com", null, null);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
         when(userFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
@@ -183,7 +132,7 @@ class UserServiceTest {
     @Test
     void updateShouldThrowWhenPhoneAlreadyTaken() {
         UserEntity entity = userEntity(1L);
-        UserPatchRequestDto request = new UserPatchRequestDto(null, null, null, "99887766", null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, null, "99887766", null);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
         when(userFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
@@ -197,7 +146,7 @@ class UserServiceTest {
     @Test
     void updateShouldApplyPatchAndSaveWhenRequestIsValid() {
         UserEntity entity = userEntity(1L);
-        UserPatchRequestDto request = new UserPatchRequestDto("Jane", null, "jane@example.com", "99887766", UserType.SPECIALIST);
+        UserUpdateRequestDto request = new UserUpdateRequestDto("Jane", null, "jane@example.com", "99887766", UserType.SPECIALIST);
         UserResponseDto dto = userResponseDto(1L);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(entity));

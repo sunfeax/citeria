@@ -7,14 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
-import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
-import com.sunfeax.citeria.dto.user.UserPostRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
+import com.sunfeax.citeria.dto.user.UserUpdateRequestDto;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
+import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
-import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.validation.UserValidator;
 
 import lombok.RequiredArgsConstructor;
@@ -41,22 +40,10 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponseDto register(UserPostRequestDto request) {
-        UserPostRequestDto normalizedRequest = userFieldNormalizer.normalizePostRequest(request);
-        userValidator.validateRegister(normalizedRequest);
-
-        UserEntity entity = userMapper.createEntity(normalizedRequest);
-        entity.setPassword(passwordEncoder.encode(request.password()));
-        UserEntity saved = userRepository.save(entity);
-
-        return userMapper.toResponseDto(saved);
-    }
-
-    @Transactional
-    public UserResponseDto update(Long id, UserPatchRequestDto request) {
+    public UserResponseDto update(Long id, UserUpdateRequestDto request) {
         UserEntity entity = findUserOrThrow(id);
 
-        UserPatchRequestDto normalizedRequest = userFieldNormalizer.normalizePatchRequest(request);
+        UserUpdateRequestDto normalizedRequest = userFieldNormalizer.normalizePatchRequest(request);
         userValidator.validateUpdate(id, entity, normalizedRequest);
 
         userMapper.applyPatch(entity, normalizedRequest);

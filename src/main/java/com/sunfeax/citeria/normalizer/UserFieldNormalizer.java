@@ -4,14 +4,14 @@ import java.util.Locale;
 
 import org.springframework.stereotype.Component;
 
-import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
-import com.sunfeax.citeria.dto.user.UserPostRequestDto;
+import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
+import com.sunfeax.citeria.dto.user.UserUpdateRequestDto;
 
 @Component
 public class UserFieldNormalizer {
 
-    public UserPostRequestDto normalizePostRequest(UserPostRequestDto request) {
-        return new UserPostRequestDto(
+    public RegisterRequestDto normalizePostRequest(RegisterRequestDto request) {
+        return new RegisterRequestDto(
             normalizeName(request.firstName()),
             normalizeName(request.lastName()),
             normalizeEmail(request.email()),
@@ -21,8 +21,8 @@ public class UserFieldNormalizer {
         );
     }
 
-    public UserPatchRequestDto normalizePatchRequest(UserPatchRequestDto request) {
-        return new UserPatchRequestDto(
+    public UserUpdateRequestDto normalizePatchRequest(UserUpdateRequestDto request) {
+        return new UserUpdateRequestDto(
             normalizeName(request.firstName()),
             normalizeName(request.lastName()),
             normalizeEmail(request.email()),

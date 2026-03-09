@@ -2,8 +2,8 @@ package com.sunfeax.citeria.mapper;
 
 import org.springframework.stereotype.Component;
 
-import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
-import com.sunfeax.citeria.dto.user.UserPostRequestDto;
+import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
+import com.sunfeax.citeria.dto.user.UserUpdateRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.UserRole;
@@ -25,7 +25,7 @@ public class UserMapper {
         );
     }
 
-    public UserEntity createEntity(UserPostRequestDto request) {
+    public UserEntity createEntity(RegisterRequestDto request) {
 
         UserEntity entity = new UserEntity();
 
@@ -39,7 +39,7 @@ public class UserMapper {
         return entity;
     }
 
-    public UserEntity applyPatch(UserEntity entity, UserPatchRequestDto request) {
+    public UserEntity applyPatch(UserEntity entity, UserUpdateRequestDto request) {
         if (request.firstName() != null) {
             entity.setFirstName(request.firstName());
         }
@@ -59,7 +59,7 @@ public class UserMapper {
         return entity;
     }
     
-    public boolean hasAnyPatchField(UserPatchRequestDto request) {
+    public boolean hasAnyPatchField(UserUpdateRequestDto request) {
         return request.firstName() != null
             || request.lastName() != null
             || request.email() != null

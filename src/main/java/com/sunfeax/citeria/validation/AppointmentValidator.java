@@ -11,8 +11,8 @@ import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.enums.UserType;
-import com.sunfeax.citeria.mapper.AppointmentMapper;
 import com.sunfeax.citeria.repository.AppointmentRepository;
+import com.sunfeax.citeria.mapper.AppointmentMapper;
 
 import lombok.RequiredArgsConstructor;
 

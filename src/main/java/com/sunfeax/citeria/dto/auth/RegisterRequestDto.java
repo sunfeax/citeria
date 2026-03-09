@@ -1,4 +1,4 @@
-package com.sunfeax.citeria.dto.user;
+package com.sunfeax.citeria.dto.auth;
 
 import com.sunfeax.citeria.enums.UserType;
 
@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record UserPostRequestDto(
+public record RegisterRequestDto(
     @NotBlank(message = "First name is required")
     @Pattern(
         regexp = "^[\\p{L}]+(?:[-' ][\\p{L}]+)*$",

@@ -12,10 +12,10 @@ import com.sunfeax.citeria.entity.AppointmentEntity;
 import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
-import com.sunfeax.citeria.mapper.AppointmentMapper;
 import com.sunfeax.citeria.repository.AppointmentRepository;
 import com.sunfeax.citeria.repository.SpecialistServiceRepository;
 import com.sunfeax.citeria.repository.UserRepository;
+import com.sunfeax.citeria.mapper.AppointmentMapper;
 import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
 import com.sunfeax.citeria.validation.AppointmentValidator;
 

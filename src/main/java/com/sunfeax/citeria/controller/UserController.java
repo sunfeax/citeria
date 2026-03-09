@@ -2,22 +2,19 @@ package com.sunfeax.citeria.controller;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
-import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
-import com.sunfeax.citeria.dto.user.UserPostRequestDto;
+import com.sunfeax.citeria.dto.user.UserUpdateRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.service.UserService;
 
@@ -49,18 +46,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getById(id));
     }
 
-    // register new user
-    @PostMapping
-    public ResponseEntity<UserResponseDto> register(@Valid @RequestBody UserPostRequestDto request) {
-        UserResponseDto response = userService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
     // update profile fields for an existing user
     @PatchMapping("/{id}")
     public ResponseEntity<UserResponseDto> update(
         @PathVariable Long id,
-        @Valid @RequestBody UserPatchRequestDto request
+        @Valid @RequestBody UserUpdateRequestDto request
     ) {
         return ResponseEntity.ok(userService.update(id, request));
     }

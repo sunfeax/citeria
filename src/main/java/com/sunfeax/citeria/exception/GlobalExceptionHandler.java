@@ -9,6 +9,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -46,13 +48,19 @@ public class GlobalExceptionHandler {
         return createDetail(HttpStatus.NOT_FOUND, "Resource Not Found", ex.getMessage(), null);
     }
 
+    @ExceptionHandler({UsernameNotFoundException.class})
+    public ProblemDetail handleUserNotFound(Exception ex) {
+        return createDetail(HttpStatus.NOT_FOUND, "User Not Found", ex.getMessage(), null);
+    }
+
+    // 409 Conflict
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         log.debug("Data integrity violation", ex);
 
-        String message = ex.getMostSpecificCause() != null
-            ? ex.getMostSpecificCause().getMessage()
-            : ex.getMessage();
+        Throwable specificCause = ex.getMostSpecificCause();
+        
+        String message = (specificCause != null) ? specificCause.getMessage() : ex.getMessage();
 
         if (message != null && message.contains("exclude_overlapping_appointments")) {
             ProblemDetail detail = createDetail(
@@ -61,7 +69,6 @@ public class GlobalExceptionHandler {
                 OVERLAP_DETAIL, 
                 null
             );
-
             detail.setProperty("field", "time");
             return detail;
         }
@@ -110,7 +117,24 @@ public class GlobalExceptionHandler {
     // 401 Unauthorized
     @ExceptionHandler(UnauthorizedException.class)
     public ProblemDetail handleUnauthorized(UnauthorizedException ex) {
-        return createDetail(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage(), null);
+        return createDetail(
+            HttpStatus.UNAUTHORIZED, 
+            "Unauthorized",
+            ex.getMessage(),
+            null
+        );
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ProblemDetail handleBadCredentials(BadCredentialsException ex) {
+        log.warn("Authentication failed: {}", ex.getMessage());
+
+        return createDetail(
+            HttpStatus.UNAUTHORIZED,
+            "Authentication Failed", 
+            "Invalid email or password",
+            null
+        );
     }
 
     // 500 Internal Server Error

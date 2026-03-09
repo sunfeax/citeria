@@ -35,11 +35,11 @@ import com.sunfeax.citeria.enums.PaymentMethod;
 import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
-import com.sunfeax.citeria.mapper.AppointmentMapper;
-import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
 import com.sunfeax.citeria.repository.AppointmentRepository;
 import com.sunfeax.citeria.repository.SpecialistServiceRepository;
 import com.sunfeax.citeria.repository.UserRepository;
+import com.sunfeax.citeria.mapper.AppointmentMapper;
+import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
 import com.sunfeax.citeria.validation.AppointmentValidator;
 
 @ExtendWith(MockitoExtension.class)

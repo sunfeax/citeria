@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -26,9 +25,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import tools.jackson.databind.ObjectMapper;
+
 import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
-import com.sunfeax.citeria.dto.user.UserPatchRequestDto;
-import com.sunfeax.citeria.dto.user.UserPostRequestDto;
+import com.sunfeax.citeria.dto.user.UserUpdateRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.enums.UserRole;
 import com.sunfeax.citeria.enums.UserType;
@@ -85,54 +84,9 @@ class UserControllerWebMvcTest {
     }
 
     @Test
-    void registerShouldReturnCreated() throws Exception {
-        UserPostRequestDto request = new UserPostRequestDto(
-            "John",
-            "Snow",
-            "john@example.com",
-            "+34123456789",
-            "Password!",
-            UserType.CLIENT
-        );
-        when(userService.register(any(UserPostRequestDto.class))).thenReturn(userDto(1L));
-
-        mockMvc.perform(post("/api/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").value(1))
-            .andExpect(jsonPath("$.type").value("CLIENT"));
-    }
-
-    @Test
-    void registerShouldReturnBadRequestForInvalidBody() throws Exception {
-        String invalidBody = """
-            {
-              "firstName": "John",
-              "lastName": "Snow",
-              "email": "invalid-email",
-              "phone": "+34123456789",
-              "password": "Password!",
-              "type": "CLIENT"
-            }
-            """;
-
-        mockMvc.perform(post("/api/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidBody))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.status").value(400))
-            .andExpect(jsonPath("$.title").value("Validation Failed"))
-            .andExpect(jsonPath("$.detail").value("Request contains invalid fields."))
-            .andExpect(jsonPath("$.errors").isMap())
-            .andExpect(jsonPath("$.timestamp").exists())
-            .andExpect(jsonPath("$.errors.email").exists());
-    }
-
-    @Test
     void updateShouldReturnOk() throws Exception {
-        UserPatchRequestDto request = new UserPatchRequestDto("Jane", null, null, null, null);
-        when(userService.update(eq(1L), any(UserPatchRequestDto.class))).thenReturn(userDto(1L));
+        UserUpdateRequestDto request = new UserUpdateRequestDto("Jane", null, null, null, null);
+        when(userService.update(eq(1L), any(UserUpdateRequestDto.class))).thenReturn(userDto(1L));
 
         mockMvc.perform(patch("/api/users/1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -143,8 +97,8 @@ class UserControllerWebMvcTest {
 
     @Test
     void updateShouldReturnBadRequestForServiceValidationError() throws Exception {
-        UserPatchRequestDto request = new UserPatchRequestDto(null, null, "taken@example.com", null, null);
-        when(userService.update(eq(1L), any(UserPatchRequestDto.class)))
+        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, "taken@example.com", null, null);
+        when(userService.update(eq(1L), any(UserUpdateRequestDto.class)))
             .thenThrow(new RequestValidationException(Map.of("email", "Email taken@example.com is already taken")));
 
         mockMvc.perform(patch("/api/users/1")

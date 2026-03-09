@@ -14,5 +14,5 @@ public record UserResponseDto(
     UserRole role,
     UserType type,
     Boolean isActive,
-    LocalDateTime createdAt) {
-}
+    LocalDateTime createdAt
+) {}

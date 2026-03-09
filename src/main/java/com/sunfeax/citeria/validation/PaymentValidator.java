@@ -7,8 +7,8 @@ import com.sunfeax.citeria.dto.payment.PaymentPostRequestDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
 import com.sunfeax.citeria.entity.PaymentEntity;
 import com.sunfeax.citeria.enums.AppointmentStatus;
-import com.sunfeax.citeria.mapper.PaymentMapper;
 import com.sunfeax.citeria.repository.PaymentRepository;
+import com.sunfeax.citeria.mapper.PaymentMapper;
 
 import lombok.RequiredArgsConstructor;
 

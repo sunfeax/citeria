@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record UserPatchRequestDto(
+public record UserUpdateRequestDto(
     @Nullable
     @Pattern(
         regexp = "^\\s*[\\p{L}]+(?:[-' ][\\p{L}]+)*\\s*$",

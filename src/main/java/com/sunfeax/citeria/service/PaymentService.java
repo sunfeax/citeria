@@ -12,10 +12,10 @@ import com.sunfeax.citeria.entity.AppointmentEntity;
 import com.sunfeax.citeria.entity.PaymentEntity;
 import com.sunfeax.citeria.enums.PaymentStatus;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
-import com.sunfeax.citeria.mapper.PaymentMapper;
-import com.sunfeax.citeria.normalizer.PaymentFieldNormalizer;
 import com.sunfeax.citeria.repository.AppointmentRepository;
 import com.sunfeax.citeria.repository.PaymentRepository;
+import com.sunfeax.citeria.mapper.PaymentMapper;
+import com.sunfeax.citeria.normalizer.PaymentFieldNormalizer;
 import com.sunfeax.citeria.validation.PaymentValidator;
 
 import lombok.RequiredArgsConstructor;
