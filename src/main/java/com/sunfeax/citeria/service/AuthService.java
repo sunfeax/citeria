@@ -1,15 +1,19 @@
 package com.sunfeax.citeria.service;
 
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sunfeax.citeria.dto.auth.AuthSessionDto;
 import com.sunfeax.citeria.dto.auth.LoginRequestDto;
 import com.sunfeax.citeria.dto.auth.LoginResponseDto;
 import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
+import com.sunfeax.citeria.entity.RefreshTokenEntity;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.entity.UserEntity;
+import com.sunfeax.citeria.exception.UnauthorizedException;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
 import com.sunfeax.citeria.repository.UserRepository;
@@ -28,6 +32,8 @@ public class AuthService {
     private final UserValidator userValidator;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final AuthenticationManager authenticationManager;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public UserResponseDto register(RegisterRequestDto request) {
@@ -42,18 +48,51 @@ public class AuthService {
     }
 
     @Transactional
-    public LoginResponseDto login(LoginRequestDto request) {
-        UserEntity user = userRepository.findByEmail(request.email())
-            .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
+    public AuthSessionDto login(LoginRequestDto request) {
+        String normalizedEmail = userFieldNormalizer.normalizeEmail(request.email());
 
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new BadCredentialsException("Invalid email or password");
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(normalizedEmail, request.password())
+        );
+
+        UserEntity user = userRepository.findByEmail(normalizedEmail)
+            .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
+
+        String accessToken = jwtProvider.generateToken(user);
+        String refreshToken = refreshTokenService.createRefreshToken(user.getId());
+        LoginResponseDto response = buildLoginResponse(user, accessToken);
+
+        return new AuthSessionDto(response, refreshToken);
+    }
+
+    @Transactional
+    public AuthSessionDto refresh(String refreshToken) {
+        RefreshTokenEntity storedToken = refreshTokenService.findByToken(refreshToken)
+            .map(refreshTokenService::verifyExpiration)
+            .orElseThrow(() -> new UnauthorizedException("Refresh token is invalid"));
+
+        UserEntity user = storedToken.getUser();
+
+        if (!user.isActive()) {
+            refreshTokenService.deleteByToken(refreshToken);
+            throw new UnauthorizedException("User is deactivated");
         }
 
-        String token = jwtProvider.generateToken(user);
+        String accessToken = jwtProvider.generateToken(user);
+        String rotatedRefreshToken = refreshTokenService.rotateRefreshToken(storedToken);
+        LoginResponseDto response = buildLoginResponse(user, accessToken);
 
+        return new AuthSessionDto(response, rotatedRefreshToken);
+    }
+
+    @Transactional
+    public void logout(String refreshToken) {
+        refreshTokenService.deleteByToken(refreshToken);
+    }
+
+    private LoginResponseDto buildLoginResponse(UserEntity user, String accessToken) {
         return new LoginResponseDto(
-            token,
+            accessToken,
             "Bearer",
             user.getId(),
             user.getFirstName() + " " + user.getLastName(),

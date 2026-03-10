@@ -21,8 +21,8 @@ public class JwtProvider {
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
-    @Value("${app.jwt.expiration}")
-    private int jwtExpirationMs;
+    @Value("${app.jwt.accessExpiration}")
+    private int jwtExpiration;
 
     private Key getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
@@ -33,7 +33,7 @@ public class JwtProvider {
         return Jwts.builder()
             .setSubject(user.getEmail())
             .setIssuedAt(new Date())
-            .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+            .setExpiration(new Date((new Date()).getTime() + jwtExpiration))
             .claim("id", user.getId())
             .claim("role", user.getRole())
             .signWith(getSigningKey()) 

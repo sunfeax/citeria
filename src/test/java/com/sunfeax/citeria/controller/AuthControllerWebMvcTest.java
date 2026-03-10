@@ -1,8 +1,12 @@
 package com.sunfeax.citeria.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -14,10 +18,13 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.sunfeax.citeria.config.JwtAuthenticationFilter;
+import com.sunfeax.citeria.dto.auth.AuthSessionDto;
 import com.sunfeax.citeria.dto.auth.LoginRequestDto;
 import com.sunfeax.citeria.dto.auth.LoginResponseDto;
 import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
@@ -27,6 +34,7 @@ import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.GlobalExceptionHandler;
 import com.sunfeax.citeria.service.AuthService;
 
+import jakarta.servlet.http.Cookie;
 import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(AuthController.class)
@@ -42,6 +50,12 @@ class AuthControllerWebMvcTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private AuthenticationProvider authenticationProvider;
 
     @Test
     void registerShouldReturnCreated() throws Exception {
@@ -90,9 +104,13 @@ class AuthControllerWebMvcTest {
     }
 
     @Test
-    void loginShouldReturnOk() throws Exception {
+    void loginShouldReturnOkAndSetRefreshCookie() throws Exception {
         LoginRequestDto request = new LoginRequestDto("john@example.com", "Password!");
-        when(authService.login(any(LoginRequestDto.class))).thenReturn(loginResponseDto(1L));
+
+        when(authService.login(any(LoginRequestDto.class))).thenReturn(new AuthSessionDto(
+            loginResponseDto(1L),
+            "refresh-token"
+        ));
 
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -103,7 +121,8 @@ class AuthControllerWebMvcTest {
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.fullName").value("John Snow"))
             .andExpect(jsonPath("$.role").value("USER"))
-            .andExpect(jsonPath("$.type").value("CLIENT"));
+            .andExpect(jsonPath("$.type").value("CLIENT"))
+            .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("refresh_token=refresh-token")));
     }
 
     @Test
@@ -142,6 +161,40 @@ class AuthControllerWebMvcTest {
             .andExpect(jsonPath("$.timestamp").exists())
             .andExpect(jsonPath("$.errors.email").exists())
             .andExpect(jsonPath("$.errors.password").exists());
+    }
+
+    @Test
+    void refreshShouldReturnOkAndRotateCookie() throws Exception {
+        when(authService.refresh(eq("old-refresh"))).thenReturn(new AuthSessionDto(
+            loginResponseDto(1L),
+            "new-refresh"
+        ));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                .cookie(new Cookie("refresh_token", "old-refresh")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").value("jwt-token"))
+            .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("refresh_token=new-refresh")));
+    }
+
+    @Test
+    void refreshShouldReturnUnauthorizedWhenCookieMissing() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh"))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.status").value(401))
+            .andExpect(jsonPath("$.title").value("Unauthorized"));
+    }
+
+    @Test
+    void logoutShouldClearCookieAndReturnNoContent() throws Exception {
+        doNothing().when(authService).logout("refresh-token");
+
+        mockMvc.perform(post("/api/auth/logout")
+                .cookie(new Cookie("refresh_token", "refresh-token")))
+            .andExpect(status().isNoContent())
+            .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("Max-Age=0")));
+
+        verify(authService).logout("refresh-token");
     }
 
     private UserResponseDto userDto(Long id) {

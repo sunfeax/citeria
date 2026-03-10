@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -15,17 +16,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.sunfeax.citeria.dto.auth.AuthSessionDto;
 import com.sunfeax.citeria.dto.auth.LoginRequestDto;
-import com.sunfeax.citeria.dto.auth.LoginResponseDto;
 import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
+import com.sunfeax.citeria.entity.RefreshTokenEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.UserRole;
 import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.RequestValidationException;
+import com.sunfeax.citeria.exception.UnauthorizedException;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
 import com.sunfeax.citeria.repository.UserRepository;
@@ -45,6 +49,10 @@ class AuthServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private JwtProvider jwtProvider;
+    @Mock
+    private AuthenticationManager authenticationManager;
+    @Mock
+    private RefreshTokenService refreshTokenService;
 
     private UserValidator userValidator;
     private AuthService authService;
@@ -58,7 +66,9 @@ class AuthServiceTest {
             userFieldNormalizer,
             userValidator,
             passwordEncoder,
-            jwtProvider
+            jwtProvider,
+            authenticationManager,
+            refreshTokenService
         );
     }
 
@@ -107,46 +117,62 @@ class AuthServiceTest {
     }
 
     @Test
-    void loginShouldThrowWhenEmailNotFound() {
+    void loginShouldReturnAccessAndRefreshTokenWhenCredentialsAreValid() {
         LoginRequestDto request = new LoginRequestDto("john@example.com", "Password!");
+        UserEntity entity = userEntity(1L);
 
-        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.empty());
+        when(userFieldNormalizer.normalizeEmail("john@example.com")).thenReturn("john@example.com");
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+            .thenReturn(new UsernamePasswordAuthenticationToken("john@example.com", null));
+        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(entity));
+        when(jwtProvider.generateToken(entity)).thenReturn("access-token");
+        when(refreshTokenService.createRefreshToken(1L)).thenReturn("refresh-token");
 
-        assertThrows(BadCredentialsException.class, () -> authService.login(request));
+        AuthSessionDto result = authService.login(request);
+
+        assertEquals("access-token", result.response().token());
+        assertEquals("Bearer", result.response().tokenType());
+        assertEquals(1L, result.response().id());
+        assertEquals("John Snow", result.response().fullName());
+        assertEquals(UserRole.USER, result.response().role());
+        assertEquals(UserType.CLIENT, result.response().type());
+        assertEquals("refresh-token", result.refreshToken());
+    }
+
+    @Test
+    void refreshShouldRotateTokenAndReturnNewSession() {
+        UserEntity entity = userEntity(1L);
+        RefreshTokenEntity storedToken = RefreshTokenEntity.builder()
+            .id(11L)
+            .tokenHash("old-refresh-hash")
+            .user(entity)
+            .expiryDate(Instant.now().plusSeconds(3600))
+            .build();
+
+        when(refreshTokenService.findByToken("old-refresh")).thenReturn(Optional.of(storedToken));
+        when(refreshTokenService.verifyExpiration(storedToken)).thenReturn(storedToken);
+        when(jwtProvider.generateToken(entity)).thenReturn("new-access");
+        when(refreshTokenService.rotateRefreshToken(storedToken)).thenReturn("new-refresh");
+
+        AuthSessionDto result = authService.refresh("old-refresh");
+
+        assertEquals("new-access", result.response().token());
+        assertEquals("new-refresh", result.refreshToken());
+    }
+
+    @Test
+    void refreshShouldThrowWhenTokenNotFound() {
+        when(refreshTokenService.findByToken("missing-token")).thenReturn(Optional.empty());
+
+        assertThrows(UnauthorizedException.class, () -> authService.refresh("missing-token"));
         verify(jwtProvider, never()).generateToken(any(UserEntity.class));
     }
 
     @Test
-    void loginShouldThrowWhenPasswordIsInvalid() {
-        LoginRequestDto request = new LoginRequestDto("john@example.com", "WrongPassword!");
-        UserEntity entity = userEntity(1L);
-        entity.setPassword("encoded-pass");
+    void logoutShouldDeleteRefreshToken() {
+        authService.logout("refresh-token");
 
-        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(entity));
-        when(passwordEncoder.matches("WrongPassword!", "encoded-pass")).thenReturn(false);
-
-        assertThrows(BadCredentialsException.class, () -> authService.login(request));
-        verify(jwtProvider, never()).generateToken(any(UserEntity.class));
-    }
-
-    @Test
-    void loginShouldReturnTokenWhenCredentialsAreValid() {
-        LoginRequestDto request = new LoginRequestDto("john@example.com", "Password!");
-        UserEntity entity = userEntity(1L);
-        entity.setPassword("encoded-pass");
-
-        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(entity));
-        when(passwordEncoder.matches("Password!", "encoded-pass")).thenReturn(true);
-        when(jwtProvider.generateToken(entity)).thenReturn("jwt-token");
-
-        LoginResponseDto result = authService.login(request);
-
-        assertEquals("jwt-token", result.token());
-        assertEquals("Bearer", result.tokenType());
-        assertEquals(1L, result.id());
-        assertEquals("John Snow", result.fullName());
-        assertEquals(UserRole.USER, result.role());
-        assertEquals(UserType.CLIENT, result.type());
+        verify(refreshTokenService).deleteByToken("refresh-token");
     }
 
     private RegisterRequestDto registerRequest() {

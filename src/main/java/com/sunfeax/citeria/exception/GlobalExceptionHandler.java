@@ -9,8 +9,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -48,7 +48,7 @@ public class GlobalExceptionHandler {
         return createDetail(HttpStatus.NOT_FOUND, "Resource Not Found", ex.getMessage(), null);
     }
 
-    @ExceptionHandler({UsernameNotFoundException.class})
+    @ExceptionHandler({UserNotFoundException.class})
     public ProblemDetail handleUserNotFound(Exception ex) {
         return createDetail(HttpStatus.NOT_FOUND, "User Not Found", ex.getMessage(), null);
     }
@@ -133,6 +133,18 @@ public class GlobalExceptionHandler {
             HttpStatus.UNAUTHORIZED,
             "Authentication Failed", 
             "Invalid email or password",
+            null
+        );
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ProblemDetail handleAuthenticationException(AuthenticationException ex) {
+        log.warn("Authentication failed: {}", ex.getMessage());
+
+        return createDetail(
+            HttpStatus.UNAUTHORIZED,
+            "Authentication Failed",
+            "Authentication was not successful",
             null
         );
     }
