@@ -7,7 +7,8 @@ public record LoginResponseDto(
     String token,
     String tokenType,
     Long id,
-    String fullName,
+    String firstName,
+    String lastName,
     UserRole role,
     UserType type
 ) {}

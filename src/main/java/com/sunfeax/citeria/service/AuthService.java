@@ -95,7 +95,8 @@ public class AuthService {
             accessToken,
             "Bearer",
             user.getId(),
-            user.getFirstName() + " " + user.getLastName(),
+            user.getFirstName(),
+            user.getLastName(),
             user.getRole(),
             user.getType()
         );

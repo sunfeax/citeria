@@ -119,7 +119,8 @@ class AuthControllerWebMvcTest {
             .andExpect(jsonPath("$.token").value("jwt-token"))
             .andExpect(jsonPath("$.tokenType").value("Bearer"))
             .andExpect(jsonPath("$.id").value(1))
-            .andExpect(jsonPath("$.fullName").value("John Snow"))
+            .andExpect(jsonPath("$.firstName").value("John"))
+            .andExpect(jsonPath("$.lastName").value("Snow"))
             .andExpect(jsonPath("$.role").value("USER"))
             .andExpect(jsonPath("$.type").value("CLIENT"))
             .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("refresh_token=refresh-token")));
@@ -216,7 +217,8 @@ class AuthControllerWebMvcTest {
             "jwt-token",
             "Bearer",
             id,
-            "John Snow",
+            "John",
+            "Snow",
             UserRole.USER,
             UserType.CLIENT
         );

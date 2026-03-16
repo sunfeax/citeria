@@ -40,15 +40,21 @@ public class RefreshTokenService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        refreshTokenRepository.deleteByUser(user);
-
         String rawToken = generateRawToken();
+        String tokenHash = hashToken(rawToken);
+        Instant expiryDate = buildExpiryDate();
 
-        RefreshTokenEntity refreshToken = RefreshTokenEntity.builder()
-                .user(user)
-                .tokenHash(hashToken(rawToken))
-                .expiryDate(buildExpiryDate())
-                .build();
+        RefreshTokenEntity refreshToken = refreshTokenRepository.findByUser(user)
+                .map(existingToken -> {
+                    existingToken.setTokenHash(tokenHash);
+                    existingToken.setExpiryDate(expiryDate);
+                    return existingToken;
+                })
+                .orElseGet(() -> RefreshTokenEntity.builder()
+                        .user(user)
+                        .tokenHash(tokenHash)
+                        .expiryDate(expiryDate)
+                        .build());
 
         refreshTokenRepository.save(refreshToken);
         return rawToken;

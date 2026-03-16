@@ -133,7 +133,8 @@ class AuthServiceTest {
         assertEquals("access-token", result.response().token());
         assertEquals("Bearer", result.response().tokenType());
         assertEquals(1L, result.response().id());
-        assertEquals("John Snow", result.response().fullName());
+        assertEquals("John", result.response().firstName());
+        assertEquals("Snow", result.response().lastName());
         assertEquals(UserRole.USER, result.response().role());
         assertEquals(UserType.CLIENT, result.response().type());
         assertEquals("refresh-token", result.refreshToken());
