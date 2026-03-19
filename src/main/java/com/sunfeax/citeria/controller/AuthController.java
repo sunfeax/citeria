@@ -42,7 +42,7 @@ public class AuthController {
     private boolean refreshCookieSecure;
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponseDto> register(@Valid @RequestBody RegisterRequestDto request) {
+    public ResponseEntity<UserResponseDto> register(@RequestBody RegisterRequestDto request) {
         UserResponseDto response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +37,8 @@ import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.util.JwtProvider;
 import com.sunfeax.citeria.validation.UserValidator;
 
+import jakarta.validation.Validator;
+
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
@@ -53,6 +56,8 @@ class AuthServiceTest {
     private AuthenticationManager authenticationManager;
     @Mock
     private RefreshTokenService refreshTokenService;
+    @Mock
+    private Validator beanValidator;
 
     private UserValidator userValidator;
     private AuthService authService;
@@ -68,7 +73,8 @@ class AuthServiceTest {
             passwordEncoder,
             jwtProvider,
             authenticationManager,
-            refreshTokenService
+            refreshTokenService,
+            beanValidator
         );
     }
 
@@ -76,6 +82,7 @@ class AuthServiceTest {
     void registerShouldThrowWhenEmailAlreadyExists() {
         RegisterRequestDto request = registerRequest();
 
+        when(beanValidator.validate(any(RegisterRequestDto.class))).thenReturn(Collections.emptySet());
         when(userFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
         when(userRepository.existsByEmail("john@example.com")).thenReturn(true);
         when(userRepository.existsByPhone("1234567")).thenReturn(false);
@@ -88,6 +95,7 @@ class AuthServiceTest {
     void registerShouldThrowWhenPhoneAlreadyExists() {
         RegisterRequestDto request = registerRequest();
 
+        when(beanValidator.validate(any(RegisterRequestDto.class))).thenReturn(Collections.emptySet());
         when(userFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
         when(userRepository.existsByEmail("john@example.com")).thenReturn(false);
         when(userRepository.existsByPhone("1234567")).thenReturn(true);
@@ -102,6 +110,7 @@ class AuthServiceTest {
         UserEntity entity = userEntity(1L);
         UserResponseDto dto = userResponseDto(1L);
 
+        when(beanValidator.validate(any(RegisterRequestDto.class))).thenReturn(Collections.emptySet());
         when(userFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
         when(userRepository.existsByEmail("john@example.com")).thenReturn(false);
         when(userRepository.existsByPhone("1234567")).thenReturn(false);

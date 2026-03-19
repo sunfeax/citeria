@@ -21,18 +21,25 @@ public class UserValidator {
     private final PasswordEncoder passwordEncoder;
 
     public void validateRegister(RegisterRequestDto request) {
-        new ValidationResult()
+        collectRegisterErrors(request).throwIfHasErrors();
+    }
+
+    public ValidationResult collectRegisterErrors(RegisterRequestDto request) {
+        return new ValidationResult()
             .addErrorIf(
-                userRepository.existsByEmail(request.email()),
+                hasText(request.email()) && userRepository.existsByEmail(request.email()),
                 "email",
                 "Email " + request.email() + " is already taken"
             )
             .addErrorIf(
-                userRepository.existsByPhone(request.phone()),
+                hasText(request.phone()) && userRepository.existsByPhone(request.phone()),
                 "phone",
                 "Phone " + request.phone() + " is already busy"
-            )
-            .throwIfHasErrors();
+            );
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
     public void validateUpdate(Long id, UserEntity existingEntity, UserUpdateRequestDto request) {

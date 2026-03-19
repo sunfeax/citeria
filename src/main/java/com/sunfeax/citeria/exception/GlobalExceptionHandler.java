@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,27 +31,45 @@ public class GlobalExceptionHandler {
     private static final String INVALID_JSON_DETAIL = "Invalid JSON format or value.";
     private static final String VALIDATION_DETAIL = "Request contains invalid fields.";
     private static final String INTERNAL_ERROR_DETAIL = "An unexpected error occurred.";
+    private static final Map<String, String> EMPTY_ERRORS = Map.of();
 
-    private ProblemDetail createDetail(HttpStatus status, String title, String detail, Map<String, Object> properties) {
+    private ProblemDetail createDetail(
+        HttpStatus status,
+        String code,
+        String title,
+        String detail,
+        Map<String, String> errors
+    ) {
         String safeDetail = Optional.ofNullable(detail).orElse(DEFAULT_DETAIL);
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, safeDetail);
         pd.setTitle(title);
+        pd.setProperty("code", code);
         pd.setProperty("timestamp", Instant.now());
-        if (properties != null && !properties.isEmpty()) {
-            properties.forEach(pd::setProperty);
-        }
+        pd.setProperty("errors", normalizeErrors(errors));
         return pd;
     }
 
     // 404 Not Found
     @ExceptionHandler({ResourceNotFoundException.class, NoResourceFoundException.class, NoHandlerFoundException.class})
     public ProblemDetail handleNotFound(Exception ex) {
-        return createDetail(HttpStatus.NOT_FOUND, "Resource Not Found", ex.getMessage(), null);
+        return createDetail(
+            HttpStatus.NOT_FOUND,
+            "RESOURCE_NOT_FOUND",
+            "Resource Not Found",
+            ex.getMessage(),
+            EMPTY_ERRORS
+        );
     }
 
     @ExceptionHandler({UserNotFoundException.class})
     public ProblemDetail handleUserNotFound(Exception ex) {
-        return createDetail(HttpStatus.NOT_FOUND, "User Not Found", ex.getMessage(), null);
+        return createDetail(
+            HttpStatus.NOT_FOUND,
+            "USER_NOT_FOUND",
+            "User Not Found",
+            ex.getMessage(),
+            EMPTY_ERRORS
+        );
     }
 
     // 409 Conflict
@@ -63,17 +82,22 @@ public class GlobalExceptionHandler {
         String message = (specificCause != null) ? specificCause.getMessage() : ex.getMessage();
 
         if (message != null && message.contains("exclude_overlapping_appointments")) {
-            ProblemDetail detail = createDetail(
-                HttpStatus.CONFLICT, 
-                "Slot already booked", 
-                OVERLAP_DETAIL, 
-                null
+            return createDetail(
+                HttpStatus.CONFLICT,
+                "SLOT_ALREADY_BOOKED",
+                "Slot already booked",
+                OVERLAP_DETAIL,
+                Map.of("time", OVERLAP_DETAIL)
             );
-            detail.setProperty("field", "time");
-            return detail;
         }
 
-        return createDetail(HttpStatus.CONFLICT, "Conflict", DATA_INTEGRITY_DETAIL, null);
+        return createDetail(
+            HttpStatus.CONFLICT,
+            "CONFLICT",
+            "Conflict",
+            DATA_INTEGRITY_DETAIL,
+            EMPTY_ERRORS
+        );
     }
 
     // 400 Bad Request (Validation)
@@ -84,7 +108,13 @@ public class GlobalExceptionHandler {
     })
     public ProblemDetail handleValidationExceptions(Exception ex) {
         Map<String, String> errors = extractValidationErrors(ex);
-        return createDetail(HttpStatus.BAD_REQUEST, "Validation Failed", VALIDATION_DETAIL, Map.of("errors", errors));
+        return createDetail(
+            HttpStatus.BAD_REQUEST,
+            "VALIDATION_ERROR",
+            "Validation Failed",
+            VALIDATION_DETAIL,
+            errors
+        );
     }
 
     private Map<String, String> extractValidationErrors(Exception ex) {
@@ -97,7 +127,7 @@ public class GlobalExceptionHandler {
             
             case ConstraintViolationException e -> 
                 e.getConstraintViolations().forEach(v -> 
-                    errors.putIfAbsent(v.getPropertyPath().toString(), v.getMessage()));
+                    errors.putIfAbsent(resolveConstraintField(v), v.getMessage()));
             
             case RequestValidationException e -> 
                 errors.putAll(e.getErrors());
@@ -108,20 +138,40 @@ public class GlobalExceptionHandler {
         return errors;
     }
 
+    private String resolveConstraintField(ConstraintViolation<?> violation) {
+        String propertyPath = violation.getPropertyPath().toString();
+        int lastDot = propertyPath.lastIndexOf('.');
+        return lastDot >= 0 ? propertyPath.substring(lastDot + 1) : propertyPath;
+    }
+
+    private Map<String, String> normalizeErrors(Map<String, String> errors) {
+        if (errors == null || errors.isEmpty()) {
+            return EMPTY_ERRORS;
+        }
+        return Map.copyOf(errors);
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleInvalidJson(HttpMessageNotReadableException ex) {
         log.debug("Unreadable request payload", ex);
-        return createDetail(HttpStatus.BAD_REQUEST, "Bad Request", INVALID_JSON_DETAIL, null);
+        return createDetail(
+            HttpStatus.BAD_REQUEST,
+            "INVALID_REQUEST_BODY",
+            "Bad Request",
+            INVALID_JSON_DETAIL,
+            Map.of("request", INVALID_JSON_DETAIL)
+        );
     }
     
     // 401 Unauthorized
     @ExceptionHandler(UnauthorizedException.class)
     public ProblemDetail handleUnauthorized(UnauthorizedException ex) {
         return createDetail(
-            HttpStatus.UNAUTHORIZED, 
+            HttpStatus.UNAUTHORIZED,
+            "UNAUTHORIZED",
             "Unauthorized",
             ex.getMessage(),
-            null
+            EMPTY_ERRORS
         );
     }
 
@@ -131,9 +181,10 @@ public class GlobalExceptionHandler {
 
         return createDetail(
             HttpStatus.UNAUTHORIZED,
+            "AUTHENTICATION_FAILED",
             "Authentication Failed", 
             "Invalid email or password",
-            null
+            EMPTY_ERRORS
         );
     }
 
@@ -143,9 +194,10 @@ public class GlobalExceptionHandler {
 
         return createDetail(
             HttpStatus.UNAUTHORIZED,
+            "AUTHENTICATION_FAILED",
             "Authentication Failed",
             "Authentication was not successful",
-            null
+            EMPTY_ERRORS
         );
     }
 
@@ -153,6 +205,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleAll(Exception ex) {
         log.error("Unhandled exception", ex);
-        return createDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", INTERNAL_ERROR_DETAIL, null);
+        return createDetail(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "INTERNAL_ERROR",
+            "Internal Server Error",
+            INTERNAL_ERROR_DETAIL,
+            EMPTY_ERRORS
+        );
     }
 }

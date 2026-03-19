@@ -18,8 +18,11 @@ import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.util.JwtProvider;
+import com.sunfeax.citeria.validation.ValidationResult;
 import com.sunfeax.citeria.validation.UserValidator;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -34,14 +37,15 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
+    private final Validator beanValidator;
 
     @Transactional
     public UserResponseDto register(RegisterRequestDto request) {
         RegisterRequestDto normalizedRequest = userFieldNormalizer.normalizePostRequest(request);
-        userValidator.validateRegister(normalizedRequest);
+        validateRegister(normalizedRequest).throwIfHasErrors();
 
         UserEntity entity = userMapper.createEntity(normalizedRequest);
-        entity.setPassword(passwordEncoder.encode(request.password()));
+        entity.setPassword(passwordEncoder.encode(normalizedRequest.password()));
         UserEntity saved = userRepository.save(entity);
 
         return userMapper.toResponseDto(saved);
@@ -88,6 +92,22 @@ public class AuthService {
     @Transactional
     public void logout(String refreshToken) {
         refreshTokenService.deleteByToken(refreshToken);
+    }
+
+    private ValidationResult validateRegister(RegisterRequestDto request) {
+        ValidationResult result = new ValidationResult();
+
+        beanValidator.validate(request).forEach(violation ->
+            result.addError(resolveConstraintField(violation), violation.getMessage())
+        );
+
+        return result.merge(userValidator.collectRegisterErrors(request));
+    }
+
+    private String resolveConstraintField(ConstraintViolation<?> violation) {
+        String propertyPath = violation.getPropertyPath().toString();
+        int lastDot = propertyPath.lastIndexOf('.');
+        return lastDot >= 0 ? propertyPath.substring(lastDot + 1) : propertyPath;
     }
 
     private LoginResponseDto buildLoginResponse(UserEntity user, String accessToken) {

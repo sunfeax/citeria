@@ -7,11 +7,28 @@ import java.util.Map;
 public class ValidationResult {
     private final Map<String, String> errors = new LinkedHashMap<>();
 
+    public ValidationResult addError(String field, String message) {
+        errors.putIfAbsent(field, message);
+        return this;
+    }
+
     public ValidationResult addErrorIf(boolean condition, String field, String message) {
         if (condition) {
-            errors.put(field, message);
+            addError(field, message);
         }
         return this;
+    }
+
+    public ValidationResult merge(ValidationResult other) {
+        if (other == null) {
+            return this;
+        }
+        other.errors.forEach(errors::putIfAbsent);
+        return this;
+    }
+
+    public Map<String, String> getErrors() {
+        return Map.copyOf(errors);
     }
 
     public void throwIfHasErrors() {
