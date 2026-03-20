@@ -3,13 +3,14 @@ package com.sunfeax.citeria.service;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Optional;
-import java.security.SecureRandom;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +22,9 @@ import com.sunfeax.citeria.repository.RefreshTokenRepository;
 import com.sunfeax.citeria.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenService {
@@ -80,10 +83,24 @@ public class RefreshTokenService {
 
     @Transactional
     public String rotateRefreshToken(RefreshTokenEntity token) {
+        String currentTokenHash = token.getTokenHash();
+        Instant newExpiryDate = buildExpiryDate();
         String rawToken = generateRawToken();
-        token.setTokenHash(hashToken(rawToken));
-        token.setExpiryDate(buildExpiryDate());
-        refreshTokenRepository.save(token);
+        String newTokenHash = hashToken(rawToken);
+
+        int updated = refreshTokenRepository.rotateTokenIfValid(
+            currentTokenHash,
+            newTokenHash,
+            newExpiryDate,
+            Instant.now()
+        );
+
+        if (updated != 1) {
+            throw new UnauthorizedException("Refresh token is invalid or already used");
+        }
+
+        token.setTokenHash(newTokenHash);
+        token.setExpiryDate(newExpiryDate);
         return rawToken;
     }
 
@@ -103,6 +120,15 @@ public class RefreshTokenService {
         byte[] bytes = new byte[REFRESH_TOKEN_BYTES];
         SECURE_RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    @Scheduled(fixedDelayString = "${app.jwt.refreshCleanupIntervalMs:3600000}")
+    @Transactional
+    public void cleanupExpiredTokens() {
+        int deleted = refreshTokenRepository.deleteExpiredTokens(Instant.now());
+        if (deleted > 0) {
+            log.debug("Deleted {} expired refresh tokens", deleted);
+        }
     }
 
     private String hashToken(String token) {

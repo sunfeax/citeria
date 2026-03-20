@@ -1,7 +1,9 @@
 package com.sunfeax.citeria.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -19,6 +21,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.sunfeax.citeria.entity.RefreshTokenEntity;
 import com.sunfeax.citeria.entity.UserEntity;
+import com.sunfeax.citeria.exception.UnauthorizedException;
 import com.sunfeax.citeria.repository.RefreshTokenRepository;
 import com.sunfeax.citeria.repository.UserRepository;
 
@@ -68,5 +71,45 @@ class RefreshTokenServiceTest {
         assertThat(savedToken.getUser()).isSameAs(user);
         assertThat(savedToken.getTokenHash()).hasSize(64).isNotEqualTo("old-hash");
         assertThat(savedToken.getExpiryDate()).isAfter(Instant.now());
+    }
+
+    @Test
+    void rotateRefreshTokenShouldUpdateTokenAtomically() {
+        RefreshTokenEntity storedToken = RefreshTokenEntity.builder()
+            .id(15L)
+            .tokenHash("old-hash")
+            .expiryDate(Instant.now().plusSeconds(60))
+            .build();
+
+        when(refreshTokenRepository.rotateTokenIfValid(
+            eq("old-hash"),
+            any(String.class),
+            any(Instant.class),
+            any(Instant.class)
+        )).thenReturn(1);
+
+        String newRawToken = refreshTokenService.rotateRefreshToken(storedToken);
+
+        assertThat(newRawToken).isNotBlank();
+        assertThat(storedToken.getTokenHash()).hasSize(64).isNotEqualTo("old-hash");
+        assertThat(storedToken.getExpiryDate()).isAfter(Instant.now());
+    }
+
+    @Test
+    void rotateRefreshTokenShouldThrowWhenTokenAlreadyUsed() {
+        RefreshTokenEntity storedToken = RefreshTokenEntity.builder()
+            .id(16L)
+            .tokenHash("old-hash")
+            .expiryDate(Instant.now().plusSeconds(60))
+            .build();
+
+        when(refreshTokenRepository.rotateTokenIfValid(
+            eq("old-hash"),
+            any(String.class),
+            any(Instant.class),
+            any(Instant.class)
+        )).thenReturn(0);
+
+        assertThrows(UnauthorizedException.class, () -> refreshTokenService.rotateRefreshToken(storedToken));
     }
 }
