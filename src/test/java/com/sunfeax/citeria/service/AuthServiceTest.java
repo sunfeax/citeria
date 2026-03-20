@@ -1,21 +1,20 @@
 package com.sunfeax.citeria.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -139,7 +138,7 @@ class AuthServiceTest {
 
         AuthSessionDto result = authService.login(request);
 
-        assertEquals("access-token", result.response().token());
+        assertEquals("access-token", result.response().accessToken());
         assertEquals("Bearer", result.response().tokenType());
         assertEquals(1L, result.response().id());
         assertEquals("John", result.response().firstName());
@@ -166,7 +165,7 @@ class AuthServiceTest {
 
         AuthSessionDto result = authService.refresh("old-refresh");
 
-        assertEquals("new-access", result.response().token());
+        assertEquals("new-access", result.response().accessToken());
         assertEquals("new-refresh", result.refreshToken());
     }
 

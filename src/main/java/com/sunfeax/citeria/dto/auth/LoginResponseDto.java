@@ -4,7 +4,7 @@ import com.sunfeax.citeria.enums.UserRole;
 import com.sunfeax.citeria.enums.UserType;
 
 public record LoginResponseDto(
-    String token,
+    String accessToken,
     String tokenType,
     Long id,
     String firstName,

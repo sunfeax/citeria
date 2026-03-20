@@ -11,9 +11,10 @@ import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.dto.user.UserUpdateRequestDto;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
-import com.sunfeax.citeria.repository.UserRepository;
+import com.sunfeax.citeria.exception.UnauthorizedException;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
+import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.validation.UserValidator;
 
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,14 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponseDto getById(Long id) {
         return userMapper.toResponseDto(findUserOrThrow(id));
+    }
+
+    @Transactional(readOnly = true)
+    public UserResponseDto getMe(String email) {
+        UserEntity user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new UnauthorizedException("User not found"));
+
+        return userMapper.toResponseDto(user);
     }
 
     @Transactional

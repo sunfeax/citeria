@@ -10,16 +10,16 @@ import com.sunfeax.citeria.dto.auth.AuthSessionDto;
 import com.sunfeax.citeria.dto.auth.LoginRequestDto;
 import com.sunfeax.citeria.dto.auth.LoginResponseDto;
 import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
-import com.sunfeax.citeria.entity.RefreshTokenEntity;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
+import com.sunfeax.citeria.entity.RefreshTokenEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.exception.UnauthorizedException;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.util.JwtProvider;
-import com.sunfeax.citeria.validation.ValidationResult;
 import com.sunfeax.citeria.validation.UserValidator;
+import com.sunfeax.citeria.validation.ValidationResult;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -40,18 +40,6 @@ public class AuthService {
     private final Validator beanValidator;
 
     @Transactional
-    public UserResponseDto register(RegisterRequestDto request) {
-        RegisterRequestDto normalizedRequest = userFieldNormalizer.normalizePostRequest(request);
-        validateRegister(normalizedRequest).throwIfHasErrors();
-
-        UserEntity entity = userMapper.createEntity(normalizedRequest);
-        entity.setPassword(passwordEncoder.encode(normalizedRequest.password()));
-        UserEntity saved = userRepository.save(entity);
-
-        return userMapper.toResponseDto(saved);
-    }
-
-    @Transactional
     public AuthSessionDto login(LoginRequestDto request) {
         String normalizedEmail = userFieldNormalizer.normalizeEmail(request.email());
 
@@ -67,6 +55,18 @@ public class AuthService {
         LoginResponseDto response = buildLoginResponse(user, accessToken);
 
         return new AuthSessionDto(response, refreshToken);
+    }
+
+    @Transactional
+    public UserResponseDto register(RegisterRequestDto request) {
+        RegisterRequestDto normalizedRequest = userFieldNormalizer.normalizePostRequest(request);
+        validateRegister(normalizedRequest).throwIfHasErrors();
+
+        UserEntity entity = userMapper.createEntity(normalizedRequest);
+        entity.setPassword(passwordEncoder.encode(normalizedRequest.password()));
+        UserEntity saved = userRepository.save(entity);
+
+        return userMapper.toResponseDto(saved);
     }
 
     @Transactional

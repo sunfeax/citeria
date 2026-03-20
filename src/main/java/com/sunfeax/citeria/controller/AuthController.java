@@ -36,7 +36,7 @@ public class AuthController {
     private final AuthService authService;
 
     @Value("${app.jwt.refreshExpiration}")
-    private long refreshTokenDurationMs;
+    private long refreshTokenDuration;
 
     @Value("${app.jwt.refreshCookieSecure:false}")
     private boolean refreshCookieSecure;
@@ -89,7 +89,7 @@ public class AuthController {
             .secure(refreshCookieSecure)
             .sameSite("Lax")
             .path(REFRESH_COOKIE_PATH)
-            .maxAge(Duration.ofMillis(refreshTokenDurationMs))
+            .maxAge(Duration.ofMillis(refreshTokenDuration))
             .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
