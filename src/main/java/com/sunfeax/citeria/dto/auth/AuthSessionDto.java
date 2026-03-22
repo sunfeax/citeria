@@ -1,6 +1,6 @@
 package com.sunfeax.citeria.dto.auth;
 
 public record AuthSessionDto(
-    LoginResponseDto response,
+    AuthResponseDto response,
     String refreshToken
 ) {}

@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -116,11 +117,16 @@ class AuthServiceTest {
         when(userMapper.createEntity(request)).thenReturn(entity);
         when(passwordEncoder.encode("Password!")).thenReturn("encoded");
         when(userRepository.save(entity)).thenReturn(entity);
+        when(jwtProvider.generateToken(entity)).thenReturn("access-token");
+        when(refreshTokenService.createRefreshToken(1L)).thenReturn("refresh-token");
         when(userMapper.toResponseDto(entity)).thenReturn(dto);
 
-        UserResponseDto result = authService.register(request);
+        AuthSessionDto result = authService.register(request);
 
-        assertEquals(dto, result);
+        assertEquals("access-token", result.response().accessToken());
+        assertEquals("Bearer", result.response().tokenType());
+        assertEquals(dto, result.response().user());
+        assertEquals("refresh-token", result.refreshToken());
         assertEquals("encoded", entity.getPassword());
     }
 
@@ -135,16 +141,13 @@ class AuthServiceTest {
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(entity));
         when(jwtProvider.generateToken(entity)).thenReturn("access-token");
         when(refreshTokenService.createRefreshToken(1L)).thenReturn("refresh-token");
+        when(userMapper.toResponseDto(entity)).thenReturn(userResponseDto(1L));
 
         AuthSessionDto result = authService.login(request);
 
         assertEquals("access-token", result.response().accessToken());
         assertEquals("Bearer", result.response().tokenType());
-        assertEquals(1L, result.response().id());
-        assertEquals("John", result.response().firstName());
-        assertEquals("Snow", result.response().lastName());
-        assertEquals(UserRole.USER, result.response().role());
-        assertEquals(UserType.CLIENT, result.response().type());
+        assertEquals(1L, result.response().user().id());
         assertEquals("refresh-token", result.refreshToken());
     }
 
@@ -166,6 +169,7 @@ class AuthServiceTest {
         AuthSessionDto result = authService.refresh("old-refresh");
 
         assertEquals("new-access", result.response().accessToken());
+        assertNull(result.response().user());
         assertEquals("new-refresh", result.refreshToken());
     }
 

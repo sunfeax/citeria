@@ -60,6 +60,7 @@ public class RefreshTokenService {
                         .build());
 
         refreshTokenRepository.save(refreshToken);
+
         return rawToken;
     }
 
@@ -78,6 +79,7 @@ public class RefreshTokenService {
             refreshTokenRepository.delete(token);
             throw new UnauthorizedException("Refresh token was expired. Please make a new signin request");
         }
+
         return token;
     }
 
@@ -89,10 +91,7 @@ public class RefreshTokenService {
         String newTokenHash = hashToken(rawToken);
 
         int updated = refreshTokenRepository.rotateTokenIfValid(
-            currentTokenHash,
-            newTokenHash,
-            newExpiryDate,
-            Instant.now()
+            currentTokenHash, newTokenHash, newExpiryDate, Instant.now()
         );
 
         if (updated != 1) {
@@ -101,6 +100,7 @@ public class RefreshTokenService {
 
         token.setTokenHash(newTokenHash);
         token.setExpiryDate(newExpiryDate);
+
         return rawToken;
     }
 
@@ -109,6 +109,7 @@ public class RefreshTokenService {
         if (token == null || token.isBlank()) {
             return;
         }
+        
         refreshTokenRepository.deleteByTokenHash(hashToken(token));
     }
 
@@ -119,6 +120,7 @@ public class RefreshTokenService {
     private String generateRawToken() {
         byte[] bytes = new byte[REFRESH_TOKEN_BYTES];
         SECURE_RANDOM.nextBytes(bytes);
+
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
@@ -126,6 +128,7 @@ public class RefreshTokenService {
     @Transactional
     public void cleanupExpiredTokens() {
         int deleted = refreshTokenRepository.deleteExpiredTokens(Instant.now());
+        
         if (deleted > 0) {
             log.debug("Deleted {} expired refresh tokens", deleted);
         }
@@ -135,7 +138,9 @@ public class RefreshTokenService {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            
             return HexFormat.of().formatHex(hash);
+
         } catch (NoSuchAlgorithmException ex) {
             throw new IllegalStateException("SHA-256 algorithm is not available", ex);
         }

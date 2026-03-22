@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.sunfeax.citeria.dto.auth.AuthSessionDto;
 import com.sunfeax.citeria.dto.auth.LoginRequestDto;
-import com.sunfeax.citeria.dto.auth.LoginResponseDto;
+import com.sunfeax.citeria.dto.auth.AuthResponseDto;
 import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.entity.RefreshTokenEntity;
@@ -52,21 +52,25 @@ public class AuthService {
 
         String accessToken = jwtProvider.generateToken(user);
         String refreshToken = refreshTokenService.createRefreshToken(user.getId());
-        LoginResponseDto response = buildLoginResponse(user, accessToken);
+        AuthResponseDto response = buildLoginResponse(user, accessToken);
 
         return new AuthSessionDto(response, refreshToken);
     }
 
     @Transactional
-    public UserResponseDto register(RegisterRequestDto request) {
+    public AuthSessionDto register(RegisterRequestDto request) {
         RegisterRequestDto normalizedRequest = userFieldNormalizer.normalizePostRequest(request);
         validateRegister(normalizedRequest).throwIfHasErrors();
 
-        UserEntity entity = userMapper.createEntity(normalizedRequest);
-        entity.setPassword(passwordEncoder.encode(normalizedRequest.password()));
-        UserEntity saved = userRepository.save(entity);
+        UserEntity user = userMapper.createEntity(normalizedRequest);
+        user.setPassword(passwordEncoder.encode(normalizedRequest.password()));
+        UserEntity savedUser = userRepository.save(user);
 
-        return userMapper.toResponseDto(saved);
+        String accessToken = jwtProvider.generateToken(savedUser);
+        String refreshToken = refreshTokenService.createRefreshToken(savedUser.getId());
+        AuthResponseDto response = buildLoginResponse(savedUser, accessToken);
+
+        return new AuthSessionDto(response, refreshToken);
     }
 
     @Transactional
@@ -84,7 +88,7 @@ public class AuthService {
 
         String accessToken = jwtProvider.generateToken(user);
         String rotatedRefreshToken = refreshTokenService.rotateRefreshToken(storedToken);
-        LoginResponseDto response = buildLoginResponse(user, accessToken);
+        AuthResponseDto response = new AuthResponseDto(accessToken, "Bearer", null);
 
         return new AuthSessionDto(response, rotatedRefreshToken);
     }
@@ -110,15 +114,8 @@ public class AuthService {
         return lastDot >= 0 ? propertyPath.substring(lastDot + 1) : propertyPath;
     }
 
-    private LoginResponseDto buildLoginResponse(UserEntity user, String accessToken) {
-        return new LoginResponseDto(
-            accessToken,
-            "Bearer",
-            user.getId(),
-            user.getFirstName(),
-            user.getLastName(),
-            user.getRole(),
-            user.getType()
-        );
+    private AuthResponseDto buildLoginResponse(UserEntity user, String accessToken) {
+        UserResponseDto userResponse = userMapper.toResponseDto(user);
+        return new AuthResponseDto(accessToken, "Bearer", userResponse);
     }
 }

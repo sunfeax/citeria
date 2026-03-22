@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sunfeax.citeria.dto.auth.AuthSessionDto;
 import com.sunfeax.citeria.dto.auth.LoginRequestDto;
-import com.sunfeax.citeria.dto.auth.LoginResponseDto;
+import com.sunfeax.citeria.dto.auth.AuthResponseDto;
 import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
-import com.sunfeax.citeria.dto.user.UserResponseDto;
+import com.sunfeax.citeria.dto.auth.TokenResponseDto;
 import com.sunfeax.citeria.exception.UnauthorizedException;
 import com.sunfeax.citeria.service.AuthService;
 
@@ -42,13 +42,18 @@ public class AuthController {
     private boolean refreshCookieSecure;
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponseDto> register(@RequestBody RegisterRequestDto request) {
-        UserResponseDto response = authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<AuthResponseDto> register(
+        @RequestBody RegisterRequestDto request,
+        HttpServletResponse response
+    ) {
+        AuthSessionDto session = authService.register(request);
+        addRefreshCookie(response, session.refreshToken());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(session.response());
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(
+    public ResponseEntity<AuthResponseDto> login(
         @Valid @RequestBody LoginRequestDto request,
         HttpServletResponse response
     ) {
@@ -58,7 +63,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponseDto> refresh(
+    public ResponseEntity<TokenResponseDto> refresh(
         @CookieValue(name = REFRESH_COOKIE_NAME, required = false) String refreshToken,
         HttpServletResponse response
     ) {
@@ -68,7 +73,13 @@ public class AuthController {
 
         AuthSessionDto session = authService.refresh(refreshToken);
         addRefreshCookie(response, session.refreshToken());
-        return ResponseEntity.ok(session.response());
+
+        TokenResponseDto tokenResponse = new TokenResponseDto(
+            session.response().accessToken(),
+            session.response().tokenType()
+        );
+        
+        return ResponseEntity.ok(tokenResponse);
     }
 
     @PostMapping("/logout")

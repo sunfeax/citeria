@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +27,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.sunfeax.citeria.config.JwtAuthenticationFilter;
 import com.sunfeax.citeria.dto.auth.AuthSessionDto;
 import com.sunfeax.citeria.dto.auth.LoginRequestDto;
-import com.sunfeax.citeria.dto.auth.LoginResponseDto;
+import com.sunfeax.citeria.dto.auth.AuthResponseDto;
 import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.enums.UserRole;
 import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.GlobalExceptionHandler;
+import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.service.AuthService;
 
 import jakarta.servlet.http.Cookie;
@@ -68,14 +70,20 @@ class AuthControllerWebMvcTest {
             UserType.CLIENT
         );
 
-        when(authService.register(any(RegisterRequestDto.class))).thenReturn(userDto(1L));
+        when(authService.register(any(RegisterRequestDto.class))).thenReturn(new AuthSessionDto(
+            authResponseDto(),
+            "refresh-token"
+        ));
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").value(1))
-            .andExpect(jsonPath("$.type").value("CLIENT"));
+            .andExpect(jsonPath("$.accessToken").value("jwt-token"))
+            .andExpect(jsonPath("$.tokenType").value("Bearer"))
+            .andExpect(jsonPath("$.user.id").value(1))
+            .andExpect(jsonPath("$.user.type").value("CLIENT"))
+            .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("refresh_token=refresh-token")));
     }
 
     @Test
@@ -91,10 +99,14 @@ class AuthControllerWebMvcTest {
             }
             """;
 
+        when(authService.register(any(RegisterRequestDto.class)))
+            .thenThrow(new RequestValidationException(Map.of("email", "must be a well-formed email address")));
+
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidBody))
             .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
             .andExpect(jsonPath("$.status").value(400))
             .andExpect(jsonPath("$.title").value("Validation Failed"))
             .andExpect(jsonPath("$.detail").value("Request contains invalid fields."))
@@ -108,7 +120,7 @@ class AuthControllerWebMvcTest {
         LoginRequestDto request = new LoginRequestDto("john@example.com", "Password!");
 
         when(authService.login(any(LoginRequestDto.class))).thenReturn(new AuthSessionDto(
-            loginResponseDto(1L),
+            authResponseDto(),
             "refresh-token"
         ));
 
@@ -116,13 +128,8 @@ class AuthControllerWebMvcTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.token").value("jwt-token"))
+            .andExpect(jsonPath("$.accessToken").value("jwt-token"))
             .andExpect(jsonPath("$.tokenType").value("Bearer"))
-            .andExpect(jsonPath("$.id").value(1))
-            .andExpect(jsonPath("$.firstName").value("John"))
-            .andExpect(jsonPath("$.lastName").value("Snow"))
-            .andExpect(jsonPath("$.role").value("USER"))
-            .andExpect(jsonPath("$.type").value("CLIENT"))
             .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("refresh_token=refresh-token")));
     }
 
@@ -167,14 +174,15 @@ class AuthControllerWebMvcTest {
     @Test
     void refreshShouldReturnOkAndRotateCookie() throws Exception {
         when(authService.refresh(eq("old-refresh"))).thenReturn(new AuthSessionDto(
-            loginResponseDto(1L),
+            authResponseDto(),
             "new-refresh"
         ));
 
         mockMvc.perform(post("/api/auth/refresh")
                 .cookie(new Cookie("refresh_token", "old-refresh")))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.token").value("jwt-token"))
+            .andExpect(jsonPath("$.accessToken").value("jwt-token"))
+            .andExpect(jsonPath("$.user").doesNotExist())
             .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("refresh_token=new-refresh")));
     }
 
@@ -212,15 +220,11 @@ class AuthControllerWebMvcTest {
         );
     }
 
-    private LoginResponseDto loginResponseDto(Long id) {
-        return new LoginResponseDto(
+    private AuthResponseDto authResponseDto() {
+        return new AuthResponseDto(
             "jwt-token",
             "Bearer",
-            id,
-            "John",
-            "Snow",
-            UserRole.USER,
-            UserType.CLIENT
+            userDto(1L)
         );
     }
 }
