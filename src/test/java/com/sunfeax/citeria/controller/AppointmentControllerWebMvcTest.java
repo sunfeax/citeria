@@ -25,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.sunfeax.citeria.config.JwtAuthenticationFilter;
 import com.sunfeax.citeria.dto.appointment.AppointmentPatchRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
@@ -50,6 +51,9 @@ class AppointmentControllerWebMvcTest {
 
     @MockitoBean
     private AppointmentService appointmentService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
     void getAppointmentsShouldReturnPagedResponse() throws Exception {
@@ -88,7 +92,6 @@ class AppointmentControllerWebMvcTest {
     void createShouldReturnCreated() throws Exception {
         LocalDateTime start = LocalDateTime.now().plusDays(1).withSecond(0).withNano(0);
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
-            10L,
             100L,
             start,
             start.plusMinutes(60),
@@ -108,7 +111,6 @@ class AppointmentControllerWebMvcTest {
     void createShouldReturnBadRequestForInvalidBody() throws Exception {
         String invalidBody = """
             {
-              "clientId": 10,
               "specialistServiceId": 100,
               "startTime": null,
               "endTime": "2026-03-10T11:00:00",

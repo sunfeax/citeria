@@ -7,9 +7,6 @@ import com.sunfeax.citeria.enums.PaymentMethod;
 import jakarta.validation.constraints.NotNull;
 
 public record AppointmentPostRequestDto(
-    @NotNull(message = "Client id is required")
-    Long clientId,
-
     @NotNull(message = "Specialist service id is required")
     Long specialistServiceId,
 

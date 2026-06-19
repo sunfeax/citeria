@@ -27,24 +27,8 @@ class AppointmentPostRequestDtoValidationTest {
     }
 
     @Test
-    void nullClientIdShouldFailValidation() {
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(
-            null,
-            100L,
-            LocalDateTime.now().plusDays(1),
-            LocalDateTime.now().plusDays(1).plusMinutes(60),
-            PaymentMethod.ONLINE
-        );
-
-        Set<ConstraintViolation<AppointmentPostRequestDto>> violations = validator.validate(request);
-
-        assertTrue(hasFieldMessage(violations, "clientId", "Client id is required"));
-    }
-
-    @Test
     void nullSpecialistServiceIdShouldFailValidation() {
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
-            10L,
             null,
             LocalDateTime.now().plusDays(1),
             LocalDateTime.now().plusDays(1).plusMinutes(60),
@@ -59,7 +43,6 @@ class AppointmentPostRequestDtoValidationTest {
     @Test
     void nullStartTimeShouldFailValidation() {
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
-            10L,
             100L,
             null,
             LocalDateTime.now().plusDays(1).plusMinutes(60),
@@ -74,7 +57,6 @@ class AppointmentPostRequestDtoValidationTest {
     @Test
     void nullPaymentMethodShouldFailValidation() {
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
-            10L,
             100L,
             LocalDateTime.now().plusDays(1),
             LocalDateTime.now().plusDays(1).plusMinutes(60),
@@ -88,7 +70,6 @@ class AppointmentPostRequestDtoValidationTest {
 
     private AppointmentPostRequestDto validRequest() {
         return new AppointmentPostRequestDto(
-            10L,
             100L,
             LocalDateTime.now().plusDays(1),
             LocalDateTime.now().plusDays(1).plusMinutes(60),

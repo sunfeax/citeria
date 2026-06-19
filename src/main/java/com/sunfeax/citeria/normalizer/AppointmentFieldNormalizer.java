@@ -12,7 +12,6 @@ public class AppointmentFieldNormalizer {
 
     public AppointmentPostRequestDto normalizePostRequest(AppointmentPostRequestDto request) {
         return new AppointmentPostRequestDto(
-            request.clientId(),
             request.specialistServiceId(),
             normalizeDateTime(request.startTime()),
             normalizeDateTime(request.endTime()),

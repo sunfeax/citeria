@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -17,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.entity.BusinessEntity;
@@ -57,8 +60,8 @@ class AppointmentRaceConditionTest {
         LocalDateTime end = start.plusMinutes(60);
 
         AttemptResult[] results = runConcurrentAttempts(
-            bookingTask(fixture.clientOneId(), fixture.specialistServiceId(), start, end),
-            bookingTask(fixture.clientTwoId(), fixture.specialistServiceId(), start, end)
+            bookingTask(fixture.clientOneEmail(), fixture.specialistServiceId(), start, end),
+            bookingTask(fixture.clientTwoEmail(), fixture.specialistServiceId(), start, end)
         );
 
         long successCount = countSuccesses(results);
@@ -86,8 +89,8 @@ class AppointmentRaceConditionTest {
         LocalDateTime secondEnd = secondStart.plusMinutes(60);
 
         AttemptResult[] results = runConcurrentAttempts(
-            bookingTask(fixture.clientOneId(), fixture.specialistServiceId(), firstStart, firstEnd),
-            bookingTask(fixture.clientTwoId(), fixture.specialistServiceId(), secondStart, secondEnd)
+            bookingTask(fixture.clientOneEmail(), fixture.specialistServiceId(), firstStart, firstEnd),
+            bookingTask(fixture.clientTwoEmail(), fixture.specialistServiceId(), secondStart, secondEnd)
         );
 
         long successCount = countSuccesses(results);
@@ -138,22 +141,28 @@ class AppointmentRaceConditionTest {
     }
 
     private Callable<AttemptResult> bookingTask(
-        Long clientId,
+        String clientEmail,
         Long specialistServiceId,
         LocalDateTime start,
         LocalDateTime end
     ) {
         return () -> {
-            appointmentService.create(
-                new AppointmentPostRequestDto(
-                    clientId,
-                    specialistServiceId,
-                    start,
-                    end,
-                    PaymentMethod.ONLINE
-                )
+            SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(clientEmail, null, List.of())
             );
-            return AttemptResult.success();
+            try {
+                appointmentService.create(
+                    new AppointmentPostRequestDto(
+                        specialistServiceId,
+                        start,
+                        end,
+                        PaymentMethod.ONLINE
+                    )
+                );
+                return AttemptResult.success();
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
         };
     }
 
@@ -253,8 +262,8 @@ class AppointmentRaceConditionTest {
         return new TestFixture(
             specialist.getId(),
             specialistService.getId(),
-            clientOne.getId(),
-            clientTwo.getId()
+            clientOne.getEmail(),
+            clientTwo.getEmail()
         );
     }
 
@@ -274,8 +283,8 @@ class AppointmentRaceConditionTest {
     private record TestFixture(
         Long specialistId,
         Long specialistServiceId,
-        Long clientOneId,
-        Long clientTwoId
+        String clientOneEmail,
+        String clientTwoEmail
     ) {}
 
     private record AttemptResult(boolean successful, Throwable error) {

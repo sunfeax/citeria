@@ -17,6 +17,7 @@ import com.sunfeax.citeria.repository.SpecialistServiceRepository;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.mapper.AppointmentMapper;
 import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
+import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.validation.AppointmentValidator;
 
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class AppointmentService {
     private final SpecialistServiceRepository specialistServiceRepository;
     private final AppointmentFieldNormalizer appointmentFieldNormalizer;
     private final AppointmentValidator appointmentValidator;
+    private final CurrentUserProvider currentUserProvider;
 
     @Transactional(readOnly = true)
     public Page<AppointmentResponseDto> getAll(Pageable pageable) {
@@ -49,7 +51,7 @@ public class AppointmentService {
     public AppointmentResponseDto create(AppointmentPostRequestDto request) {
         AppointmentPostRequestDto normalizedRequest = appointmentFieldNormalizer.normalizePostRequest(request);
 
-        UserEntity client = findClientOrThrow(normalizedRequest.clientId());
+        UserEntity client = currentUserProvider.getCurrentUser();
         SpecialistServiceEntity specialistService = findSpecialistServiceOrThrow(normalizedRequest.specialistServiceId());
 
         appointmentValidator.validateCreate(normalizedRequest, client, specialistService);

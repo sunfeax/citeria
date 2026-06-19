@@ -35,11 +35,13 @@ import com.sunfeax.citeria.enums.PaymentMethod;
 import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
+import com.sunfeax.citeria.exception.UnauthorizedException;
 import com.sunfeax.citeria.repository.AppointmentRepository;
 import com.sunfeax.citeria.repository.SpecialistServiceRepository;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.mapper.AppointmentMapper;
 import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
+import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.validation.AppointmentValidator;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,6 +57,8 @@ class AppointmentServiceTest {
     private SpecialistServiceRepository specialistServiceRepository;
     @Mock
     private AppointmentFieldNormalizer appointmentFieldNormalizer;
+    @Mock
+    private CurrentUserProvider currentUserProvider;
 
     private AppointmentValidator appointmentValidator;
 
@@ -69,7 +73,8 @@ class AppointmentServiceTest {
             userRepository,
             specialistServiceRepository,
             appointmentFieldNormalizer,
-            appointmentValidator
+            appointmentValidator,
+            currentUserProvider
         );
     }
 
@@ -100,14 +105,14 @@ class AppointmentServiceTest {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(10L, 100L, start, end, PaymentMethod.ONLINE);
+        AppointmentPostRequestDto request = new AppointmentPostRequestDto(100L, start, end, PaymentMethod.ONLINE);
         UserEntity client = clientUser(10L);
         SpecialistServiceEntity specialistService = specialistService(100L, true);
         AppointmentEntity entity = appointmentEntity(1L);
         AppointmentResponseDto dto = appointmentDto(1L);
 
         when(appointmentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(userRepository.findById(10L)).thenReturn(Optional.of(client));
+        when(currentUserProvider.getCurrentUser()).thenReturn(client);
         when(specialistServiceRepository.findById(100L)).thenReturn(Optional.of(specialistService));
         when(
             appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
@@ -128,16 +133,16 @@ class AppointmentServiceTest {
     }
 
     @Test
-    void createShouldThrowWhenClientNotFound() {
+    void createShouldThrowWhenCurrentUserCannotBeResolved() {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(10L, 100L, start, end, PaymentMethod.ONLINE);
+        AppointmentPostRequestDto request = new AppointmentPostRequestDto(100L, start, end, PaymentMethod.ONLINE);
 
         when(appointmentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(userRepository.findById(10L)).thenReturn(Optional.empty());
+        when(currentUserProvider.getCurrentUser()).thenThrow(new UnauthorizedException("Authentication is required"));
 
-        assertThrows(ResourceNotFoundException.class, () -> appointmentService.create(request));
+        assertThrows(UnauthorizedException.class, () -> appointmentService.create(request));
         verify(appointmentRepository, never()).save(any(AppointmentEntity.class));
     }
 
@@ -146,11 +151,11 @@ class AppointmentServiceTest {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(10L, 100L, start, end, PaymentMethod.ONLINE);
+        AppointmentPostRequestDto request = new AppointmentPostRequestDto(100L, start, end, PaymentMethod.ONLINE);
         UserEntity client = clientUser(10L);
 
         when(appointmentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(userRepository.findById(10L)).thenReturn(Optional.of(client));
+        when(currentUserProvider.getCurrentUser()).thenReturn(client);
         when(specialistServiceRepository.findById(100L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> appointmentService.create(request));
@@ -162,12 +167,12 @@ class AppointmentServiceTest {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(10L, 100L, start, end, PaymentMethod.ONLINE);
+        AppointmentPostRequestDto request = new AppointmentPostRequestDto(100L, start, end, PaymentMethod.ONLINE);
         UserEntity specialistAsClient = specialistUser(10L);
         SpecialistServiceEntity specialistService = specialistService(100L, true);
 
         when(appointmentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(userRepository.findById(10L)).thenReturn(Optional.of(specialistAsClient));
+        when(currentUserProvider.getCurrentUser()).thenReturn(specialistAsClient);
         when(specialistServiceRepository.findById(100L)).thenReturn(Optional.of(specialistService));
         when(
             appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
@@ -187,12 +192,12 @@ class AppointmentServiceTest {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.minusMinutes(30);
 
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(10L, 100L, start, end, PaymentMethod.ONLINE);
+        AppointmentPostRequestDto request = new AppointmentPostRequestDto(100L, start, end, PaymentMethod.ONLINE);
         UserEntity client = clientUser(10L);
         SpecialistServiceEntity specialistService = specialistService(100L, true);
 
         when(appointmentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(userRepository.findById(10L)).thenReturn(Optional.of(client));
+        when(currentUserProvider.getCurrentUser()).thenReturn(client);
         when(specialistServiceRepository.findById(100L)).thenReturn(Optional.of(specialistService));
         when(
             appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
@@ -212,12 +217,12 @@ class AppointmentServiceTest {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(10L, 100L, start, end, PaymentMethod.ONLINE);
+        AppointmentPostRequestDto request = new AppointmentPostRequestDto(100L, start, end, PaymentMethod.ONLINE);
         UserEntity client = clientUser(10L);
         SpecialistServiceEntity specialistService = specialistService(100L, true);
 
         when(appointmentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(userRepository.findById(10L)).thenReturn(Optional.of(client));
+        when(currentUserProvider.getCurrentUser()).thenReturn(client);
         when(specialistServiceRepository.findById(100L)).thenReturn(Optional.of(specialistService));
         when(
             appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
