@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.controller;
 
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -42,7 +43,7 @@ public class PaymentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PaymentResponseDto> getPaymentById(@PathVariable Long id) {
+    public ResponseEntity<PaymentResponseDto> getPaymentById(@PathVariable UUID id) {
         return ResponseEntity.ok(paymentService.getById(id));
     }
 
@@ -54,14 +55,14 @@ public class PaymentController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<PaymentResponseDto> update(
-        @PathVariable Long id,
+        @PathVariable UUID id,
         @Valid @RequestBody PaymentPatchRequestDto request
     ) {
         return ResponseEntity.ok(paymentService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<PaymentResponseDto> deleteById(@PathVariable Long id) {
+    public ResponseEntity<PaymentResponseDto> deleteById(@PathVariable UUID id) {
         return ResponseEntity.ok(paymentService.deleteById(id));
     }
 }

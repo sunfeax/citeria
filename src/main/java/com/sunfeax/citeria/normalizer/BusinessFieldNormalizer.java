@@ -12,7 +12,6 @@ public class BusinessFieldNormalizer {
 
     public BusinessPostRequestDto normalizePostRequest(BusinessPostRequestDto request) {
         return new BusinessPostRequestDto(
-            request.ownerId(),
             normalizeText(request.name()),
             normalizeText(request.description()),
             normalizePhone(request.phone()),

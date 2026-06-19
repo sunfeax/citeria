@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.service;
 
+import java.util.UUID;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -68,8 +69,8 @@ class PaymentServiceTest {
     @Test
     void getAllShouldReturnMappedPage() {
         Pageable pageable = PageRequest.of(0, 20);
-        PaymentEntity entity = paymentEntity(1L, 10L);
-        PaymentResponseDto dto = paymentDto(1L, 10L);
+        PaymentEntity entity = paymentEntity(new UUID(0, 1L), new UUID(0, 10L));
+        PaymentResponseDto dto = paymentDto(new UUID(0, 1L), new UUID(0, 10L));
 
         when(paymentRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(entity)));
         when(paymentMapper.toResponseDto(entity)).thenReturn(dto);
@@ -82,21 +83,21 @@ class PaymentServiceTest {
 
     @Test
     void getByIdShouldThrowWhenPaymentNotFound() {
-        when(paymentRepository.findById(99L)).thenReturn(Optional.empty());
+        when(paymentRepository.findById(new UUID(0, 99L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> paymentService.getById(99L));
+        assertThrows(ResourceNotFoundException.class, () -> paymentService.getById(new UUID(0, 99L)));
     }
 
     @Test
     void registerShouldSavePaymentWhenRequestIsValid() {
-        PaymentPostRequestDto request = new PaymentPostRequestDto(10L);
-        AppointmentEntity appointment = appointmentEntity(10L, AppointmentStatus.CONFIRMED);
-        PaymentEntity entity = paymentEntity(1L, 10L);
-        PaymentResponseDto dto = paymentDto(1L, 10L);
+        PaymentPostRequestDto request = new PaymentPostRequestDto(new UUID(0, 10L));
+        AppointmentEntity appointment = appointmentEntity(new UUID(0, 10L), AppointmentStatus.CONFIRMED);
+        PaymentEntity entity = paymentEntity(new UUID(0, 1L), new UUID(0, 10L));
+        PaymentResponseDto dto = paymentDto(new UUID(0, 1L), new UUID(0, 10L));
 
         when(paymentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(appointmentRepository.findById(10L)).thenReturn(Optional.of(appointment));
-        when(paymentRepository.existsByAppointmentId(10L)).thenReturn(false);
+        when(appointmentRepository.findById(new UUID(0, 10L))).thenReturn(Optional.of(appointment));
+        when(paymentRepository.existsByAppointmentId(new UUID(0, 10L))).thenReturn(false);
         when(paymentMapper.createEntity(request, appointment)).thenReturn(entity);
         when(paymentRepository.save(entity)).thenReturn(entity);
         when(paymentMapper.toResponseDto(entity)).thenReturn(dto);
@@ -109,10 +110,10 @@ class PaymentServiceTest {
 
     @Test
     void registerShouldThrowWhenAppointmentNotFound() {
-        PaymentPostRequestDto request = new PaymentPostRequestDto(10L);
+        PaymentPostRequestDto request = new PaymentPostRequestDto(new UUID(0, 10L));
 
         when(paymentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(appointmentRepository.findById(10L)).thenReturn(Optional.empty());
+        when(appointmentRepository.findById(new UUID(0, 10L))).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> paymentService.create(request));
         verify(paymentRepository, never()).save(any(PaymentEntity.class));
@@ -120,12 +121,12 @@ class PaymentServiceTest {
 
     @Test
     void registerShouldThrowWhenPaymentAlreadyExistsForAppointment() {
-        PaymentPostRequestDto request = new PaymentPostRequestDto(10L);
-        AppointmentEntity appointment = appointmentEntity(10L, AppointmentStatus.PENDING);
+        PaymentPostRequestDto request = new PaymentPostRequestDto(new UUID(0, 10L));
+        AppointmentEntity appointment = appointmentEntity(new UUID(0, 10L), AppointmentStatus.PENDING);
 
         when(paymentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(appointmentRepository.findById(10L)).thenReturn(Optional.of(appointment));
-        when(paymentRepository.existsByAppointmentId(10L)).thenReturn(true);
+        when(appointmentRepository.findById(new UUID(0, 10L))).thenReturn(Optional.of(appointment));
+        when(paymentRepository.existsByAppointmentId(new UUID(0, 10L))).thenReturn(true);
 
         assertThrows(RequestValidationException.class, () -> paymentService.create(request));
         verify(paymentRepository, never()).save(any(PaymentEntity.class));
@@ -133,12 +134,12 @@ class PaymentServiceTest {
 
     @Test
     void registerShouldThrowWhenAppointmentIsCancelled() {
-        PaymentPostRequestDto request = new PaymentPostRequestDto(10L);
-        AppointmentEntity appointment = appointmentEntity(10L, AppointmentStatus.CANCELLED);
+        PaymentPostRequestDto request = new PaymentPostRequestDto(new UUID(0, 10L));
+        AppointmentEntity appointment = appointmentEntity(new UUID(0, 10L), AppointmentStatus.CANCELLED);
 
         when(paymentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(appointmentRepository.findById(10L)).thenReturn(Optional.of(appointment));
-        when(paymentRepository.existsByAppointmentId(10L)).thenReturn(false);
+        when(appointmentRepository.findById(new UUID(0, 10L))).thenReturn(Optional.of(appointment));
+        when(paymentRepository.existsByAppointmentId(new UUID(0, 10L))).thenReturn(false);
 
         assertThrows(RequestValidationException.class, () -> paymentService.create(request));
         verify(paymentRepository, never()).save(any(PaymentEntity.class));
@@ -148,85 +149,85 @@ class PaymentServiceTest {
     void updateShouldThrowWhenPaymentNotFound() {
         PaymentPatchRequestDto request = new PaymentPatchRequestDto(null, PaymentStatus.PAID);
 
-        when(paymentRepository.findById(1L)).thenReturn(Optional.empty());
+        when(paymentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> paymentService.update(1L, request));
+        assertThrows(ResourceNotFoundException.class, () -> paymentService.update(new UUID(0, 1L), request));
     }
 
     @Test
     void updateShouldThrowWhenNoFieldsProvided() {
-        PaymentEntity entity = paymentEntity(1L, 10L);
+        PaymentEntity entity = paymentEntity(new UUID(0, 1L), new UUID(0, 10L));
         PaymentPatchRequestDto request = new PaymentPatchRequestDto(null, null);
 
-        when(paymentRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(paymentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(paymentFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
         when(paymentMapper.hasAnyPatchField(request)).thenReturn(false);
 
-        assertThrows(RequestValidationException.class, () -> paymentService.update(1L, request));
+        assertThrows(RequestValidationException.class, () -> paymentService.update(new UUID(0, 1L), request));
         verify(paymentRepository, never()).save(any(PaymentEntity.class));
     }
 
     @Test
     void updateShouldThrowWhenTargetAppointmentNotFound() {
-        PaymentEntity entity = paymentEntity(1L, 10L);
-        PaymentPatchRequestDto request = new PaymentPatchRequestDto(20L, null);
+        PaymentEntity entity = paymentEntity(new UUID(0, 1L), new UUID(0, 10L));
+        PaymentPatchRequestDto request = new PaymentPatchRequestDto(new UUID(0, 20L), null);
 
-        when(paymentRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(paymentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(paymentFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
-        when(appointmentRepository.findById(20L)).thenReturn(Optional.empty());
+        when(appointmentRepository.findById(new UUID(0, 20L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> paymentService.update(1L, request));
+        assertThrows(ResourceNotFoundException.class, () -> paymentService.update(new UUID(0, 1L), request));
     }
 
     @Test
     void updateShouldThrowWhenPaymentForAppointmentAlreadyExists() {
-        PaymentEntity entity = paymentEntity(1L, 10L);
-        PaymentPatchRequestDto request = new PaymentPatchRequestDto(20L, null);
-        AppointmentEntity targetAppointment = appointmentEntity(20L, AppointmentStatus.CONFIRMED);
+        PaymentEntity entity = paymentEntity(new UUID(0, 1L), new UUID(0, 10L));
+        PaymentPatchRequestDto request = new PaymentPatchRequestDto(new UUID(0, 20L), null);
+        AppointmentEntity targetAppointment = appointmentEntity(new UUID(0, 20L), AppointmentStatus.CONFIRMED);
 
-        when(paymentRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(paymentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(paymentFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
-        when(appointmentRepository.findById(20L)).thenReturn(Optional.of(targetAppointment));
+        when(appointmentRepository.findById(new UUID(0, 20L))).thenReturn(Optional.of(targetAppointment));
         when(paymentMapper.hasAnyPatchField(request)).thenReturn(true);
-        when(paymentRepository.existsByAppointmentIdAndIdNot(20L, 1L)).thenReturn(true);
+        when(paymentRepository.existsByAppointmentIdAndIdNot(new UUID(0, 20L), new UUID(0, 1L))).thenReturn(true);
 
-        assertThrows(RequestValidationException.class, () -> paymentService.update(1L, request));
+        assertThrows(RequestValidationException.class, () -> paymentService.update(new UUID(0, 1L), request));
         verify(paymentRepository, never()).save(any(PaymentEntity.class));
     }
 
     @Test
     void updateShouldThrowWhenTargetAppointmentCancelled() {
-        PaymentEntity entity = paymentEntity(1L, 10L);
-        PaymentPatchRequestDto request = new PaymentPatchRequestDto(20L, PaymentStatus.PAID);
-        AppointmentEntity targetAppointment = appointmentEntity(20L, AppointmentStatus.CANCELLED);
+        PaymentEntity entity = paymentEntity(new UUID(0, 1L), new UUID(0, 10L));
+        PaymentPatchRequestDto request = new PaymentPatchRequestDto(new UUID(0, 20L), PaymentStatus.PAID);
+        AppointmentEntity targetAppointment = appointmentEntity(new UUID(0, 20L), AppointmentStatus.CANCELLED);
 
-        when(paymentRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(paymentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(paymentFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
-        when(appointmentRepository.findById(20L)).thenReturn(Optional.of(targetAppointment));
+        when(appointmentRepository.findById(new UUID(0, 20L))).thenReturn(Optional.of(targetAppointment));
         when(paymentMapper.hasAnyPatchField(request)).thenReturn(true);
-        when(paymentRepository.existsByAppointmentIdAndIdNot(20L, 1L)).thenReturn(false);
+        when(paymentRepository.existsByAppointmentIdAndIdNot(new UUID(0, 20L), new UUID(0, 1L))).thenReturn(false);
 
-        assertThrows(RequestValidationException.class, () -> paymentService.update(1L, request));
+        assertThrows(RequestValidationException.class, () -> paymentService.update(new UUID(0, 1L), request));
         verify(paymentRepository, never()).save(any(PaymentEntity.class));
     }
 
     @Test
     void updateShouldApplyPatchAndSaveWhenRequestIsValid() {
-        PaymentEntity entity = paymentEntity(1L, 10L);
-        PaymentPatchRequestDto request = new PaymentPatchRequestDto(20L, PaymentStatus.PAID);
-        AppointmentEntity targetAppointment = appointmentEntity(20L, AppointmentStatus.CONFIRMED);
-        PaymentResponseDto dto = paymentDto(1L, 20L);
+        PaymentEntity entity = paymentEntity(new UUID(0, 1L), new UUID(0, 10L));
+        PaymentPatchRequestDto request = new PaymentPatchRequestDto(new UUID(0, 20L), PaymentStatus.PAID);
+        AppointmentEntity targetAppointment = appointmentEntity(new UUID(0, 20L), AppointmentStatus.CONFIRMED);
+        PaymentResponseDto dto = paymentDto(new UUID(0, 1L), new UUID(0, 20L));
 
-        when(paymentRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(paymentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(paymentFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
-        when(appointmentRepository.findById(20L)).thenReturn(Optional.of(targetAppointment));
+        when(appointmentRepository.findById(new UUID(0, 20L))).thenReturn(Optional.of(targetAppointment));
         when(paymentMapper.hasAnyPatchField(request)).thenReturn(true);
-        when(paymentRepository.existsByAppointmentIdAndIdNot(20L, 1L)).thenReturn(false);
+        when(paymentRepository.existsByAppointmentIdAndIdNot(new UUID(0, 20L), new UUID(0, 1L))).thenReturn(false);
         when(paymentMapper.applyPatch(entity, request, targetAppointment)).thenReturn(entity);
         when(paymentRepository.save(entity)).thenReturn(entity);
         when(paymentMapper.toResponseDto(entity)).thenReturn(dto);
 
-        PaymentResponseDto result = paymentService.update(1L, request);
+        PaymentResponseDto result = paymentService.update(new UUID(0, 1L), request);
 
         assertEquals(dto, result);
         verify(paymentRepository).save(entity);
@@ -234,14 +235,14 @@ class PaymentServiceTest {
 
     @Test
     void deactivateShouldSetFailedStatusAndSave() {
-        PaymentEntity entity = paymentEntity(1L, 10L);
-        PaymentResponseDto dto = paymentDto(1L, 10L);
+        PaymentEntity entity = paymentEntity(new UUID(0, 1L), new UUID(0, 10L));
+        PaymentResponseDto dto = paymentDto(new UUID(0, 1L), new UUID(0, 10L));
 
-        when(paymentRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(paymentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(paymentRepository.save(entity)).thenReturn(entity);
         when(paymentMapper.toResponseDto(entity)).thenReturn(dto);
 
-        PaymentResponseDto result = paymentService.deactivateById(1L);
+        PaymentResponseDto result = paymentService.deactivateById(new UUID(0, 1L));
 
         assertEquals(dto, result);
         assertEquals(PaymentStatus.FAILED, entity.getStatus());
@@ -249,13 +250,13 @@ class PaymentServiceTest {
 
     @Test
     void deleteShouldDeleteAndReturnDto() {
-        PaymentEntity entity = paymentEntity(1L, 10L);
-        PaymentResponseDto dto = paymentDto(1L, 10L);
+        PaymentEntity entity = paymentEntity(new UUID(0, 1L), new UUID(0, 10L));
+        PaymentResponseDto dto = paymentDto(new UUID(0, 1L), new UUID(0, 10L));
 
-        when(paymentRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(paymentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(paymentMapper.toResponseDto(entity)).thenReturn(dto);
 
-        PaymentResponseDto result = paymentService.deleteById(1L);
+        PaymentResponseDto result = paymentService.deleteById(new UUID(0, 1L));
 
         assertEquals(dto, result);
         verify(paymentRepository).delete(entity);
@@ -263,12 +264,12 @@ class PaymentServiceTest {
 
     @Test
     void deleteShouldThrowWhenPaymentNotFound() {
-        when(paymentRepository.findById(1L)).thenReturn(Optional.empty());
+        when(paymentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> paymentService.deleteById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> paymentService.deleteById(new UUID(0, 1L)));
     }
 
-    private AppointmentEntity appointmentEntity(Long id, AppointmentStatus status) {
+    private AppointmentEntity appointmentEntity(UUID id, AppointmentStatus status) {
         AppointmentEntity entity = new AppointmentEntity();
         entity.setId(id);
         entity.setStatus(status);
@@ -280,7 +281,7 @@ class PaymentServiceTest {
         return entity;
     }
 
-    private PaymentEntity paymentEntity(Long id, Long appointmentId) {
+    private PaymentEntity paymentEntity(UUID id, UUID appointmentId) {
         PaymentEntity entity = new PaymentEntity();
         entity.setId(id);
         entity.setAppointment(appointmentEntity(appointmentId, AppointmentStatus.PENDING));
@@ -290,7 +291,7 @@ class PaymentServiceTest {
         return entity;
     }
 
-    private PaymentResponseDto paymentDto(Long id, Long appointmentId) {
+    private PaymentResponseDto paymentDto(UUID id, UUID appointmentId) {
         return new PaymentResponseDto(
             id,
             appointmentId,

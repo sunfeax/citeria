@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.dto.payment;
 
+import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
@@ -16,7 +17,7 @@ class PaymentPostRequestDtoValidationTest {
 
     @Test
     void validRequestShouldPassValidation() {
-        PaymentPostRequestDto request = new PaymentPostRequestDto(10L);
+        PaymentPostRequestDto request = new PaymentPostRequestDto(new UUID(0, 10L));
 
         Set<ConstraintViolation<PaymentPostRequestDto>> violations = validator.validate(request);
 

@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.dto.business;
 
+import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
@@ -26,7 +27,6 @@ class BusinessPostRequestDtoValidationTest {
     @Test
     void blankNameShouldFailValidation() {
         BusinessPostRequestDto request = new BusinessPostRequestDto(
-            1L,
             "   ",
             "description",
             "1234567",
@@ -43,7 +43,6 @@ class BusinessPostRequestDtoValidationTest {
     @Test
     void shortNameShouldFailValidation() {
         BusinessPostRequestDto request = new BusinessPostRequestDto(
-            1L,
             "A",
             "description",
             "1234567",
@@ -61,7 +60,6 @@ class BusinessPostRequestDtoValidationTest {
     void tooLongDescriptionShouldFailValidation() {
         String tooLongDescription = "a".repeat(1001);
         BusinessPostRequestDto request = new BusinessPostRequestDto(
-            1L,
             "Alpha Studio",
             tooLongDescription,
             "1234567",
@@ -78,7 +76,6 @@ class BusinessPostRequestDtoValidationTest {
     @Test
     void invalidEmailShouldFailValidation() {
         BusinessPostRequestDto request = new BusinessPostRequestDto(
-            1L,
             "Alpha Studio",
             "description",
             "1234567",
@@ -95,7 +92,6 @@ class BusinessPostRequestDtoValidationTest {
     @Test
     void shortPhoneShouldFailValidation() {
         BusinessPostRequestDto request = new BusinessPostRequestDto(
-            1L,
             "Alpha Studio",
             "description",
             "123",
@@ -111,7 +107,6 @@ class BusinessPostRequestDtoValidationTest {
 
     private BusinessPostRequestDto validRequest() {
         return new BusinessPostRequestDto(
-            1L,
             "Alpha Studio",
             "description",
             "1234567890",

@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.service;
 
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import com.sunfeax.citeria.repository.BusinessRepository;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.mapper.BusinessMapper;
 import com.sunfeax.citeria.normalizer.BusinessFieldNormalizer;
+import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.validation.BusinessValidator;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class BusinessService {
     private final UserRepository userRepository;
     private final BusinessFieldNormalizer businessFieldNormalizer;
     private final BusinessValidator businessValidator;
+    private final CurrentUserProvider currentUserProvider;
 
     @Transactional(readOnly = true)
     public Page<BusinessResponseDto> getAll(Pageable pageable) {
@@ -36,7 +39,7 @@ public class BusinessService {
     }
 
     @Transactional(readOnly = true)
-    public BusinessResponseDto getById(Long id) {
+    public BusinessResponseDto getById(UUID id) {
         return businessRepository.findById(id)
             .map(businessMapper::toResponseDto)
             .orElseThrow(() -> new ResourceNotFoundException("Business with id " + id + " not found"));
@@ -47,7 +50,7 @@ public class BusinessService {
         BusinessPostRequestDto normalizedRequest = businessFieldNormalizer.normalizePostRequest(request);
         businessValidator.validateCreate(normalizedRequest);
 
-        UserEntity owner = findOwnerOrThrow(normalizedRequest.ownerId());
+        UserEntity owner = currentUserProvider.getCurrentUser();
 
         BusinessEntity entity = businessMapper.createEntity(normalizedRequest, owner);
         BusinessEntity saved = businessRepository.save(entity);
@@ -56,8 +59,9 @@ public class BusinessService {
     }
 
     @Transactional
-    public BusinessResponseDto update(Long id, BusinessPatchRequestDto request) {
+    public BusinessResponseDto update(UUID id, BusinessPatchRequestDto request) {
         BusinessEntity entity = findBusinessOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(entity.getOwner().getId());
 
         BusinessPatchRequestDto normalizedRequest = businessFieldNormalizer.normalizePatchRequest(request);
         businessValidator.validateUpdate(id, entity, normalizedRequest);
@@ -73,8 +77,9 @@ public class BusinessService {
     }
 
     @Transactional
-    public BusinessResponseDto deactivateById(Long id) {
+    public BusinessResponseDto deactivateById(UUID id) {
         BusinessEntity business = findBusinessOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(business.getOwner().getId());
 
         business.setActive(false);
         BusinessEntity saved = businessRepository.save(business);
@@ -83,8 +88,9 @@ public class BusinessService {
     }
 
     @Transactional
-    public BusinessResponseDto hardDeleteById(Long id) {
+    public BusinessResponseDto hardDeleteById(UUID id) {
         BusinessEntity business = findBusinessOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(business.getOwner().getId());
 
         BusinessResponseDto deletedBusiness = businessMapper.toResponseDto(business);
         businessRepository.delete(business);
@@ -93,8 +99,9 @@ public class BusinessService {
     }
 
     @Transactional
-    public BusinessResponseDto restoreById(Long id) {
+    public BusinessResponseDto restoreById(UUID id) {
         BusinessEntity business = findBusinessOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(business.getOwner().getId());
 
         business.setActive(true);
         BusinessEntity saved = businessRepository.save(business);
@@ -102,12 +109,12 @@ public class BusinessService {
         return businessMapper.toResponseDto(saved);
     }
 
-    private UserEntity findOwnerOrThrow(Long ownerId) {
+    private UserEntity findOwnerOrThrow(UUID ownerId) {
         return userRepository.findById(ownerId)
             .orElseThrow(() -> new ResourceNotFoundException("Owner user with id " + ownerId + " not found"));
     }
 
-    private BusinessEntity findBusinessOrThrow(Long id) {
+    private BusinessEntity findBusinessOrThrow(UUID id) {
         return businessRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Business with id " + id + " not found"));
     }

@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.controller;
 
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -42,7 +43,7 @@ public class BusinessController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BusinessResponseDto> getBusinessById(@PathVariable Long id) {
+    public ResponseEntity<BusinessResponseDto> getBusinessById(@PathVariable UUID id) {
         return ResponseEntity.ok(businessService.getById(id));
     }
 
@@ -54,24 +55,24 @@ public class BusinessController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<BusinessResponseDto> update(
-        @PathVariable Long id,
+        @PathVariable UUID id,
         @Valid @RequestBody BusinessPatchRequestDto request
     ) {
         return ResponseEntity.ok(businessService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<BusinessResponseDto> deactivateById(@PathVariable Long id) {
+    public ResponseEntity<BusinessResponseDto> deactivateById(@PathVariable UUID id) {
         return ResponseEntity.ok(businessService.deactivateById(id));
     }
 
     @DeleteMapping("/{id}/hard")
-    public ResponseEntity<BusinessResponseDto> hardDeleteById(@PathVariable Long id) {
+    public ResponseEntity<BusinessResponseDto> hardDeleteById(@PathVariable UUID id) {
         return ResponseEntity.ok(businessService.hardDeleteById(id));
     }
 
     @PatchMapping("/{id}/restore")
-    public ResponseEntity<BusinessResponseDto> restoreById(@PathVariable Long id) {
+    public ResponseEntity<BusinessResponseDto> restoreById(@PathVariable UUID id) {
         return ResponseEntity.ok(businessService.restoreById(id));
     }
 }

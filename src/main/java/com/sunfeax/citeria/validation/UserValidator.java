@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.validation;
 
+import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -42,7 +43,7 @@ public class UserValidator {
         return value != null && !value.isBlank();
     }
 
-    public void validateUpdate(Long id, UserEntity existingEntity, UserUpdateRequestDto request) {
+    public void validateUpdate(UUID id, UserEntity existingEntity, UserUpdateRequestDto request) {
         String targetEmail = request.email() != null ? request.email() : existingEntity.getEmail();
         String targetPhone = request.phone() != null ? request.phone() : existingEntity.getPhone();
 

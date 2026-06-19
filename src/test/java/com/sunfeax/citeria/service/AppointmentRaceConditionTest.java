@@ -142,7 +142,7 @@ class AppointmentRaceConditionTest {
 
     private Callable<AttemptResult> bookingTask(
         String clientEmail,
-        Long specialistServiceId,
+        UUID specialistServiceId,
         LocalDateTime start,
         LocalDateTime end
     ) {
@@ -281,8 +281,8 @@ class AppointmentRaceConditionTest {
     }
 
     private record TestFixture(
-        Long specialistId,
-        Long specialistServiceId,
+        UUID specialistId,
+        UUID specialistServiceId,
         String clientOneEmail,
         String clientTwoEmail
     ) {}

@@ -4,7 +4,7 @@ ALTER TABLE specialist_services
   ADD CONSTRAINT specialist_services_id_specialist_uq UNIQUE (id, specialist_id);
 
 ALTER TABLE appointments
-  ADD COLUMN specialist_id BIGINT;
+  ADD COLUMN specialist_id UUID;
 
 UPDATE appointments a
 SET specialist_id = ss.specialist_id

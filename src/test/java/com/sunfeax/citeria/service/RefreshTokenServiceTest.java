@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.service;
 
+import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,20 +46,20 @@ class RefreshTokenServiceTest {
     @Test
     void createRefreshTokenShouldReuseExistingTokenRowForUser() {
         UserEntity user = new UserEntity();
-        user.setId(1L);
+        user.setId(new UUID(0, 1L));
 
         RefreshTokenEntity existingToken = RefreshTokenEntity.builder()
-            .id(10L)
+            .id(new UUID(0, 10L))
             .user(user)
             .tokenHash("old-hash")
             .expiryDate(Instant.now().minusSeconds(60))
             .build();
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(user));
         when(refreshTokenRepository.findByUser(user)).thenReturn(Optional.of(existingToken));
         when(refreshTokenRepository.save(any(RefreshTokenEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        String rawToken = refreshTokenService.createRefreshToken(1L);
+        String rawToken = refreshTokenService.createRefreshToken(new UUID(0, 1L));
 
         ArgumentCaptor<RefreshTokenEntity> savedTokenCaptor = ArgumentCaptor.forClass(RefreshTokenEntity.class);
         verify(refreshTokenRepository).save(savedTokenCaptor.capture());
@@ -67,7 +68,7 @@ class RefreshTokenServiceTest {
         RefreshTokenEntity savedToken = savedTokenCaptor.getValue();
 
         assertThat(rawToken).isNotBlank();
-        assertThat(savedToken.getId()).isEqualTo(10L);
+        assertThat(savedToken.getId()).isEqualTo(new UUID(0, 10L));
         assertThat(savedToken.getUser()).isSameAs(user);
         assertThat(savedToken.getTokenHash()).hasSize(64).isNotEqualTo("old-hash");
         assertThat(savedToken.getExpiryDate()).isAfter(Instant.now());
@@ -76,7 +77,7 @@ class RefreshTokenServiceTest {
     @Test
     void rotateRefreshTokenShouldUpdateTokenAtomically() {
         RefreshTokenEntity storedToken = RefreshTokenEntity.builder()
-            .id(15L)
+            .id(new UUID(0, 15L))
             .tokenHash("old-hash")
             .expiryDate(Instant.now().plusSeconds(60))
             .build();
@@ -98,7 +99,7 @@ class RefreshTokenServiceTest {
     @Test
     void rotateRefreshTokenShouldThrowWhenTokenAlreadyUsed() {
         RefreshTokenEntity storedToken = RefreshTokenEntity.builder()
-            .id(16L)
+            .id(new UUID(0, 16L))
             .tokenHash("old-hash")
             .expiryDate(Instant.now().plusSeconds(60))
             .build();

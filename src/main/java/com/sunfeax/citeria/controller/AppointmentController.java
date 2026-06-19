@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.controller;
 
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -42,7 +43,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AppointmentResponseDto> getAppointmentById(@PathVariable Long id) {
+    public ResponseEntity<AppointmentResponseDto> getAppointmentById(@PathVariable UUID id) {
         return ResponseEntity.ok(appointmentService.getById(id));
     }
 
@@ -54,14 +55,14 @@ public class AppointmentController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<AppointmentResponseDto> update(
-        @PathVariable Long id,
+        @PathVariable UUID id,
         @Valid @RequestBody AppointmentPatchRequestDto request
     ) {
         return ResponseEntity.ok(appointmentService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<AppointmentResponseDto> deleteById(@PathVariable Long id) {
+    public ResponseEntity<AppointmentResponseDto> deleteById(@PathVariable UUID id) {
         return ResponseEntity.ok(appointmentService.deleteById(id));
     }
 }

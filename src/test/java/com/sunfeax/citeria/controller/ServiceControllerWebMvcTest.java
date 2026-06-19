@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.controller;
 
+import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -30,6 +31,7 @@ import com.sunfeax.citeria.dto.service.ServicePostRequestDto;
 import com.sunfeax.citeria.dto.service.ServiceResponseDto;
 import com.sunfeax.citeria.exception.GlobalExceptionHandler;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
+import com.sunfeax.citeria.config.JwtAuthenticationFilter;
 import com.sunfeax.citeria.service.ServiceService;
 
 @WebMvcTest(ServiceController.class)
@@ -46,32 +48,38 @@ class ServiceControllerWebMvcTest {
     @MockitoBean
     private ServiceService serviceService;
 
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    private static final UUID ID = new UUID(0, 1L);
+    private static final UUID MISSING_ID = new UUID(0, 99L);
+
     @Test
     void getServicesShouldReturnPagedResponse() throws Exception {
-        ServiceResponseDto dto = serviceDto(1L, 10L, "Consultation");
+        ServiceResponseDto dto = serviceDto(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
         when(serviceService.getAll(any())).thenReturn(new PageImpl<>(List.of(dto)));
 
         mockMvc.perform(get("/api/services"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content[0].id").value(1))
+            .andExpect(jsonPath("$.content[0].id").value(ID.toString()))
             .andExpect(jsonPath("$.content[0].name").value("Consultation"));
     }
 
     @Test
     void getByIdShouldReturnOk() throws Exception {
-        when(serviceService.getById(1L)).thenReturn(serviceDto(1L, 10L, "Consultation"));
+        when(serviceService.getById(new UUID(0, 1L))).thenReturn(serviceDto(new UUID(0, 1L), new UUID(0, 10L), "Consultation"));
 
-        mockMvc.perform(get("/api/services/1"))
+        mockMvc.perform(get("/api/services/" + ID))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.id").value(ID.toString()))
             .andExpect(jsonPath("$.name").value("Consultation"));
     }
 
     @Test
     void getByIdShouldReturnNotFoundWhenServiceThrows() throws Exception {
-        when(serviceService.getById(99L)).thenThrow(new ResourceNotFoundException("Service with id 99 not found"));
+        when(serviceService.getById(new UUID(0, 99L))).thenThrow(new ResourceNotFoundException("Service with id 99 not found"));
 
-        mockMvc.perform(get("/api/services/99"))
+        mockMvc.perform(get("/api/services/" + MISSING_ID))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.title").value("Resource Not Found"))
@@ -82,20 +90,20 @@ class ServiceControllerWebMvcTest {
     @Test
     void createShouldReturnCreated() throws Exception {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            10L,
+            new UUID(0, 10L),
             "Consultation",
             "desc",
             60,
             BigDecimal.valueOf(95),
             "EUR"
         );
-        when(serviceService.create(any(ServicePostRequestDto.class))).thenReturn(serviceDto(1L, 10L, "Consultation"));
+        when(serviceService.create(any(ServicePostRequestDto.class))).thenReturn(serviceDto(new UUID(0, 1L), new UUID(0, 10L), "Consultation"));
 
         mockMvc.perform(post("/api/services")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.id").value(ID.toString()))
             .andExpect(jsonPath("$.name").value("Consultation"));
     }
 
@@ -103,7 +111,7 @@ class ServiceControllerWebMvcTest {
     void createShouldReturnBadRequestForInvalidBody() throws Exception {
         String invalidBody = """
             {
-              "businessId": 10,
+              "businessId": "00000000-0000-0000-0000-000000000001",
               "name": "",
               "description": "desc",
               "durationMinutes": 60,
@@ -127,13 +135,13 @@ class ServiceControllerWebMvcTest {
     @Test
     void updateShouldReturnOk() throws Exception {
         ServicePatchRequestDto request = new ServicePatchRequestDto(null, "Therapy", null, null, null, null);
-        when(serviceService.update(eq(1L), any(ServicePatchRequestDto.class))).thenReturn(serviceDto(1L, 10L, "Therapy"));
+        when(serviceService.update(eq(new UUID(0, 1L)), any(ServicePatchRequestDto.class))).thenReturn(serviceDto(new UUID(0, 1L), new UUID(0, 10L), "Therapy"));
 
-        mockMvc.perform(patch("/api/services/1")
+        mockMvc.perform(patch("/api/services/" + ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.id").value(ID.toString()))
             .andExpect(jsonPath("$.name").value("Therapy"));
     }
 
@@ -145,7 +153,7 @@ class ServiceControllerWebMvcTest {
             }
             """;
 
-        mockMvc.perform(patch("/api/services/1")
+        mockMvc.perform(patch("/api/services/" + ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidBody))
             .andExpect(status().isBadRequest())
@@ -159,32 +167,32 @@ class ServiceControllerWebMvcTest {
 
     @Test
     void deactivateShouldReturnOk() throws Exception {
-        when(serviceService.deactivateById(1L)).thenReturn(serviceDto(1L, 10L, "Consultation"));
+        when(serviceService.deactivateById(new UUID(0, 1L))).thenReturn(serviceDto(new UUID(0, 1L), new UUID(0, 10L), "Consultation"));
 
-        mockMvc.perform(delete("/api/services/1"))
+        mockMvc.perform(delete("/api/services/" + ID))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
     void hardDeleteShouldReturnOk() throws Exception {
-        when(serviceService.hardDeleteById(1L)).thenReturn(serviceDto(1L, 10L, "Consultation"));
+        when(serviceService.hardDeleteById(new UUID(0, 1L))).thenReturn(serviceDto(new UUID(0, 1L), new UUID(0, 10L), "Consultation"));
 
-        mockMvc.perform(delete("/api/services/1/hard"))
+        mockMvc.perform(delete("/api/services/" + ID + "/hard"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
     void restoreShouldReturnOk() throws Exception {
-        when(serviceService.restoreById(1L)).thenReturn(serviceDto(1L, 10L, "Consultation"));
+        when(serviceService.restoreById(new UUID(0, 1L))).thenReturn(serviceDto(new UUID(0, 1L), new UUID(0, 10L), "Consultation"));
 
-        mockMvc.perform(patch("/api/services/1/restore"))
+        mockMvc.perform(patch("/api/services/" + ID + "/restore"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
-    private ServiceResponseDto serviceDto(Long id, Long businessId, String name) {
+    private ServiceResponseDto serviceDto(UUID id, UUID businessId, String name) {
         return new ServiceResponseDto(
             id,
             businessId,

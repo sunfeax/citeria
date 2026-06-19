@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.controller;
 
+import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -56,6 +57,9 @@ class AuthControllerWebMvcTest {
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    private static final UUID ID = new UUID(0, 1L);
+    private static final UUID MISSING_ID = new UUID(0, 99L);
+
     @MockitoBean
     private AuthenticationProvider authenticationProvider;
 
@@ -81,7 +85,7 @@ class AuthControllerWebMvcTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.accessToken").value("jwt-token"))
             .andExpect(jsonPath("$.tokenType").value("Bearer"))
-            .andExpect(jsonPath("$.user.id").value(1))
+            .andExpect(jsonPath("$.user.id").value(ID.toString()))
             .andExpect(jsonPath("$.user.type").value("CLIENT"))
             .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("refresh_token=refresh-token")));
     }
@@ -206,7 +210,7 @@ class AuthControllerWebMvcTest {
         verify(authService).logout("refresh-token");
     }
 
-    private UserResponseDto userDto(Long id) {
+    private UserResponseDto userDto(UUID id) {
         return new UserResponseDto(
             id,
             "John",
@@ -224,7 +228,7 @@ class AuthControllerWebMvcTest {
         return new AuthResponseDto(
             "jwt-token",
             "Bearer",
-            userDto(1L)
+            userDto(new UUID(0, 1L))
         );
     }
 }

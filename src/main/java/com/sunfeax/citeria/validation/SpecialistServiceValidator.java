@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.validation;
 
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import com.sunfeax.citeria.dto.specialistservice.SpecialistServicePatchRequestDto;
@@ -50,20 +51,20 @@ public class SpecialistServiceValidator {
     }
 
     public void validateUpdate(
-        Long id,
+        UUID id,
         SpecialistServiceEntity existingEntity,
         SpecialistServicePatchRequestDto request,
         BusinessEntity targetBusiness,
         UserEntity targetSpecialist,
         ServiceEntity targetService
     ) {
-        Long targetBusinessId = request.businessId() != null
+        UUID targetBusinessId = request.businessId() != null
             ? request.businessId()
             : existingEntity.getBusiness().getId();
-        Long targetSpecialistId = request.specialistId() != null
+        UUID targetSpecialistId = request.specialistId() != null
             ? request.specialistId()
             : existingEntity.getSpecialist().getId();
-        Long targetServiceId = request.serviceId() != null
+        UUID targetServiceId = request.serviceId() != null
             ? request.serviceId()
             : existingEntity.getService().getId();
 

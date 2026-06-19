@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.dto.appointment;
 
+import java.util.UUID;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -7,14 +8,14 @@ import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.enums.PaymentMethod;
 
 public record AppointmentResponseDto(
-    Long id,
-    Long clientId,
+    UUID id,
+    UUID clientId,
     String clientName,
     String clientEmail,
-    Long specialistServiceId,
-    Long specialistId,
+    UUID specialistServiceId,
+    UUID specialistId,
     String specialistName,
-    Long serviceId,
+    UUID serviceId,
     String serviceName,
     String businessName,
     LocalDateTime startTime,

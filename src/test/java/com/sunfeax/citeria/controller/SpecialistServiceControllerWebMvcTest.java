@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.controller;
 
+import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -30,6 +31,7 @@ import com.sunfeax.citeria.dto.specialistservice.SpecialistServiceResponseDto;
 import com.sunfeax.citeria.exception.GlobalExceptionHandler;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
+import com.sunfeax.citeria.config.JwtAuthenticationFilter;
 import com.sunfeax.citeria.service.SpecialistServiceService;
 
 import tools.jackson.databind.ObjectMapper;
@@ -48,23 +50,29 @@ class SpecialistServiceControllerWebMvcTest {
     @MockitoBean
     private SpecialistServiceService specialistServiceService;
 
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    private static final UUID ID = new UUID(0, 1L);
+    private static final UUID MISSING_ID = new UUID(0, 99L);
+
     @Test
     void getSpecialistServicesShouldReturnPagedResponse() throws Exception {
-        SpecialistServiceResponseDto dto = specialistServiceDto(1L, 10L, 20L, 30L);
+        SpecialistServiceResponseDto dto = specialistServiceDto(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
         when(specialistServiceService.getAll(any())).thenReturn(new PageImpl<>(List.of(dto)));
 
         mockMvc.perform(get("/api/specialist-services"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content[0].id").value(1))
-            .andExpect(jsonPath("$.content[0].businessId").value(10));
+            .andExpect(jsonPath("$.content[0].id").value(ID.toString()))
+            .andExpect(jsonPath("$.content[0].businessId").value(new UUID(0, 10L).toString()));
     }
 
     @Test
     void getByIdShouldReturnNotFoundWhenServiceThrows() throws Exception {
-        when(specialistServiceService.getById(99L))
+        when(specialistServiceService.getById(new UUID(0, 99L)))
             .thenThrow(new ResourceNotFoundException("Specialist service with id 99 not found"));
 
-        mockMvc.perform(get("/api/specialist-services/99"))
+        mockMvc.perform(get("/api/specialist-services/" + MISSING_ID))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.title").value("Resource Not Found"))
@@ -73,24 +81,24 @@ class SpecialistServiceControllerWebMvcTest {
 
     @Test
     void registerShouldReturnCreated() throws Exception {
-        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(10L, 20L, 30L);
+        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
         when(specialistServiceService.register(any(SpecialistServicePostRequestDto.class)))
-            .thenReturn(specialistServiceDto(1L, 10L, 20L, 30L));
+            .thenReturn(specialistServiceDto(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L)));
 
         mockMvc.perform(post("/api/specialist-services")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
     void registerShouldReturnBadRequestForInvalidBody() throws Exception {
         String invalidBody = """
             {
-              "businessId": 10,
+              "businessId": "00000000-0000-0000-0000-000000000001",
               "specialistId": null,
-              "serviceId": 30
+              "serviceId": "00000000-0000-0000-0000-000000000001"
             }
             """;
 
@@ -105,24 +113,24 @@ class SpecialistServiceControllerWebMvcTest {
 
     @Test
     void updateShouldReturnOk() throws Exception {
-        SpecialistServicePatchRequestDto request = new SpecialistServicePatchRequestDto(11L, null, null);
-        when(specialistServiceService.update(eq(1L), any(SpecialistServicePatchRequestDto.class)))
-            .thenReturn(specialistServiceDto(1L, 11L, 20L, 30L));
+        SpecialistServicePatchRequestDto request = new SpecialistServicePatchRequestDto(new UUID(0, 11L), null, null);
+        when(specialistServiceService.update(eq(new UUID(0, 1L)), any(SpecialistServicePatchRequestDto.class)))
+            .thenReturn(specialistServiceDto(new UUID(0, 1L), new UUID(0, 11L), new UUID(0, 20L), new UUID(0, 30L)));
 
-        mockMvc.perform(patch("/api/specialist-services/1")
+        mockMvc.perform(patch("/api/specialist-services/" + ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
     void updateShouldReturnBadRequestForServiceValidationError() throws Exception {
         SpecialistServicePatchRequestDto request = new SpecialistServicePatchRequestDto(null, null, null);
-        when(specialistServiceService.update(eq(1L), any(SpecialistServicePatchRequestDto.class)))
+        when(specialistServiceService.update(eq(new UUID(0, 1L)), any(SpecialistServicePatchRequestDto.class)))
             .thenThrow(new RequestValidationException(Map.of("request", "No fields to update")));
 
-        mockMvc.perform(patch("/api/specialist-services/1")
+        mockMvc.perform(patch("/api/specialist-services/" + ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
@@ -133,32 +141,32 @@ class SpecialistServiceControllerWebMvcTest {
 
     @Test
     void deactivateShouldReturnOk() throws Exception {
-        when(specialistServiceService.deactivateById(1L)).thenReturn(specialistServiceDto(1L, 10L, 20L, 30L));
+        when(specialistServiceService.deactivateById(new UUID(0, 1L))).thenReturn(specialistServiceDto(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L)));
 
-        mockMvc.perform(delete("/api/specialist-services/1"))
+        mockMvc.perform(delete("/api/specialist-services/" + ID))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
     void hardDeleteShouldReturnOk() throws Exception {
-        when(specialistServiceService.hardDeleteById(1L)).thenReturn(specialistServiceDto(1L, 10L, 20L, 30L));
+        when(specialistServiceService.hardDeleteById(new UUID(0, 1L))).thenReturn(specialistServiceDto(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L)));
 
-        mockMvc.perform(delete("/api/specialist-services/1/hard"))
+        mockMvc.perform(delete("/api/specialist-services/" + ID + "/hard"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
     void restoreShouldReturnOk() throws Exception {
-        when(specialistServiceService.restoreById(1L)).thenReturn(specialistServiceDto(1L, 10L, 20L, 30L));
+        when(specialistServiceService.restoreById(new UUID(0, 1L))).thenReturn(specialistServiceDto(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L)));
 
-        mockMvc.perform(patch("/api/specialist-services/1/restore"))
+        mockMvc.perform(patch("/api/specialist-services/" + ID + "/restore"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
-    private SpecialistServiceResponseDto specialistServiceDto(Long id, Long businessId, Long specialistId, Long serviceId) {
+    private SpecialistServiceResponseDto specialistServiceDto(UUID id, UUID businessId, UUID specialistId, UUID serviceId) {
         return new SpecialistServiceResponseDto(
             id,
             businessId,

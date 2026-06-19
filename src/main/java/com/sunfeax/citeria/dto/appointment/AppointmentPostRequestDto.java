@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.dto.appointment;
 
+import java.util.UUID;
 import java.time.LocalDateTime;
 
 import com.sunfeax.citeria.enums.PaymentMethod;
@@ -8,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record AppointmentPostRequestDto(
     @NotNull(message = "Specialist service id is required")
-    Long specialistServiceId,
+    UUID specialistServiceId,
 
     @NotNull(message = "Start time is required")
     LocalDateTime startTime,

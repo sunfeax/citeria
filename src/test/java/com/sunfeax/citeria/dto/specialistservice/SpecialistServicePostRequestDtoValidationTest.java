@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.dto.specialistservice;
 
+import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
@@ -16,7 +17,7 @@ class SpecialistServicePostRequestDtoValidationTest {
 
     @Test
     void validRequestShouldPassValidation() {
-        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(10L, 20L, 30L);
+        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
 
         Set<ConstraintViolation<SpecialistServicePostRequestDto>> violations = validator.validate(request);
 
@@ -25,7 +26,7 @@ class SpecialistServicePostRequestDtoValidationTest {
 
     @Test
     void nullBusinessIdShouldFailValidation() {
-        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(null, 20L, 30L);
+        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(null, new UUID(0, 20L), new UUID(0, 30L));
 
         Set<ConstraintViolation<SpecialistServicePostRequestDto>> violations = validator.validate(request);
 
@@ -34,7 +35,7 @@ class SpecialistServicePostRequestDtoValidationTest {
 
     @Test
     void nullSpecialistIdShouldFailValidation() {
-        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(10L, null, 30L);
+        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(new UUID(0, 10L), null, new UUID(0, 30L));
 
         Set<ConstraintViolation<SpecialistServicePostRequestDto>> violations = validator.validate(request);
 
@@ -43,7 +44,7 @@ class SpecialistServicePostRequestDtoValidationTest {
 
     @Test
     void nullServiceIdShouldFailValidation() {
-        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(10L, 20L, null);
+        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(new UUID(0, 10L), new UUID(0, 20L), null);
 
         Set<ConstraintViolation<SpecialistServicePostRequestDto>> violations = validator.validate(request);
 

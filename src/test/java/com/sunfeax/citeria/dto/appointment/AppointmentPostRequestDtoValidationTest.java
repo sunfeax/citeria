@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.dto.appointment;
 
+import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
@@ -43,7 +44,7 @@ class AppointmentPostRequestDtoValidationTest {
     @Test
     void nullStartTimeShouldFailValidation() {
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
-            100L,
+            new UUID(0, 100L),
             null,
             LocalDateTime.now().plusDays(1).plusMinutes(60),
             PaymentMethod.ONLINE
@@ -57,7 +58,7 @@ class AppointmentPostRequestDtoValidationTest {
     @Test
     void nullPaymentMethodShouldFailValidation() {
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
-            100L,
+            new UUID(0, 100L),
             LocalDateTime.now().plusDays(1),
             LocalDateTime.now().plusDays(1).plusMinutes(60),
             null
@@ -70,7 +71,7 @@ class AppointmentPostRequestDtoValidationTest {
 
     private AppointmentPostRequestDto validRequest() {
         return new AppointmentPostRequestDto(
-            100L,
+            new UUID(0, 100L),
             LocalDateTime.now().plusDays(1),
             LocalDateTime.now().plusDays(1).plusMinutes(60),
             PaymentMethod.ONLINE

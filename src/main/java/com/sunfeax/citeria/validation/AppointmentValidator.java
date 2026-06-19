@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.validation;
 
+import java.util.UUID;
 import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Component;
@@ -66,7 +67,7 @@ public class AppointmentValidator {
     }
 
     public void validateUpdate(
-        Long appointmentId,
+        UUID appointmentId,
         AppointmentEntity existingEntity,
         AppointmentPatchRequestDto request,
         UserEntity targetClient,

@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.controller;
 
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -42,7 +43,7 @@ public class ServiceController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ServiceResponseDto> getServiceById(@PathVariable Long id) {
+    public ResponseEntity<ServiceResponseDto> getServiceById(@PathVariable UUID id) {
         return ResponseEntity.ok(serviceService.getById(id));
     }
 
@@ -54,24 +55,24 @@ public class ServiceController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<ServiceResponseDto> update(
-        @PathVariable Long id,
+        @PathVariable UUID id,
         @Valid @RequestBody ServicePatchRequestDto request
     ) {
         return ResponseEntity.ok(serviceService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ServiceResponseDto> deactivateById(@PathVariable Long id) {
+    public ResponseEntity<ServiceResponseDto> deactivateById(@PathVariable UUID id) {
         return ResponseEntity.ok(serviceService.deactivateById(id));
     }
 
     @DeleteMapping("/{id}/hard")
-    public ResponseEntity<ServiceResponseDto> hardDeleteById(@PathVariable Long id) {
+    public ResponseEntity<ServiceResponseDto> hardDeleteById(@PathVariable UUID id) {
         return ResponseEntity.ok(serviceService.hardDeleteById(id));
     }
 
     @PatchMapping("/{id}/restore")
-    public ResponseEntity<ServiceResponseDto> restoreById(@PathVariable Long id) {
+    public ResponseEntity<ServiceResponseDto> restoreById(@PathVariable UUID id) {
         return ResponseEntity.ok(serviceService.restoreById(id));
     }
 }

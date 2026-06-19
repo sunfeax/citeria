@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.dto.appointment;
 
+import java.util.UUID;
 import java.time.LocalDateTime;
 
 import com.sunfeax.citeria.enums.AppointmentStatus;
@@ -9,10 +10,10 @@ import jakarta.annotation.Nullable;
 
 public record AppointmentPatchRequestDto(
     @Nullable
-    Long clientId,
+    UUID clientId,
 
     @Nullable
-    Long specialistServiceId,
+    UUID specialistServiceId,
 
     @Nullable
     LocalDateTime startTime,

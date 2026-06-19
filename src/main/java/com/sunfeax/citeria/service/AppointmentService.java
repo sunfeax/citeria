@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.service;
 
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
 import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
+import com.sunfeax.citeria.exception.ForbiddenException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.repository.AppointmentRepository;
 import com.sunfeax.citeria.repository.SpecialistServiceRepository;
@@ -36,15 +38,18 @@ public class AppointmentService {
 
     @Transactional(readOnly = true)
     public Page<AppointmentResponseDto> getAll(Pageable pageable) {
-        Page<AppointmentEntity> appointmentPage = appointmentRepository.findAll(pageable);
+        UserEntity current = currentUserProvider.getCurrentUser();
+        Page<AppointmentEntity> appointmentPage = currentUserProvider.isAdmin(current)
+            ? appointmentRepository.findAll(pageable)
+            : appointmentRepository.findByClientIdOrSpecialistId(current.getId(), current.getId(), pageable);
         return appointmentPage.map(appointmentMapper::toResponseDto);
     }
 
     @Transactional(readOnly = true)
-    public AppointmentResponseDto getById(Long id) {
-        return appointmentRepository.findById(id)
-            .map(appointmentMapper::toResponseDto)
-            .orElseThrow(() -> new ResourceNotFoundException("Appointment with id " + id + " not found"));
+    public AppointmentResponseDto getById(UUID id) {
+        AppointmentEntity appointment = findAppointmentOrThrow(id);
+        assertParticipantOrAdmin(appointment);
+        return appointmentMapper.toResponseDto(appointment);
     }
 
     @Transactional
@@ -63,8 +68,9 @@ public class AppointmentService {
     }
 
     @Transactional
-    public AppointmentResponseDto update(Long id, AppointmentPatchRequestDto request) {
+    public AppointmentResponseDto update(UUID id, AppointmentPatchRequestDto request) {
         AppointmentEntity entity = findAppointmentOrThrow(id);
+        assertParticipantOrAdmin(entity);
         AppointmentPatchRequestDto normalizedRequest = appointmentFieldNormalizer.normalizePatchRequest(request);
 
         UserEntity targetClient = normalizedRequest.clientId() == null
@@ -88,8 +94,9 @@ public class AppointmentService {
     }
 
     @Transactional
-    public AppointmentResponseDto deleteById(Long id) {
+    public AppointmentResponseDto deleteById(UUID id) {
         AppointmentEntity appointment = findAppointmentOrThrow(id);
+        assertParticipantOrAdmin(appointment);
 
         AppointmentResponseDto deletedAppointment = appointmentMapper.toResponseDto(appointment);
         appointmentRepository.delete(appointment);
@@ -97,17 +104,32 @@ public class AppointmentService {
         return deletedAppointment;
     }
 
-    private AppointmentEntity findAppointmentOrThrow(Long id) {
+    private void assertParticipantOrAdmin(AppointmentEntity appointment) {
+        UserEntity current = currentUserProvider.getCurrentUser();
+        if (currentUserProvider.isAdmin(current)) {
+            return;
+        }
+
+        UUID currentId = current.getId();
+        boolean participant = currentId.equals(appointment.getClient().getId())
+            || currentId.equals(appointment.getSpecialist().getId());
+
+        if (!participant) {
+            throw new ForbiddenException("You do not have permission to access this appointment");
+        }
+    }
+
+    private AppointmentEntity findAppointmentOrThrow(UUID id) {
         return appointmentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Appointment with id " + id + " not found"));
     }
 
-    private UserEntity findClientOrThrow(Long clientId) {
+    private UserEntity findClientOrThrow(UUID clientId) {
         return userRepository.findById(clientId)
             .orElseThrow(() -> new ResourceNotFoundException("Client user with id " + clientId + " not found"));
     }
 
-    private SpecialistServiceEntity findSpecialistServiceOrThrow(Long specialistServiceId) {
+    private SpecialistServiceEntity findSpecialistServiceOrThrow(UUID specialistServiceId) {
         return specialistServiceRepository.findById(specialistServiceId)
             .orElseThrow(
                 () -> new ResourceNotFoundException("Specialist service with id " + specialistServiceId + " not found")

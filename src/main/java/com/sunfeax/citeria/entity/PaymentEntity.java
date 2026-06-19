@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.entity;
 
+import java.util.UUID;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -34,8 +35,8 @@ public class PaymentEntity {
 
     @Column(name = "id")
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "appointment_id", nullable = false, unique = true)

@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.controller;
 
+import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -55,32 +56,35 @@ class AppointmentControllerWebMvcTest {
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    private static final UUID ID = new UUID(0, 1L);
+    private static final UUID MISSING_ID = new UUID(0, 99L);
+
     @Test
     void getAppointmentsShouldReturnPagedResponse() throws Exception {
-        AppointmentResponseDto dto = appointmentDto(1L);
+        AppointmentResponseDto dto = appointmentDto(new UUID(0, 1L));
         when(appointmentService.getAll(any())).thenReturn(new PageImpl<>(List.of(dto)));
 
         mockMvc.perform(get("/api/appointments"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content[0].id").value(1))
+            .andExpect(jsonPath("$.content[0].id").value(ID.toString()))
             .andExpect(jsonPath("$.content[0].clientEmail").value("client@example.com"));
     }
 
     @Test
     void getByIdShouldReturnOk() throws Exception {
-        when(appointmentService.getById(1L)).thenReturn(appointmentDto(1L));
+        when(appointmentService.getById(new UUID(0, 1L))).thenReturn(appointmentDto(new UUID(0, 1L)));
 
-        mockMvc.perform(get("/api/appointments/1"))
+        mockMvc.perform(get("/api/appointments/" + ID))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.id").value(ID.toString()))
             .andExpect(jsonPath("$.status").value("PENDING"));
     }
 
     @Test
     void getByIdShouldReturnNotFoundWhenServiceThrows() throws Exception {
-        when(appointmentService.getById(99L)).thenThrow(new ResourceNotFoundException("Appointment with id 99 not found"));
+        when(appointmentService.getById(new UUID(0, 99L))).thenThrow(new ResourceNotFoundException("Appointment with id 99 not found"));
 
-        mockMvc.perform(get("/api/appointments/99"))
+        mockMvc.perform(get("/api/appointments/" + MISSING_ID))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.title").value("Resource Not Found"))
@@ -92,18 +96,18 @@ class AppointmentControllerWebMvcTest {
     void createShouldReturnCreated() throws Exception {
         LocalDateTime start = LocalDateTime.now().plusDays(1).withSecond(0).withNano(0);
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
-            100L,
+            new UUID(0, 100L),
             start,
             start.plusMinutes(60),
             PaymentMethod.ONLINE
         );
-        when(appointmentService.create(any(AppointmentPostRequestDto.class))).thenReturn(appointmentDto(1L));
+        when(appointmentService.create(any(AppointmentPostRequestDto.class))).thenReturn(appointmentDto(new UUID(0, 1L)));
 
         mockMvc.perform(post("/api/appointments")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.id").value(ID.toString()))
             .andExpect(jsonPath("$.paymentMethod").value("ONLINE"));
     }
 
@@ -111,7 +115,7 @@ class AppointmentControllerWebMvcTest {
     void createShouldReturnBadRequestForInvalidBody() throws Exception {
         String invalidBody = """
             {
-              "specialistServiceId": 100,
+              "specialistServiceId": "00000000-0000-0000-0000-000000000001",
               "startTime": null,
               "endTime": "2026-03-10T11:00:00",
               "paymentMethod": "ONLINE"
@@ -139,22 +143,22 @@ class AppointmentControllerWebMvcTest {
             AppointmentStatus.CONFIRMED,
             null
         );
-        when(appointmentService.update(eq(1L), any(AppointmentPatchRequestDto.class))).thenReturn(appointmentDto(1L));
+        when(appointmentService.update(eq(new UUID(0, 1L)), any(AppointmentPatchRequestDto.class))).thenReturn(appointmentDto(new UUID(0, 1L)));
 
-        mockMvc.perform(patch("/api/appointments/1")
+        mockMvc.perform(patch("/api/appointments/" + ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
     void updateShouldReturnBadRequestForServiceValidationError() throws Exception {
         AppointmentPatchRequestDto request = new AppointmentPatchRequestDto(null, null, null, null, null, null);
-        when(appointmentService.update(eq(1L), any(AppointmentPatchRequestDto.class)))
+        when(appointmentService.update(eq(new UUID(0, 1L)), any(AppointmentPatchRequestDto.class)))
             .thenThrow(new RequestValidationException(Map.of("request", "No fields to update")));
 
-        mockMvc.perform(patch("/api/appointments/1")
+        mockMvc.perform(patch("/api/appointments/" + ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
@@ -165,24 +169,24 @@ class AppointmentControllerWebMvcTest {
 
     @Test
     void deleteShouldReturnOk() throws Exception {
-        when(appointmentService.deleteById(1L)).thenReturn(appointmentDto(1L));
+        when(appointmentService.deleteById(new UUID(0, 1L))).thenReturn(appointmentDto(new UUID(0, 1L)));
 
-        mockMvc.perform(delete("/api/appointments/1"))
+        mockMvc.perform(delete("/api/appointments/" + ID))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
-    private AppointmentResponseDto appointmentDto(Long id) {
+    private AppointmentResponseDto appointmentDto(UUID id) {
         LocalDateTime start = LocalDateTime.of(2026, 3, 10, 10, 0);
         return new AppointmentResponseDto(
             id,
-            10L,
+            new UUID(0, 10L),
             "Client User",
             "client@example.com",
-            100L,
-            500L,
+            new UUID(0, 100L),
+            new UUID(0, 500L),
             "Specialist User",
-            400L,
+            new UUID(0, 400L),
             "Consultation",
             "Alpha Studio",
             start,

@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.validation;
 
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import com.sunfeax.citeria.dto.payment.PaymentPatchRequestDto;
@@ -35,12 +36,12 @@ public class PaymentValidator {
     }
 
     public void validateUpdate(
-        Long id,
+        UUID id,
         PaymentEntity existingEntity,
         PaymentPatchRequestDto request,
         AppointmentEntity targetAppointment
     ) {
-        Long targetAppointmentId = request.appointmentId() != null
+        UUID targetAppointmentId = request.appointmentId() != null
             ? request.appointmentId()
             : existingEntity.getAppointment().getId();
 

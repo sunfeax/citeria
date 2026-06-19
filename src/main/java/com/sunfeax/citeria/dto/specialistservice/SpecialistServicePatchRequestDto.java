@@ -1,14 +1,15 @@
 package com.sunfeax.citeria.dto.specialistservice;
 
+import java.util.UUID;
 import jakarta.annotation.Nullable;
 
 public record SpecialistServicePatchRequestDto(
     @Nullable
-    Long businessId,
+    UUID businessId,
 
     @Nullable
-    Long specialistId,
+    UUID specialistId,
 
     @Nullable
-    Long serviceId
+    UUID serviceId
 ) {}

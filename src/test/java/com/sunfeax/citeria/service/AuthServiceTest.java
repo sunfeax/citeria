@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.service;
 
+import java.util.UUID;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -107,8 +108,8 @@ class AuthServiceTest {
     @Test
     void registerShouldEncodePasswordAndSave() {
         RegisterRequestDto request = registerRequest();
-        UserEntity entity = userEntity(1L);
-        UserResponseDto dto = userResponseDto(1L);
+        UserEntity entity = userEntity(new UUID(0, 1L));
+        UserResponseDto dto = userResponseDto(new UUID(0, 1L));
 
         when(beanValidator.validate(any(RegisterRequestDto.class))).thenReturn(Collections.emptySet());
         when(userFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
@@ -118,7 +119,7 @@ class AuthServiceTest {
         when(passwordEncoder.encode("Password!")).thenReturn("encoded");
         when(userRepository.save(entity)).thenReturn(entity);
         when(jwtProvider.generateToken(entity)).thenReturn("access-token");
-        when(refreshTokenService.createRefreshToken(1L)).thenReturn("refresh-token");
+        when(refreshTokenService.createRefreshToken(new UUID(0, 1L))).thenReturn("refresh-token");
         when(userMapper.toResponseDto(entity)).thenReturn(dto);
 
         AuthSessionDto result = authService.register(request);
@@ -133,29 +134,29 @@ class AuthServiceTest {
     @Test
     void loginShouldReturnAccessAndRefreshTokenWhenCredentialsAreValid() {
         LoginRequestDto request = new LoginRequestDto("john@example.com", "Password!");
-        UserEntity entity = userEntity(1L);
+        UserEntity entity = userEntity(new UUID(0, 1L));
 
         when(userFieldNormalizer.normalizeEmail("john@example.com")).thenReturn("john@example.com");
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenReturn(new UsernamePasswordAuthenticationToken("john@example.com", null));
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(entity));
         when(jwtProvider.generateToken(entity)).thenReturn("access-token");
-        when(refreshTokenService.createRefreshToken(1L)).thenReturn("refresh-token");
-        when(userMapper.toResponseDto(entity)).thenReturn(userResponseDto(1L));
+        when(refreshTokenService.createRefreshToken(new UUID(0, 1L))).thenReturn("refresh-token");
+        when(userMapper.toResponseDto(entity)).thenReturn(userResponseDto(new UUID(0, 1L)));
 
         AuthSessionDto result = authService.login(request);
 
         assertEquals("access-token", result.response().accessToken());
         assertEquals("Bearer", result.response().tokenType());
-        assertEquals(1L, result.response().user().id());
+        assertEquals(new UUID(0, 1L), result.response().user().id());
         assertEquals("refresh-token", result.refreshToken());
     }
 
     @Test
     void refreshShouldRotateTokenAndReturnNewSession() {
-        UserEntity entity = userEntity(1L);
+        UserEntity entity = userEntity(new UUID(0, 1L));
         RefreshTokenEntity storedToken = RefreshTokenEntity.builder()
-            .id(11L)
+            .id(new UUID(0, 11L))
             .tokenHash("old-refresh-hash")
             .user(entity)
             .expiryDate(Instant.now().plusSeconds(3600))
@@ -199,7 +200,7 @@ class AuthServiceTest {
         );
     }
 
-    private UserEntity userEntity(Long id) {
+    private UserEntity userEntity(UUID id) {
         UserEntity user = new UserEntity();
         user.setId(id);
         user.setFirstName("John");
@@ -213,7 +214,7 @@ class AuthServiceTest {
         return user;
     }
 
-    private UserResponseDto userResponseDto(Long id) {
+    private UserResponseDto userResponseDto(UUID id) {
         return new UserResponseDto(
             id,
             "John",

@@ -11,6 +11,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -171,6 +172,20 @@ public class GlobalExceptionHandler {
             "UNAUTHORIZED",
             "Unauthorized",
             ex.getMessage(),
+            EMPTY_ERRORS
+        );
+    }
+
+    // 403 Forbidden
+    @ExceptionHandler({ForbiddenException.class, AccessDeniedException.class})
+    public ProblemDetail handleForbidden(Exception ex) {
+        log.debug("Access denied: {}", ex.getMessage());
+
+        return createDetail(
+            HttpStatus.FORBIDDEN,
+            "FORBIDDEN",
+            "Forbidden",
+            "You do not have permission to perform this action",
             EMPTY_ERRORS
         );
     }

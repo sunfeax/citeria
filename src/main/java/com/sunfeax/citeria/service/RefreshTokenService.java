@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -39,7 +40,7 @@ public class RefreshTokenService {
     private final UserRepository userRepository;
 
     @Transactional
-    public String createRefreshToken(Long userId) {
+    public String createRefreshToken(UUID userId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 

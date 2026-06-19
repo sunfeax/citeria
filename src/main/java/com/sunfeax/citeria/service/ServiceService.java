@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.service;
 
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import com.sunfeax.citeria.repository.BusinessRepository;
 import com.sunfeax.citeria.repository.ServiceRepository;
 import com.sunfeax.citeria.mapper.ServiceMapper;
 import com.sunfeax.citeria.normalizer.ServiceFieldNormalizer;
+import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.validation.ServiceValidator;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class ServiceService {
     private final BusinessRepository businessRepository;
     private final ServiceFieldNormalizer serviceFieldNormalizer;
     private final ServiceValidator serviceValidator;
+    private final CurrentUserProvider currentUserProvider;
 
     @Transactional(readOnly = true)
     public Page<ServiceResponseDto> getAll(Pageable pageable) {
@@ -36,7 +39,7 @@ public class ServiceService {
     }
 
     @Transactional(readOnly = true)
-    public ServiceResponseDto getById(Long id) {
+    public ServiceResponseDto getById(UUID id) {
         return serviceRepository.findById(id)
             .map(serviceMapper::toResponseDto)
             .orElseThrow(() -> new ResourceNotFoundException("Service with id " + id + " not found"));
@@ -48,6 +51,7 @@ public class ServiceService {
         serviceValidator.validateCreate(normalizedRequest);
 
         BusinessEntity business = findBusinessOrThrow(normalizedRequest.businessId());
+        currentUserProvider.requireSelfOrAdmin(business.getOwner().getId());
 
         ServiceEntity entity = serviceMapper.createEntity(normalizedRequest, business);
         ServiceEntity saved = serviceRepository.save(entity);
@@ -56,8 +60,9 @@ public class ServiceService {
     }
 
     @Transactional
-    public ServiceResponseDto update(Long id, ServicePatchRequestDto request) {
+    public ServiceResponseDto update(UUID id, ServicePatchRequestDto request) {
         ServiceEntity entity = findServiceOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(entity.getBusiness().getOwner().getId());
 
         ServicePatchRequestDto normalizedRequest = serviceFieldNormalizer.normalizePatchRequest(request);
         serviceValidator.validateUpdate(id, entity, normalizedRequest);
@@ -73,8 +78,9 @@ public class ServiceService {
     }
 
     @Transactional
-    public ServiceResponseDto deactivateById(Long id) {
+    public ServiceResponseDto deactivateById(UUID id) {
         ServiceEntity service = findServiceOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(service.getBusiness().getOwner().getId());
 
         service.setActive(false);
         ServiceEntity saved = serviceRepository.save(service);
@@ -83,8 +89,9 @@ public class ServiceService {
     }
 
     @Transactional
-    public ServiceResponseDto hardDeleteById(Long id) {
+    public ServiceResponseDto hardDeleteById(UUID id) {
         ServiceEntity service = findServiceOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(service.getBusiness().getOwner().getId());
 
         ServiceResponseDto deletedService = serviceMapper.toResponseDto(service);
         serviceRepository.delete(service);
@@ -93,8 +100,9 @@ public class ServiceService {
     }
 
     @Transactional
-    public ServiceResponseDto restoreById(Long id) {
+    public ServiceResponseDto restoreById(UUID id) {
         ServiceEntity service = findServiceOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(service.getBusiness().getOwner().getId());
 
         service.setActive(true);
         ServiceEntity saved = serviceRepository.save(service);
@@ -102,12 +110,12 @@ public class ServiceService {
         return serviceMapper.toResponseDto(saved);
     }
 
-    private BusinessEntity findBusinessOrThrow(Long businessId) {
+    private BusinessEntity findBusinessOrThrow(UUID businessId) {
         return businessRepository.findById(businessId)
             .orElseThrow(() -> new ResourceNotFoundException("Business with id " + businessId + " not found"));
     }
 
-    private ServiceEntity findServiceOrThrow(Long id) {
+    private ServiceEntity findServiceOrThrow(UUID id) {
         return serviceRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Service with id " + id + " not found"));
     }

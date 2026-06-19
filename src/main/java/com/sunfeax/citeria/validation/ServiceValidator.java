@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.validation;
 
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import com.sunfeax.citeria.dto.service.ServicePatchRequestDto;
@@ -27,8 +28,8 @@ public class ServiceValidator {
             .throwIfHasErrors();
     }
 
-    public void validateUpdate(Long id, ServiceEntity existingEntity, ServicePatchRequestDto request) {
-        Long targetBusinessId = request.businessId() != null
+    public void validateUpdate(UUID id, ServiceEntity existingEntity, ServicePatchRequestDto request) {
+        UUID targetBusinessId = request.businessId() != null
             ? request.businessId()
             : existingEntity.getBusiness().getId();
         String targetServiceName = request.name() != null

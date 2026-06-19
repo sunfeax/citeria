@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.service;
 
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,7 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
-    public PaymentResponseDto getById(Long id) {
+    public PaymentResponseDto getById(UUID id) {
         return paymentRepository.findById(id)
             .map(paymentMapper::toResponseDto)
             .orElseThrow(() -> new ResourceNotFoundException("Payment with id " + id + " not found"));
@@ -57,7 +58,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public PaymentResponseDto update(Long id, PaymentPatchRequestDto request) {
+    public PaymentResponseDto update(UUID id, PaymentPatchRequestDto request) {
         PaymentEntity entity = findPaymentOrThrow(id);
 
         PaymentPatchRequestDto normalizedRequest = paymentFieldNormalizer.normalizePatchRequest(request);
@@ -76,7 +77,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public PaymentResponseDto deactivateById(Long id) {
+    public PaymentResponseDto deactivateById(UUID id) {
         PaymentEntity payment = findPaymentOrThrow(id);
 
         payment.setStatus(PaymentStatus.FAILED);
@@ -86,7 +87,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public PaymentResponseDto deleteById(Long id) {
+    public PaymentResponseDto deleteById(UUID id) {
         PaymentEntity payment = findPaymentOrThrow(id);
 
         PaymentResponseDto deletedPayment = paymentMapper.toResponseDto(payment);
@@ -95,12 +96,12 @@ public class PaymentService {
         return deletedPayment;
     }
 
-    private PaymentEntity findPaymentOrThrow(Long id) {
+    private PaymentEntity findPaymentOrThrow(UUID id) {
         return paymentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Payment with id " + id + " not found"));
     }
 
-    private AppointmentEntity findAppointmentOrThrow(Long appointmentId) {
+    private AppointmentEntity findAppointmentOrThrow(UUID appointmentId) {
         return appointmentRepository.findById(appointmentId)
             .orElseThrow(() -> new ResourceNotFoundException("Appointment with id " + appointmentId + " not found"));
     }

@@ -1,9 +1,10 @@
 package com.sunfeax.citeria.dto.business;
 
+import java.util.UUID;
 import java.time.LocalDateTime;
 
 public record BusinessResponseDto(
-    Long id,
+    UUID id,
     String name,
     String description,
     String phone,
@@ -11,7 +12,7 @@ public record BusinessResponseDto(
     String website,
     String address,
     Boolean isActive,
-    Long ownerId,
+    UUID ownerId,
     String ownerName,
     LocalDateTime createdAt,
     LocalDateTime updatedAt) {

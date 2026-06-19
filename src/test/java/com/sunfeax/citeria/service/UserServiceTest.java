@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.service;
 
+import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,6 +36,7 @@ import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
+import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.validation.UserValidator;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,6 +50,8 @@ class UserServiceTest {
     private UserFieldNormalizer userFieldNormalizer;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private CurrentUserProvider currentUserProvider;
 
     private UserValidator userValidator;
 
@@ -56,14 +60,14 @@ class UserServiceTest {
     @BeforeEach
     void setUp() {
         userValidator = new UserValidator(userRepository, userMapper, passwordEncoder);
-        userService = new UserService(userRepository, userMapper, userFieldNormalizer, passwordEncoder, userValidator);
+        userService = new UserService(userRepository, userMapper, userFieldNormalizer, passwordEncoder, userValidator, currentUserProvider);
     }
 
     @Test
     void getAllShouldReturnMappedPage() {
         Pageable pageable = PageRequest.of(0, 20);
-        UserEntity entity = userEntity(1L);
-        UserResponseDto dto = userResponseDto(1L);
+        UserEntity entity = userEntity(new UUID(0, 1L));
+        UserResponseDto dto = userResponseDto(new UUID(0, 1L));
 
         when(userRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(entity)));
         when(userMapper.toResponseDto(entity)).thenReturn(dto);
@@ -76,89 +80,89 @@ class UserServiceTest {
 
     @Test
     void getByIdShouldReturnUserWhenExists() {
-        UserEntity entity = userEntity(1L);
-        UserResponseDto dto = userResponseDto(1L);
+        UserEntity entity = userEntity(new UUID(0, 1L));
+        UserResponseDto dto = userResponseDto(new UUID(0, 1L));
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(userMapper.toResponseDto(entity)).thenReturn(dto);
 
-        UserResponseDto result = userService.getById(1L);
+        UserResponseDto result = userService.getById(new UUID(0, 1L));
 
         assertEquals(dto, result);
     }
 
     @Test
     void getByIdShouldThrowWhenUserNotFound() {
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        when(userRepository.findById(new UUID(0, 99L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.getById(99L));
+        assertThrows(ResourceNotFoundException.class, () -> userService.getById(new UUID(0, 99L)));
     }
 
     @Test
     void updateShouldThrowWhenUserNotFound() {
         UserUpdateRequestDto request = new UserUpdateRequestDto("John", null, null, null, null);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.update(1L, request));
+        assertThrows(ResourceNotFoundException.class, () -> userService.update(new UUID(0, 1L), request));
     }
 
     @Test
     void updateShouldThrowWhenNoFieldsProvided() {
-        UserEntity entity = userEntity(1L);
+        UserEntity entity = userEntity(new UUID(0, 1L));
         UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, null, null, null);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(userFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
         when(userMapper.hasAnyPatchField(request)).thenReturn(false);
 
-        assertThrows(RequestValidationException.class, () -> userService.update(1L, request));
+        assertThrows(RequestValidationException.class, () -> userService.update(new UUID(0, 1L), request));
     }
 
     @Test
     void updateShouldThrowWhenEmailAlreadyTaken() {
-        UserEntity entity = userEntity(1L);
+        UserEntity entity = userEntity(new UUID(0, 1L));
         UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, "new@example.com", null, null);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(userFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
         when(userMapper.hasAnyPatchField(request)).thenReturn(true);
-        when(userRepository.existsByEmailAndIdNot("new@example.com", 1L)).thenReturn(true);
+        when(userRepository.existsByEmailAndIdNot("new@example.com", new UUID(0, 1L))).thenReturn(true);
 
-        assertThrows(RequestValidationException.class, () -> userService.update(1L, request));
+        assertThrows(RequestValidationException.class, () -> userService.update(new UUID(0, 1L), request));
         verify(userRepository, never()).save(any(UserEntity.class));
     }
 
     @Test
     void updateShouldThrowWhenPhoneAlreadyTaken() {
-        UserEntity entity = userEntity(1L);
+        UserEntity entity = userEntity(new UUID(0, 1L));
         UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, null, "99887766", null);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(userFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
         when(userMapper.hasAnyPatchField(request)).thenReturn(true);
-        when(userRepository.existsByPhoneAndIdNot("99887766", 1L)).thenReturn(true);
+        when(userRepository.existsByPhoneAndIdNot("99887766", new UUID(0, 1L))).thenReturn(true);
 
-        assertThrows(RequestValidationException.class, () -> userService.update(1L, request));
+        assertThrows(RequestValidationException.class, () -> userService.update(new UUID(0, 1L), request));
         verify(userRepository, never()).save(any(UserEntity.class));
     }
 
     @Test
     void updateShouldApplyPatchAndSaveWhenRequestIsValid() {
-        UserEntity entity = userEntity(1L);
+        UserEntity entity = userEntity(new UUID(0, 1L));
         UserUpdateRequestDto request = new UserUpdateRequestDto("Jane", null, "jane@example.com", "99887766", UserType.SPECIALIST);
-        UserResponseDto dto = userResponseDto(1L);
+        UserResponseDto dto = userResponseDto(new UUID(0, 1L));
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(userFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
         when(userMapper.hasAnyPatchField(request)).thenReturn(true);
-        when(userRepository.existsByEmailAndIdNot("jane@example.com", 1L)).thenReturn(false);
-        when(userRepository.existsByPhoneAndIdNot("99887766", 1L)).thenReturn(false);
+        when(userRepository.existsByEmailAndIdNot("jane@example.com", new UUID(0, 1L))).thenReturn(false);
+        when(userRepository.existsByPhoneAndIdNot("99887766", new UUID(0, 1L))).thenReturn(false);
         when(userMapper.applyPatch(entity, request)).thenReturn(entity);
         when(userRepository.save(entity)).thenReturn(entity);
         when(userMapper.toResponseDto(entity)).thenReturn(dto);
 
-        UserResponseDto result = userService.update(1L, request);
+        UserResponseDto result = userService.update(new UUID(0, 1L), request);
 
         assertEquals(dto, result);
         verify(userRepository).save(entity);
@@ -166,63 +170,67 @@ class UserServiceTest {
 
     @Test
     void changePasswordShouldThrowWhenUserNotFound() {
+        when(currentUserProvider.getCurrentUser()).thenReturn(userEntity(new UUID(0, 1L)));
         UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "NewPassword!");
 
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.changePassword(1L, request));
+        assertThrows(ResourceNotFoundException.class, () -> userService.changePassword(new UUID(0, 1L), request));
     }
 
     @Test
     void changePasswordShouldThrowWhenCurrentPasswordIsWrong() {
-        UserEntity entity = userEntity(1L);
+        when(currentUserProvider.getCurrentUser()).thenReturn(userEntity(new UUID(0, 1L)));
+        UserEntity entity = userEntity(new UUID(0, 1L));
         entity.setPassword("encoded-old");
         UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("WrongOld!", "NewPassword!");
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(passwordEncoder.matches("WrongOld!", "encoded-old")).thenReturn(false);
 
-        assertThrows(RequestValidationException.class, () -> userService.changePassword(1L, request));
+        assertThrows(RequestValidationException.class, () -> userService.changePassword(new UUID(0, 1L), request));
     }
 
     @Test
     void changePasswordShouldThrowWhenNewPasswordEqualsCurrent() {
-        UserEntity entity = userEntity(1L);
+        when(currentUserProvider.getCurrentUser()).thenReturn(userEntity(new UUID(0, 1L)));
+        UserEntity entity = userEntity(new UUID(0, 1L));
         entity.setPassword("encoded-old");
         UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "OldPassword!");
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(passwordEncoder.matches("OldPassword!", "encoded-old")).thenReturn(true);
 
-        assertThrows(RequestValidationException.class, () -> userService.changePassword(1L, request));
+        assertThrows(RequestValidationException.class, () -> userService.changePassword(new UUID(0, 1L), request));
         verify(passwordEncoder, never()).encode(any(String.class));
     }
 
     @Test
     void changePasswordShouldUpdatePasswordWhenCurrentMatches() {
-        UserEntity entity = userEntity(1L);
+        when(currentUserProvider.getCurrentUser()).thenReturn(userEntity(new UUID(0, 1L)));
+        UserEntity entity = userEntity(new UUID(0, 1L));
         entity.setPassword("encoded-old");
         UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "NewPassword!");
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(passwordEncoder.matches("OldPassword!", "encoded-old")).thenReturn(true);
         when(passwordEncoder.encode("NewPassword!")).thenReturn("encoded-new");
 
-        userService.changePassword(1L, request);
+        userService.changePassword(new UUID(0, 1L), request);
 
         assertEquals("encoded-new", entity.getPassword());
     }
 
     @Test
     void deactivateShouldSetInactiveAndSave() {
-        UserEntity entity = userEntity(1L);
-        UserResponseDto dto = userResponseDto(1L);
+        UserEntity entity = userEntity(new UUID(0, 1L));
+        UserResponseDto dto = userResponseDto(new UUID(0, 1L));
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(userRepository.save(entity)).thenReturn(entity);
         when(userMapper.toResponseDto(entity)).thenReturn(dto);
 
-        UserResponseDto result = userService.deactivateById(1L);
+        UserResponseDto result = userService.deactivateById(new UUID(0, 1L));
 
         assertEquals(dto, result);
         assertFalse(entity.isActive());
@@ -230,20 +238,20 @@ class UserServiceTest {
 
     @Test
     void deactivateShouldThrowWhenUserNotFound() {
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.deactivateById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> userService.deactivateById(new UUID(0, 1L)));
     }
 
     @Test
     void hardDeleteShouldDeleteAndReturnUserDto() {
-        UserEntity entity = userEntity(1L);
-        UserResponseDto dto = userResponseDto(1L);
+        UserEntity entity = userEntity(new UUID(0, 1L));
+        UserResponseDto dto = userResponseDto(new UUID(0, 1L));
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(userMapper.toResponseDto(entity)).thenReturn(dto);
 
-        UserResponseDto result = userService.hardDeleteById(1L);
+        UserResponseDto result = userService.hardDeleteById(new UUID(0, 1L));
 
         assertEquals(dto, result);
         verify(userRepository).delete(entity);
@@ -251,22 +259,22 @@ class UserServiceTest {
 
     @Test
     void hardDeleteShouldThrowWhenUserNotFound() {
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.hardDeleteById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> userService.hardDeleteById(new UUID(0, 1L)));
     }
 
     @Test
     void restoreShouldSetActiveAndSave() {
-        UserEntity entity = userEntity(1L);
+        UserEntity entity = userEntity(new UUID(0, 1L));
         entity.setActive(false);
-        UserResponseDto dto = userResponseDto(1L);
+        UserResponseDto dto = userResponseDto(new UUID(0, 1L));
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(userRepository.save(entity)).thenReturn(entity);
         when(userMapper.toResponseDto(entity)).thenReturn(dto);
 
-        UserResponseDto result = userService.restoreById(1L);
+        UserResponseDto result = userService.restoreById(new UUID(0, 1L));
 
         assertEquals(dto, result);
         assertTrue(entity.isActive());
@@ -274,12 +282,12 @@ class UserServiceTest {
 
     @Test
     void restoreShouldThrowWhenUserNotFound() {
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.restoreById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> userService.restoreById(new UUID(0, 1L)));
     }
 
-    private UserEntity userEntity(Long id) {
+    private UserEntity userEntity(UUID id) {
         UserEntity user = new UserEntity();
         user.setId(id);
         user.setFirstName("John");
@@ -292,7 +300,7 @@ class UserServiceTest {
         return user;
     }
 
-    private UserResponseDto userResponseDto(Long id) {
+    private UserResponseDto userResponseDto(UUID id) {
         return new UserResponseDto(
             id,
             "John",

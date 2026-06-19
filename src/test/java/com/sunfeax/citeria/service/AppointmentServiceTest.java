@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.service;
 
+import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,7 +33,9 @@ import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.enums.PaymentMethod;
+import com.sunfeax.citeria.enums.UserRole;
 import com.sunfeax.citeria.enums.UserType;
+import com.sunfeax.citeria.exception.ForbiddenException;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.exception.UnauthorizedException;
@@ -80,9 +83,10 @@ class AppointmentServiceTest {
 
     @Test
     void getAllShouldReturnMappedPage() {
+        stubAdminCurrentUser();
         Pageable pageable = PageRequest.of(0, 20);
-        AppointmentEntity entity = appointmentEntity(1L);
-        AppointmentResponseDto dto = appointmentDto(1L);
+        AppointmentEntity entity = appointmentEntity(new UUID(0, 1L));
+        AppointmentResponseDto dto = appointmentDto(new UUID(0, 1L));
 
         when(appointmentRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(entity)));
         when(appointmentMapper.toResponseDto(entity)).thenReturn(dto);
@@ -95,9 +99,21 @@ class AppointmentServiceTest {
 
     @Test
     void getByIdShouldThrowWhenAppointmentNotFound() {
-        when(appointmentRepository.findById(99L)).thenReturn(Optional.empty());
+        when(appointmentRepository.findById(new UUID(0, 99L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> appointmentService.getById(99L));
+        assertThrows(ResourceNotFoundException.class, () -> appointmentService.getById(new UUID(0, 99L)));
+    }
+
+    @Test
+    void getByIdShouldThrowForbiddenWhenCallerIsNotParticipant() {
+        AppointmentEntity entity = appointmentEntity(new UUID(0, 1L));
+        UserEntity stranger = clientUser(new UUID(0, 4242L));
+
+        when(appointmentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
+        when(currentUserProvider.getCurrentUser()).thenReturn(stranger);
+        when(currentUserProvider.isAdmin(stranger)).thenReturn(false);
+
+        assertThrows(ForbiddenException.class, () -> appointmentService.getById(new UUID(0, 1L)));
     }
 
     @Test
@@ -105,15 +121,15 @@ class AppointmentServiceTest {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(100L, start, end, PaymentMethod.ONLINE);
-        UserEntity client = clientUser(10L);
-        SpecialistServiceEntity specialistService = specialistService(100L, true);
-        AppointmentEntity entity = appointmentEntity(1L);
-        AppointmentResponseDto dto = appointmentDto(1L);
+        AppointmentPostRequestDto request = new AppointmentPostRequestDto(new UUID(0, 100L), start, end, PaymentMethod.ONLINE);
+        UserEntity client = clientUser(new UUID(0, 10L));
+        SpecialistServiceEntity specialistService = specialistService(new UUID(0, 100L), true);
+        AppointmentEntity entity = appointmentEntity(new UUID(0, 1L));
+        AppointmentResponseDto dto = appointmentDto(new UUID(0, 1L));
 
         when(appointmentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
         when(currentUserProvider.getCurrentUser()).thenReturn(client);
-        when(specialistServiceRepository.findById(100L)).thenReturn(Optional.of(specialistService));
+        when(specialistServiceRepository.findById(new UUID(0, 100L))).thenReturn(Optional.of(specialistService));
         when(
             appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
                 specialistService.getSpecialist().getId(),
@@ -137,7 +153,7 @@ class AppointmentServiceTest {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(100L, start, end, PaymentMethod.ONLINE);
+        AppointmentPostRequestDto request = new AppointmentPostRequestDto(new UUID(0, 100L), start, end, PaymentMethod.ONLINE);
 
         when(appointmentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
         when(currentUserProvider.getCurrentUser()).thenThrow(new UnauthorizedException("Authentication is required"));
@@ -151,12 +167,12 @@ class AppointmentServiceTest {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(100L, start, end, PaymentMethod.ONLINE);
-        UserEntity client = clientUser(10L);
+        AppointmentPostRequestDto request = new AppointmentPostRequestDto(new UUID(0, 100L), start, end, PaymentMethod.ONLINE);
+        UserEntity client = clientUser(new UUID(0, 10L));
 
         when(appointmentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
         when(currentUserProvider.getCurrentUser()).thenReturn(client);
-        when(specialistServiceRepository.findById(100L)).thenReturn(Optional.empty());
+        when(specialistServiceRepository.findById(new UUID(0, 100L))).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> appointmentService.create(request));
         verify(appointmentRepository, never()).save(any(AppointmentEntity.class));
@@ -167,13 +183,13 @@ class AppointmentServiceTest {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(100L, start, end, PaymentMethod.ONLINE);
-        UserEntity specialistAsClient = specialistUser(10L);
-        SpecialistServiceEntity specialistService = specialistService(100L, true);
+        AppointmentPostRequestDto request = new AppointmentPostRequestDto(new UUID(0, 100L), start, end, PaymentMethod.ONLINE);
+        UserEntity specialistAsClient = specialistUser(new UUID(0, 10L));
+        SpecialistServiceEntity specialistService = specialistService(new UUID(0, 100L), true);
 
         when(appointmentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
         when(currentUserProvider.getCurrentUser()).thenReturn(specialistAsClient);
-        when(specialistServiceRepository.findById(100L)).thenReturn(Optional.of(specialistService));
+        when(specialistServiceRepository.findById(new UUID(0, 100L))).thenReturn(Optional.of(specialistService));
         when(
             appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
                 specialistService.getSpecialist().getId(),
@@ -192,13 +208,13 @@ class AppointmentServiceTest {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.minusMinutes(30);
 
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(100L, start, end, PaymentMethod.ONLINE);
-        UserEntity client = clientUser(10L);
-        SpecialistServiceEntity specialistService = specialistService(100L, true);
+        AppointmentPostRequestDto request = new AppointmentPostRequestDto(new UUID(0, 100L), start, end, PaymentMethod.ONLINE);
+        UserEntity client = clientUser(new UUID(0, 10L));
+        SpecialistServiceEntity specialistService = specialistService(new UUID(0, 100L), true);
 
         when(appointmentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
         when(currentUserProvider.getCurrentUser()).thenReturn(client);
-        when(specialistServiceRepository.findById(100L)).thenReturn(Optional.of(specialistService));
+        when(specialistServiceRepository.findById(new UUID(0, 100L))).thenReturn(Optional.of(specialistService));
         when(
             appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
                 specialistService.getSpecialist().getId(),
@@ -217,13 +233,13 @@ class AppointmentServiceTest {
         LocalDateTime start = futureStart();
         LocalDateTime end = start.plusMinutes(60);
 
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(100L, start, end, PaymentMethod.ONLINE);
-        UserEntity client = clientUser(10L);
-        SpecialistServiceEntity specialistService = specialistService(100L, true);
+        AppointmentPostRequestDto request = new AppointmentPostRequestDto(new UUID(0, 100L), start, end, PaymentMethod.ONLINE);
+        UserEntity client = clientUser(new UUID(0, 10L));
+        SpecialistServiceEntity specialistService = specialistService(new UUID(0, 100L), true);
 
         when(appointmentFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
         when(currentUserProvider.getCurrentUser()).thenReturn(client);
-        when(specialistServiceRepository.findById(100L)).thenReturn(Optional.of(specialistService));
+        when(specialistServiceRepository.findById(new UUID(0, 100L))).thenReturn(Optional.of(specialistService));
         when(
             appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
                 specialistService.getSpecialist().getId(),
@@ -241,44 +257,47 @@ class AppointmentServiceTest {
     void updateShouldThrowWhenAppointmentNotFound() {
         AppointmentPatchRequestDto request = new AppointmentPatchRequestDto(null, null, null, null, null, null);
 
-        when(appointmentRepository.findById(1L)).thenReturn(Optional.empty());
+        when(appointmentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> appointmentService.update(1L, request));
+        assertThrows(ResourceNotFoundException.class, () -> appointmentService.update(new UUID(0, 1L), request));
     }
 
     @Test
     void updateShouldThrowWhenNoFieldsProvided() {
-        AppointmentEntity entity = appointmentEntity(1L);
+        stubAdminCurrentUser();
+        AppointmentEntity entity = appointmentEntity(new UUID(0, 1L));
         AppointmentPatchRequestDto request = new AppointmentPatchRequestDto(null, null, null, null, null, null);
 
-        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(appointmentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(appointmentFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
         when(appointmentMapper.hasAnyPatchField(request)).thenReturn(false);
 
-        assertThrows(RequestValidationException.class, () -> appointmentService.update(1L, request));
+        assertThrows(RequestValidationException.class, () -> appointmentService.update(new UUID(0, 1L), request));
         verify(appointmentRepository, never()).save(any(AppointmentEntity.class));
     }
 
     @Test
     void updateShouldThrowWhenTargetSpecialistServiceNotFound() {
-        AppointmentEntity entity = appointmentEntity(1L);
-        AppointmentPatchRequestDto request = new AppointmentPatchRequestDto(null, 200L, null, null, null, null);
+        stubAdminCurrentUser();
+        AppointmentEntity entity = appointmentEntity(new UUID(0, 1L));
+        AppointmentPatchRequestDto request = new AppointmentPatchRequestDto(null, new UUID(0, 200L), null, null, null, null);
 
-        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(appointmentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(appointmentFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
-        when(specialistServiceRepository.findById(200L)).thenReturn(Optional.empty());
+        when(specialistServiceRepository.findById(new UUID(0, 200L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> appointmentService.update(1L, request));
+        assertThrows(ResourceNotFoundException.class, () -> appointmentService.update(new UUID(0, 1L), request));
     }
 
     @Test
     void updateShouldThrowWhenSpecialistIsAlreadyBooked() {
-        AppointmentEntity entity = appointmentEntity(1L);
+        stubAdminCurrentUser();
+        AppointmentEntity entity = appointmentEntity(new UUID(0, 1L));
         LocalDateTime newStart = futureStart().plusHours(1);
         LocalDateTime newEnd = newStart.plusMinutes(60);
         AppointmentPatchRequestDto request = new AppointmentPatchRequestDto(null, null, newStart, newEnd, null, null);
 
-        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(appointmentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(appointmentFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
         when(appointmentMapper.hasAnyPatchField(request)).thenReturn(true);
         when(
@@ -287,33 +306,34 @@ class AppointmentServiceTest {
                 newEnd,
                 newStart,
                 AppointmentStatus.CANCELLED,
-                1L
+                new UUID(0, 1L)
             )
         ).thenReturn(true);
 
-        assertThrows(RequestValidationException.class, () -> appointmentService.update(1L, request));
+        assertThrows(RequestValidationException.class, () -> appointmentService.update(new UUID(0, 1L), request));
         verify(appointmentRepository, never()).save(any(AppointmentEntity.class));
     }
 
     @Test
     void updateShouldApplyPatchAndSaveWhenRequestIsValid() {
-        AppointmentEntity entity = appointmentEntity(1L);
+        stubAdminCurrentUser();
+        AppointmentEntity entity = appointmentEntity(new UUID(0, 1L));
         LocalDateTime newStart = futureStart().plusHours(1);
         LocalDateTime newEnd = newStart.plusMinutes(60);
         AppointmentPatchRequestDto request = new AppointmentPatchRequestDto(
             null,
-            200L,
+            new UUID(0, 200L),
             newStart,
             newEnd,
             AppointmentStatus.CONFIRMED,
             PaymentMethod.ON_SITE
         );
-        SpecialistServiceEntity newSpecialistService = specialistService(200L, true);
-        AppointmentResponseDto dto = appointmentDto(1L);
+        SpecialistServiceEntity newSpecialistService = specialistService(new UUID(0, 200L), true);
+        AppointmentResponseDto dto = appointmentDto(new UUID(0, 1L));
 
-        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(appointmentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(appointmentFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
-        when(specialistServiceRepository.findById(200L)).thenReturn(Optional.of(newSpecialistService));
+        when(specialistServiceRepository.findById(new UUID(0, 200L))).thenReturn(Optional.of(newSpecialistService));
         when(appointmentMapper.hasAnyPatchField(request)).thenReturn(true);
         when(
             appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNotAndIdNot(
@@ -321,14 +341,14 @@ class AppointmentServiceTest {
                 newEnd,
                 newStart,
                 AppointmentStatus.CANCELLED,
-                1L
+                new UUID(0, 1L)
             )
         ).thenReturn(false);
         when(appointmentMapper.applyPatch(entity, request, null, newSpecialistService)).thenReturn(entity);
         when(appointmentRepository.save(entity)).thenReturn(entity);
         when(appointmentMapper.toResponseDto(entity)).thenReturn(dto);
 
-        AppointmentResponseDto result = appointmentService.update(1L, request);
+        AppointmentResponseDto result = appointmentService.update(new UUID(0, 1L), request);
 
         assertEquals(dto, result);
         verify(appointmentRepository).save(entity);
@@ -336,13 +356,14 @@ class AppointmentServiceTest {
 
     @Test
     void deleteShouldDeleteAndReturnDto() {
-        AppointmentEntity entity = appointmentEntity(1L);
-        AppointmentResponseDto dto = appointmentDto(1L);
+        stubAdminCurrentUser();
+        AppointmentEntity entity = appointmentEntity(new UUID(0, 1L));
+        AppointmentResponseDto dto = appointmentDto(new UUID(0, 1L));
 
-        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(appointmentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(appointmentMapper.toResponseDto(entity)).thenReturn(dto);
 
-        AppointmentResponseDto result = appointmentService.deleteById(1L);
+        AppointmentResponseDto result = appointmentService.deleteById(new UUID(0, 1L));
 
         assertEquals(dto, result);
         verify(appointmentRepository).delete(entity);
@@ -350,16 +371,28 @@ class AppointmentServiceTest {
 
     @Test
     void deleteShouldThrowWhenAppointmentNotFound() {
-        when(appointmentRepository.findById(1L)).thenReturn(Optional.empty());
+        when(appointmentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> appointmentService.deleteById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> appointmentService.deleteById(new UUID(0, 1L)));
+    }
+
+    private UserEntity stubAdminCurrentUser() {
+        UserEntity admin = new UserEntity();
+        admin.setId(new UUID(0, 7L));
+        admin.setEmail("admin@example.com");
+        admin.setType(UserType.CLIENT);
+        admin.setRole(UserRole.ADMIN);
+        admin.setActive(true);
+        when(currentUserProvider.getCurrentUser()).thenReturn(admin);
+        when(currentUserProvider.isAdmin(admin)).thenReturn(true);
+        return admin;
     }
 
     private LocalDateTime futureStart() {
         return LocalDateTime.now().plusDays(1).withSecond(0).withNano(0);
     }
 
-    private UserEntity clientUser(Long id) {
+    private UserEntity clientUser(UUID id) {
         UserEntity user = new UserEntity();
         user.setId(id);
         user.setFirstName("Client");
@@ -370,7 +403,7 @@ class AppointmentServiceTest {
         return user;
     }
 
-    private UserEntity specialistUser(Long id) {
+    private UserEntity specialistUser(UUID id) {
         UserEntity user = new UserEntity();
         user.setId(id);
         user.setFirstName("Specialist");
@@ -381,13 +414,13 @@ class AppointmentServiceTest {
         return user;
     }
 
-    private SpecialistServiceEntity specialistService(Long id, boolean active) {
+    private SpecialistServiceEntity specialistService(UUID id, boolean active) {
         BusinessEntity business = new BusinessEntity();
-        business.setId(300L);
+        business.setId(new UUID(0, 300L));
         business.setName("Alpha Studio");
 
         ServiceEntity service = new ServiceEntity();
-        service.setId(400L);
+        service.setId(new UUID(0, 400L));
         service.setName("Consultation");
         service.setPriceAmount(BigDecimal.valueOf(95));
         service.setCurrency("EUR");
@@ -397,16 +430,16 @@ class AppointmentServiceTest {
         entity.setId(id);
         entity.setBusiness(business);
         entity.setService(service);
-        entity.setSpecialist(specialistUser(500L));
+        entity.setSpecialist(specialistUser(new UUID(0, 500L)));
         entity.setActive(active);
         return entity;
     }
 
-    private AppointmentEntity appointmentEntity(Long id) {
+    private AppointmentEntity appointmentEntity(UUID id) {
         AppointmentEntity entity = new AppointmentEntity();
         entity.setId(id);
-        entity.setClient(clientUser(10L));
-        SpecialistServiceEntity specialistService = specialistService(100L, true);
+        entity.setClient(clientUser(new UUID(0, 10L)));
+        SpecialistServiceEntity specialistService = specialistService(new UUID(0, 100L), true);
         entity.setSpecialist(specialistService.getSpecialist());
         entity.setSpecialistService(specialistService);
         entity.setStartTime(futureStart());
@@ -418,16 +451,16 @@ class AppointmentServiceTest {
         return entity;
     }
 
-    private AppointmentResponseDto appointmentDto(Long id) {
+    private AppointmentResponseDto appointmentDto(UUID id) {
         return new AppointmentResponseDto(
             id,
-            10L,
+            new UUID(0, 10L),
             "Client User",
             "client@example.com",
-            100L,
-            500L,
+            new UUID(0, 100L),
+            new UUID(0, 500L),
             "Specialist User",
-            400L,
+            new UUID(0, 400L),
             "Consultation",
             "Alpha Studio",
             futureStart(),

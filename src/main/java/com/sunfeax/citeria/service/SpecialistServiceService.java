@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.service;
 
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import com.sunfeax.citeria.repository.SpecialistServiceRepository;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.mapper.SpecialistServiceMapper;
 import com.sunfeax.citeria.normalizer.SpecialistServiceFieldNormalizer;
+import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.validation.SpecialistServiceValidator;
 
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ public class SpecialistServiceService {
     private final ServiceRepository serviceRepository;
     private final SpecialistServiceFieldNormalizer specialistServiceFieldNormalizer;
     private final SpecialistServiceValidator specialistServiceValidator;
+    private final CurrentUserProvider currentUserProvider;
 
     @Transactional(readOnly = true)
     public Page<SpecialistServiceResponseDto> getAll(Pageable pageable) {
@@ -42,7 +45,7 @@ public class SpecialistServiceService {
     }
 
     @Transactional(readOnly = true)
-    public SpecialistServiceResponseDto getById(Long id) {
+    public SpecialistServiceResponseDto getById(UUID id) {
         return specialistServiceRepository.findById(id)
             .map(specialistServiceMapper::toResponseDto)
             .orElseThrow(() -> new ResourceNotFoundException("Specialist service with id " + id + " not found"));
@@ -53,6 +56,7 @@ public class SpecialistServiceService {
         SpecialistServicePostRequestDto normalizedRequest = specialistServiceFieldNormalizer.normalizePostRequest(request);
 
         BusinessEntity business = findBusinessOrThrow(normalizedRequest.businessId());
+        currentUserProvider.requireSelfOrAdmin(business.getOwner().getId());
         UserEntity specialist = findUserOrThrow(normalizedRequest.specialistId());
         ServiceEntity service = findServiceOrThrow(normalizedRequest.serviceId());
         specialistServiceValidator.validateRegister(normalizedRequest, business, specialist, service);
@@ -64,8 +68,9 @@ public class SpecialistServiceService {
     }
 
     @Transactional
-    public SpecialistServiceResponseDto update(Long id, SpecialistServicePatchRequestDto request) {
+    public SpecialistServiceResponseDto update(UUID id, SpecialistServicePatchRequestDto request) {
         SpecialistServiceEntity entity = findSpecialistServiceOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(entity.getBusiness().getOwner().getId());
 
         SpecialistServicePatchRequestDto normalizedRequest = specialistServiceFieldNormalizer.normalizePatchRequest(request);
 
@@ -93,8 +98,9 @@ public class SpecialistServiceService {
     }
 
     @Transactional
-    public SpecialistServiceResponseDto deactivateById(Long id) {
+    public SpecialistServiceResponseDto deactivateById(UUID id) {
         SpecialistServiceEntity specialistService = findSpecialistServiceOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(specialistService.getBusiness().getOwner().getId());
 
         specialistService.setActive(false);
         SpecialistServiceEntity saved = specialistServiceRepository.save(specialistService);
@@ -103,8 +109,9 @@ public class SpecialistServiceService {
     }
 
     @Transactional
-    public SpecialistServiceResponseDto hardDeleteById(Long id) {
+    public SpecialistServiceResponseDto hardDeleteById(UUID id) {
         SpecialistServiceEntity specialistService = findSpecialistServiceOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(specialistService.getBusiness().getOwner().getId());
 
         SpecialistServiceResponseDto deletedSpecialistService = specialistServiceMapper.toResponseDto(specialistService);
         specialistServiceRepository.delete(specialistService);
@@ -113,8 +120,9 @@ public class SpecialistServiceService {
     }
 
     @Transactional
-    public SpecialistServiceResponseDto restoreById(Long id) {
+    public SpecialistServiceResponseDto restoreById(UUID id) {
         SpecialistServiceEntity specialistService = findSpecialistServiceOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(specialistService.getBusiness().getOwner().getId());
 
         specialistService.setActive(true);
         SpecialistServiceEntity saved = specialistServiceRepository.save(specialistService);
@@ -122,22 +130,22 @@ public class SpecialistServiceService {
         return specialistServiceMapper.toResponseDto(saved);
     }
 
-    private SpecialistServiceEntity findSpecialistServiceOrThrow(Long id) {
+    private SpecialistServiceEntity findSpecialistServiceOrThrow(UUID id) {
         return specialistServiceRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Specialist service with id " + id + " not found"));
     }
 
-    private BusinessEntity findBusinessOrThrow(Long businessId) {
+    private BusinessEntity findBusinessOrThrow(UUID businessId) {
         return businessRepository.findById(businessId)
             .orElseThrow(() -> new ResourceNotFoundException("Business with id " + businessId + " not found"));
     }
 
-    private UserEntity findUserOrThrow(Long userId) {
+    private UserEntity findUserOrThrow(UUID userId) {
         return userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
     }
 
-    private ServiceEntity findServiceOrThrow(Long serviceId) {
+    private ServiceEntity findServiceOrThrow(UUID serviceId) {
         return serviceRepository.findById(serviceId)
             .orElseThrow(() -> new ResourceNotFoundException("Service with id " + serviceId + " not found"));
     }

@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.repository;
 
+import java.util.UUID;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -14,7 +15,7 @@ import com.sunfeax.citeria.entity.RefreshTokenEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 
 @Repository
-public interface RefreshTokenRepository extends JpaRepository<RefreshTokenEntity, Long> {
+public interface RefreshTokenRepository extends JpaRepository<RefreshTokenEntity, UUID> {
     
     Optional<RefreshTokenEntity> findByTokenHash(String tokenHash);
 

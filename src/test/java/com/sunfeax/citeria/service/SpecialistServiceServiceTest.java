@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.service;
 
+import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -39,6 +40,7 @@ import com.sunfeax.citeria.repository.SpecialistServiceRepository;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.mapper.SpecialistServiceMapper;
 import com.sunfeax.citeria.normalizer.SpecialistServiceFieldNormalizer;
+import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.validation.SpecialistServiceValidator;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,6 +58,8 @@ class SpecialistServiceServiceTest {
     private ServiceRepository serviceRepository;
     @Mock
     private SpecialistServiceFieldNormalizer specialistServiceFieldNormalizer;
+    @Mock
+    private CurrentUserProvider currentUserProvider;
 
     private SpecialistServiceValidator specialistServiceValidator;
 
@@ -71,15 +75,16 @@ class SpecialistServiceServiceTest {
             userRepository,
             serviceRepository,
             specialistServiceFieldNormalizer,
-            specialistServiceValidator
+            specialistServiceValidator,
+            currentUserProvider
         );
     }
 
     @Test
     void getAllShouldReturnMappedPage() {
         Pageable pageable = PageRequest.of(0, 20);
-        SpecialistServiceEntity entity = specialistServiceEntity(1L, 10L, 20L, 30L);
-        SpecialistServiceResponseDto dto = specialistServiceDto(1L, 10L, 20L, 30L);
+        SpecialistServiceEntity entity = specialistServiceEntity(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
+        SpecialistServiceResponseDto dto = specialistServiceDto(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
 
         when(specialistServiceRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(entity)));
         when(specialistServiceMapper.toResponseDto(entity)).thenReturn(dto);
@@ -92,25 +97,25 @@ class SpecialistServiceServiceTest {
 
     @Test
     void getByIdShouldThrowWhenNotFound() {
-        when(specialistServiceRepository.findById(99L)).thenReturn(Optional.empty());
+        when(specialistServiceRepository.findById(new UUID(0, 99L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> specialistServiceService.getById(99L));
+        assertThrows(ResourceNotFoundException.class, () -> specialistServiceService.getById(new UUID(0, 99L)));
     }
 
     @Test
     void registerShouldSaveWhenRequestIsValid() {
-        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(10L, 20L, 30L);
-        BusinessEntity business = businessEntity(10L, true);
-        UserEntity specialist = specialistUser(20L, true);
-        ServiceEntity service = serviceEntity(30L, 10L, true);
-        SpecialistServiceEntity entity = specialistServiceEntity(1L, 10L, 20L, 30L);
-        SpecialistServiceResponseDto dto = specialistServiceDto(1L, 10L, 20L, 30L);
+        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
+        BusinessEntity business = businessEntity(new UUID(0, 10L), true);
+        UserEntity specialist = specialistUser(new UUID(0, 20L), true);
+        ServiceEntity service = serviceEntity(new UUID(0, 30L), new UUID(0, 10L), true);
+        SpecialistServiceEntity entity = specialistServiceEntity(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
+        SpecialistServiceResponseDto dto = specialistServiceDto(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
 
         when(specialistServiceFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(businessRepository.findById(10L)).thenReturn(Optional.of(business));
-        when(userRepository.findById(20L)).thenReturn(Optional.of(specialist));
-        when(serviceRepository.findById(30L)).thenReturn(Optional.of(service));
-        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceId(10L, 20L, 30L)).thenReturn(false);
+        when(businessRepository.findById(new UUID(0, 10L))).thenReturn(Optional.of(business));
+        when(userRepository.findById(new UUID(0, 20L))).thenReturn(Optional.of(specialist));
+        when(serviceRepository.findById(new UUID(0, 30L))).thenReturn(Optional.of(service));
+        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceId(new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L))).thenReturn(false);
         when(specialistServiceMapper.createEntity(request, business, specialist, service)).thenReturn(entity);
         when(specialistServiceRepository.save(entity)).thenReturn(entity);
         when(specialistServiceMapper.toResponseDto(entity)).thenReturn(dto);
@@ -123,16 +128,16 @@ class SpecialistServiceServiceTest {
 
     @Test
     void registerShouldThrowWhenDuplicateExists() {
-        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(10L, 20L, 30L);
-        BusinessEntity business = businessEntity(10L, true);
-        UserEntity specialist = specialistUser(20L, true);
-        ServiceEntity service = serviceEntity(30L, 10L, true);
+        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
+        BusinessEntity business = businessEntity(new UUID(0, 10L), true);
+        UserEntity specialist = specialistUser(new UUID(0, 20L), true);
+        ServiceEntity service = serviceEntity(new UUID(0, 30L), new UUID(0, 10L), true);
 
         when(specialistServiceFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(businessRepository.findById(10L)).thenReturn(Optional.of(business));
-        when(userRepository.findById(20L)).thenReturn(Optional.of(specialist));
-        when(serviceRepository.findById(30L)).thenReturn(Optional.of(service));
-        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceId(10L, 20L, 30L)).thenReturn(true);
+        when(businessRepository.findById(new UUID(0, 10L))).thenReturn(Optional.of(business));
+        when(userRepository.findById(new UUID(0, 20L))).thenReturn(Optional.of(specialist));
+        when(serviceRepository.findById(new UUID(0, 30L))).thenReturn(Optional.of(service));
+        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceId(new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L))).thenReturn(true);
 
         assertThrows(RequestValidationException.class, () -> specialistServiceService.register(request));
         verify(specialistServiceRepository, never()).save(any(SpecialistServiceEntity.class));
@@ -140,26 +145,26 @@ class SpecialistServiceServiceTest {
 
     @Test
     void registerShouldThrowWhenBusinessNotFound() {
-        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(10L, 20L, 30L);
+        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
 
         when(specialistServiceFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(businessRepository.findById(10L)).thenReturn(Optional.empty());
+        when(businessRepository.findById(new UUID(0, 10L))).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> specialistServiceService.register(request));
     }
 
     @Test
     void registerShouldThrowWhenSpecialistWrongType() {
-        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(10L, 20L, 30L);
-        BusinessEntity business = businessEntity(10L, true);
-        UserEntity client = clientUser(20L, true);
-        ServiceEntity service = serviceEntity(30L, 10L, true);
+        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
+        BusinessEntity business = businessEntity(new UUID(0, 10L), true);
+        UserEntity client = clientUser(new UUID(0, 20L), true);
+        ServiceEntity service = serviceEntity(new UUID(0, 30L), new UUID(0, 10L), true);
 
         when(specialistServiceFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(businessRepository.findById(10L)).thenReturn(Optional.of(business));
-        when(userRepository.findById(20L)).thenReturn(Optional.of(client));
-        when(serviceRepository.findById(30L)).thenReturn(Optional.of(service));
-        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceId(10L, 20L, 30L)).thenReturn(false);
+        when(businessRepository.findById(new UUID(0, 10L))).thenReturn(Optional.of(business));
+        when(userRepository.findById(new UUID(0, 20L))).thenReturn(Optional.of(client));
+        when(serviceRepository.findById(new UUID(0, 30L))).thenReturn(Optional.of(service));
+        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceId(new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L))).thenReturn(false);
 
         assertThrows(RequestValidationException.class, () -> specialistServiceService.register(request));
         verify(specialistServiceRepository, never()).save(any(SpecialistServiceEntity.class));
@@ -167,16 +172,16 @@ class SpecialistServiceServiceTest {
 
     @Test
     void registerShouldThrowWhenServiceBelongsToAnotherBusiness() {
-        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(10L, 20L, 30L);
-        BusinessEntity business = businessEntity(10L, true);
-        UserEntity specialist = specialistUser(20L, true);
-        ServiceEntity service = serviceEntity(30L, 999L, true);
+        SpecialistServicePostRequestDto request = new SpecialistServicePostRequestDto(new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
+        BusinessEntity business = businessEntity(new UUID(0, 10L), true);
+        UserEntity specialist = specialistUser(new UUID(0, 20L), true);
+        ServiceEntity service = serviceEntity(new UUID(0, 30L), new UUID(0, 999L), true);
 
         when(specialistServiceFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(businessRepository.findById(10L)).thenReturn(Optional.of(business));
-        when(userRepository.findById(20L)).thenReturn(Optional.of(specialist));
-        when(serviceRepository.findById(30L)).thenReturn(Optional.of(service));
-        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceId(10L, 20L, 30L)).thenReturn(false);
+        when(businessRepository.findById(new UUID(0, 10L))).thenReturn(Optional.of(business));
+        when(userRepository.findById(new UUID(0, 20L))).thenReturn(Optional.of(specialist));
+        when(serviceRepository.findById(new UUID(0, 30L))).thenReturn(Optional.of(service));
+        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceId(new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L))).thenReturn(false);
 
         assertThrows(RequestValidationException.class, () -> specialistServiceService.register(request));
         verify(specialistServiceRepository, never()).save(any(SpecialistServiceEntity.class));
@@ -186,68 +191,68 @@ class SpecialistServiceServiceTest {
     void updateShouldThrowWhenNotFound() {
         SpecialistServicePatchRequestDto request = new SpecialistServicePatchRequestDto(null, null, null);
 
-        when(specialistServiceRepository.findById(1L)).thenReturn(Optional.empty());
+        when(specialistServiceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> specialistServiceService.update(1L, request));
+        assertThrows(ResourceNotFoundException.class, () -> specialistServiceService.update(new UUID(0, 1L), request));
     }
 
     @Test
     void updateShouldThrowWhenNoFieldsProvided() {
-        SpecialistServiceEntity entity = specialistServiceEntity(1L, 10L, 20L, 30L);
+        SpecialistServiceEntity entity = specialistServiceEntity(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
         SpecialistServicePatchRequestDto request = new SpecialistServicePatchRequestDto(null, null, null);
 
-        when(specialistServiceRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(specialistServiceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(specialistServiceFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
         when(specialistServiceMapper.hasAnyPatchField(request)).thenReturn(false);
-        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceIdAndIdNot(10L, 20L, 30L, 1L))
+        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceIdAndIdNot(new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L), new UUID(0, 1L)))
             .thenReturn(false);
 
-        assertThrows(RequestValidationException.class, () -> specialistServiceService.update(1L, request));
+        assertThrows(RequestValidationException.class, () -> specialistServiceService.update(new UUID(0, 1L), request));
     }
 
     @Test
     void updateShouldThrowWhenDuplicateExists() {
-        SpecialistServiceEntity entity = specialistServiceEntity(1L, 10L, 20L, 30L);
-        SpecialistServicePatchRequestDto request = new SpecialistServicePatchRequestDto(11L, 21L, 31L);
-        BusinessEntity business = businessEntity(11L, true);
-        UserEntity specialist = specialistUser(21L, true);
-        ServiceEntity service = serviceEntity(31L, 11L, true);
+        SpecialistServiceEntity entity = specialistServiceEntity(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
+        SpecialistServicePatchRequestDto request = new SpecialistServicePatchRequestDto(new UUID(0, 11L), new UUID(0, 21L), new UUID(0, 31L));
+        BusinessEntity business = businessEntity(new UUID(0, 11L), true);
+        UserEntity specialist = specialistUser(new UUID(0, 21L), true);
+        ServiceEntity service = serviceEntity(new UUID(0, 31L), new UUID(0, 11L), true);
 
-        when(specialistServiceRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(specialistServiceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(specialistServiceFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
-        when(businessRepository.findById(11L)).thenReturn(Optional.of(business));
-        when(userRepository.findById(21L)).thenReturn(Optional.of(specialist));
-        when(serviceRepository.findById(31L)).thenReturn(Optional.of(service));
+        when(businessRepository.findById(new UUID(0, 11L))).thenReturn(Optional.of(business));
+        when(userRepository.findById(new UUID(0, 21L))).thenReturn(Optional.of(specialist));
+        when(serviceRepository.findById(new UUID(0, 31L))).thenReturn(Optional.of(service));
         when(specialistServiceMapper.hasAnyPatchField(request)).thenReturn(true);
-        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceIdAndIdNot(11L, 21L, 31L, 1L))
+        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceIdAndIdNot(new UUID(0, 11L), new UUID(0, 21L), new UUID(0, 31L), new UUID(0, 1L)))
             .thenReturn(true);
 
-        assertThrows(RequestValidationException.class, () -> specialistServiceService.update(1L, request));
+        assertThrows(RequestValidationException.class, () -> specialistServiceService.update(new UUID(0, 1L), request));
         verify(specialistServiceRepository, never()).save(any(SpecialistServiceEntity.class));
     }
 
     @Test
     void updateShouldApplyPatchAndSaveWhenRequestIsValid() {
-        SpecialistServiceEntity entity = specialistServiceEntity(1L, 10L, 20L, 30L);
-        SpecialistServicePatchRequestDto request = new SpecialistServicePatchRequestDto(11L, 21L, 31L);
-        BusinessEntity business = businessEntity(11L, true);
-        UserEntity specialist = specialistUser(21L, true);
-        ServiceEntity service = serviceEntity(31L, 11L, true);
-        SpecialistServiceResponseDto dto = specialistServiceDto(1L, 11L, 21L, 31L);
+        SpecialistServiceEntity entity = specialistServiceEntity(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
+        SpecialistServicePatchRequestDto request = new SpecialistServicePatchRequestDto(new UUID(0, 11L), new UUID(0, 21L), new UUID(0, 31L));
+        BusinessEntity business = businessEntity(new UUID(0, 11L), true);
+        UserEntity specialist = specialistUser(new UUID(0, 21L), true);
+        ServiceEntity service = serviceEntity(new UUID(0, 31L), new UUID(0, 11L), true);
+        SpecialistServiceResponseDto dto = specialistServiceDto(new UUID(0, 1L), new UUID(0, 11L), new UUID(0, 21L), new UUID(0, 31L));
 
-        when(specialistServiceRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(specialistServiceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(specialistServiceFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
-        when(businessRepository.findById(11L)).thenReturn(Optional.of(business));
-        when(userRepository.findById(21L)).thenReturn(Optional.of(specialist));
-        when(serviceRepository.findById(31L)).thenReturn(Optional.of(service));
+        when(businessRepository.findById(new UUID(0, 11L))).thenReturn(Optional.of(business));
+        when(userRepository.findById(new UUID(0, 21L))).thenReturn(Optional.of(specialist));
+        when(serviceRepository.findById(new UUID(0, 31L))).thenReturn(Optional.of(service));
         when(specialistServiceMapper.hasAnyPatchField(request)).thenReturn(true);
-        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceIdAndIdNot(11L, 21L, 31L, 1L))
+        when(specialistServiceRepository.existsByBusinessIdAndSpecialistIdAndServiceIdAndIdNot(new UUID(0, 11L), new UUID(0, 21L), new UUID(0, 31L), new UUID(0, 1L)))
             .thenReturn(false);
         when(specialistServiceMapper.applyPatch(entity, request, business, specialist, service)).thenReturn(entity);
         when(specialistServiceRepository.save(entity)).thenReturn(entity);
         when(specialistServiceMapper.toResponseDto(entity)).thenReturn(dto);
 
-        SpecialistServiceResponseDto result = specialistServiceService.update(1L, request);
+        SpecialistServiceResponseDto result = specialistServiceService.update(new UUID(0, 1L), request);
 
         assertEquals(dto, result);
         verify(specialistServiceRepository).save(entity);
@@ -255,14 +260,14 @@ class SpecialistServiceServiceTest {
 
     @Test
     void deactivateShouldSetInactiveAndSave() {
-        SpecialistServiceEntity entity = specialistServiceEntity(1L, 10L, 20L, 30L);
-        SpecialistServiceResponseDto dto = specialistServiceDto(1L, 10L, 20L, 30L);
+        SpecialistServiceEntity entity = specialistServiceEntity(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
+        SpecialistServiceResponseDto dto = specialistServiceDto(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
 
-        when(specialistServiceRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(specialistServiceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(specialistServiceRepository.save(entity)).thenReturn(entity);
         when(specialistServiceMapper.toResponseDto(entity)).thenReturn(dto);
 
-        SpecialistServiceResponseDto result = specialistServiceService.deactivateById(1L);
+        SpecialistServiceResponseDto result = specialistServiceService.deactivateById(new UUID(0, 1L));
 
         assertEquals(dto, result);
         assertFalse(entity.isActive());
@@ -270,20 +275,20 @@ class SpecialistServiceServiceTest {
 
     @Test
     void deactivateShouldThrowWhenNotFound() {
-        when(specialistServiceRepository.findById(1L)).thenReturn(Optional.empty());
+        when(specialistServiceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> specialistServiceService.deactivateById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> specialistServiceService.deactivateById(new UUID(0, 1L)));
     }
 
     @Test
     void hardDeleteShouldDeleteAndReturnDto() {
-        SpecialistServiceEntity entity = specialistServiceEntity(1L, 10L, 20L, 30L);
-        SpecialistServiceResponseDto dto = specialistServiceDto(1L, 10L, 20L, 30L);
+        SpecialistServiceEntity entity = specialistServiceEntity(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
+        SpecialistServiceResponseDto dto = specialistServiceDto(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
 
-        when(specialistServiceRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(specialistServiceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(specialistServiceMapper.toResponseDto(entity)).thenReturn(dto);
 
-        SpecialistServiceResponseDto result = specialistServiceService.hardDeleteById(1L);
+        SpecialistServiceResponseDto result = specialistServiceService.hardDeleteById(new UUID(0, 1L));
 
         assertEquals(dto, result);
         verify(specialistServiceRepository).delete(entity);
@@ -291,22 +296,22 @@ class SpecialistServiceServiceTest {
 
     @Test
     void hardDeleteShouldThrowWhenNotFound() {
-        when(specialistServiceRepository.findById(1L)).thenReturn(Optional.empty());
+        when(specialistServiceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> specialistServiceService.hardDeleteById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> specialistServiceService.hardDeleteById(new UUID(0, 1L)));
     }
 
     @Test
     void restoreShouldSetActiveAndSave() {
-        SpecialistServiceEntity entity = specialistServiceEntity(1L, 10L, 20L, 30L);
+        SpecialistServiceEntity entity = specialistServiceEntity(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
         entity.setActive(false);
-        SpecialistServiceResponseDto dto = specialistServiceDto(1L, 10L, 20L, 30L);
+        SpecialistServiceResponseDto dto = specialistServiceDto(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
 
-        when(specialistServiceRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(specialistServiceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(specialistServiceRepository.save(entity)).thenReturn(entity);
         when(specialistServiceMapper.toResponseDto(entity)).thenReturn(dto);
 
-        SpecialistServiceResponseDto result = specialistServiceService.restoreById(1L);
+        SpecialistServiceResponseDto result = specialistServiceService.restoreById(new UUID(0, 1L));
 
         assertEquals(dto, result);
         assertTrue(entity.isActive());
@@ -314,20 +319,23 @@ class SpecialistServiceServiceTest {
 
     @Test
     void restoreShouldThrowWhenNotFound() {
-        when(specialistServiceRepository.findById(1L)).thenReturn(Optional.empty());
+        when(specialistServiceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> specialistServiceService.restoreById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> specialistServiceService.restoreById(new UUID(0, 1L)));
     }
 
-    private BusinessEntity businessEntity(Long id, boolean active) {
+    private BusinessEntity businessEntity(UUID id, boolean active) {
         BusinessEntity business = new BusinessEntity();
         business.setId(id);
         business.setName("Business " + id);
         business.setActive(active);
+        UserEntity owner = new UserEntity();
+        owner.setId(new UUID(0, 777L));
+        business.setOwner(owner);
         return business;
     }
 
-    private UserEntity specialistUser(Long id, boolean active) {
+    private UserEntity specialistUser(UUID id, boolean active) {
         UserEntity user = new UserEntity();
         user.setId(id);
         user.setFirstName("Spec");
@@ -337,7 +345,7 @@ class SpecialistServiceServiceTest {
         return user;
     }
 
-    private UserEntity clientUser(Long id, boolean active) {
+    private UserEntity clientUser(UUID id, boolean active) {
         UserEntity user = new UserEntity();
         user.setId(id);
         user.setFirstName("Client");
@@ -347,7 +355,7 @@ class SpecialistServiceServiceTest {
         return user;
     }
 
-    private ServiceEntity serviceEntity(Long id, Long businessId, boolean active) {
+    private ServiceEntity serviceEntity(UUID id, UUID businessId, boolean active) {
         ServiceEntity service = new ServiceEntity();
         service.setId(id);
         service.setName("Service " + id);
@@ -356,7 +364,7 @@ class SpecialistServiceServiceTest {
         return service;
     }
 
-    private SpecialistServiceEntity specialistServiceEntity(Long id, Long businessId, Long specialistId, Long serviceId) {
+    private SpecialistServiceEntity specialistServiceEntity(UUID id, UUID businessId, UUID specialistId, UUID serviceId) {
         SpecialistServiceEntity entity = new SpecialistServiceEntity();
         entity.setId(id);
         entity.setBusiness(businessEntity(businessId, true));
@@ -366,7 +374,7 @@ class SpecialistServiceServiceTest {
         return entity;
     }
 
-    private SpecialistServiceResponseDto specialistServiceDto(Long id, Long businessId, Long specialistId, Long serviceId) {
+    private SpecialistServiceResponseDto specialistServiceDto(UUID id, UUID businessId, UUID specialistId, UUID serviceId) {
         return new SpecialistServiceResponseDto(
             id,
             businessId,

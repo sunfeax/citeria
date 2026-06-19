@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.controller;
 
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -42,7 +43,7 @@ public class SpecialistServiceController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SpecialistServiceResponseDto> getSpecialistServiceById(@PathVariable Long id) {
+    public ResponseEntity<SpecialistServiceResponseDto> getSpecialistServiceById(@PathVariable UUID id) {
         return ResponseEntity.ok(specialistServiceService.getById(id));
     }
 
@@ -56,24 +57,24 @@ public class SpecialistServiceController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<SpecialistServiceResponseDto> update(
-        @PathVariable Long id,
+        @PathVariable UUID id,
         @Valid @RequestBody SpecialistServicePatchRequestDto request
     ) {
         return ResponseEntity.ok(specialistServiceService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<SpecialistServiceResponseDto> deactivateById(@PathVariable Long id) {
+    public ResponseEntity<SpecialistServiceResponseDto> deactivateById(@PathVariable UUID id) {
         return ResponseEntity.ok(specialistServiceService.deactivateById(id));
     }
 
     @DeleteMapping("/{id}/hard")
-    public ResponseEntity<SpecialistServiceResponseDto> hardDeleteById(@PathVariable Long id) {
+    public ResponseEntity<SpecialistServiceResponseDto> hardDeleteById(@PathVariable UUID id) {
         return ResponseEntity.ok(specialistServiceService.hardDeleteById(id));
     }
 
     @PatchMapping("/{id}/restore")
-    public ResponseEntity<SpecialistServiceResponseDto> restoreById(@PathVariable Long id) {
+    public ResponseEntity<SpecialistServiceResponseDto> restoreById(@PathVariable UUID id) {
         return ResponseEntity.ok(specialistServiceService.restoreById(id));
     }
 }

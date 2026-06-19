@@ -1,14 +1,15 @@
 package com.sunfeax.citeria.dto.specialistservice;
 
+import java.util.UUID;
 import jakarta.validation.constraints.NotNull;
 
 public record SpecialistServicePostRequestDto(
     @NotNull(message = "Business id is required")
-    Long businessId,
+    UUID businessId,
 
     @NotNull(message = "Specialist id is required")
-    Long specialistId,
+    UUID specialistId,
 
     @NotNull(message = "Service id is required")
-    Long serviceId
+    UUID serviceId
 ) {}

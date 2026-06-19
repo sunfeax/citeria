@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.controller;
 
+import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -32,6 +33,7 @@ import com.sunfeax.citeria.enums.PaymentStatus;
 import com.sunfeax.citeria.exception.GlobalExceptionHandler;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
+import com.sunfeax.citeria.config.JwtAuthenticationFilter;
 import com.sunfeax.citeria.service.PaymentService;
 
 import tools.jackson.databind.ObjectMapper;
@@ -50,22 +52,28 @@ class PaymentControllerWebMvcTest {
     @MockitoBean
     private PaymentService paymentService;
 
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    private static final UUID ID = new UUID(0, 1L);
+    private static final UUID MISSING_ID = new UUID(0, 99L);
+
     @Test
     void getPaymentsShouldReturnPagedResponse() throws Exception {
-        PaymentResponseDto dto = paymentDto(1L, 10L);
+        PaymentResponseDto dto = paymentDto(new UUID(0, 1L), new UUID(0, 10L));
         when(paymentService.getAll(any())).thenReturn(new PageImpl<>(List.of(dto)));
 
         mockMvc.perform(get("/api/payments"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content[0].id").value(1))
-            .andExpect(jsonPath("$.content[0].appointmentId").value(10));
+            .andExpect(jsonPath("$.content[0].id").value(ID.toString()))
+            .andExpect(jsonPath("$.content[0].appointmentId").value(new UUID(0, 10L).toString()));
     }
 
     @Test
     void getByIdShouldReturnNotFoundWhenServiceThrows() throws Exception {
-        when(paymentService.getById(99L)).thenThrow(new ResourceNotFoundException("Payment with id 99 not found"));
+        when(paymentService.getById(new UUID(0, 99L))).thenThrow(new ResourceNotFoundException("Payment with id 99 not found"));
 
-        mockMvc.perform(get("/api/payments/99"))
+        mockMvc.perform(get("/api/payments/" + MISSING_ID))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.title").value("Resource Not Found"))
@@ -74,14 +82,14 @@ class PaymentControllerWebMvcTest {
 
     @Test
     void registerShouldReturnCreated() throws Exception {
-        PaymentPostRequestDto request = new PaymentPostRequestDto(10L);
-        when(paymentService.create(any(PaymentPostRequestDto.class))).thenReturn(paymentDto(1L, 10L));
+        PaymentPostRequestDto request = new PaymentPostRequestDto(new UUID(0, 10L));
+        when(paymentService.create(any(PaymentPostRequestDto.class))).thenReturn(paymentDto(new UUID(0, 1L), new UUID(0, 10L)));
 
         mockMvc.perform(post("/api/payments")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
@@ -104,22 +112,22 @@ class PaymentControllerWebMvcTest {
     @Test
     void updateShouldReturnOk() throws Exception {
         PaymentPatchRequestDto request = new PaymentPatchRequestDto(null, PaymentStatus.PAID);
-        when(paymentService.update(eq(1L), any(PaymentPatchRequestDto.class))).thenReturn(paymentDto(1L, 10L));
+        when(paymentService.update(eq(new UUID(0, 1L)), any(PaymentPatchRequestDto.class))).thenReturn(paymentDto(new UUID(0, 1L), new UUID(0, 10L)));
 
-        mockMvc.perform(patch("/api/payments/1")
+        mockMvc.perform(patch("/api/payments/" + ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
     void updateShouldReturnBadRequestForServiceValidationError() throws Exception {
         PaymentPatchRequestDto request = new PaymentPatchRequestDto(null, null);
-        when(paymentService.update(eq(1L), any(PaymentPatchRequestDto.class)))
+        when(paymentService.update(eq(new UUID(0, 1L)), any(PaymentPatchRequestDto.class)))
             .thenThrow(new RequestValidationException(Map.of("request", "No fields to update")));
 
-        mockMvc.perform(patch("/api/payments/1")
+        mockMvc.perform(patch("/api/payments/" + ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
@@ -130,14 +138,14 @@ class PaymentControllerWebMvcTest {
 
     @Test
     void deleteShouldReturnOk() throws Exception {
-        when(paymentService.deleteById(1L)).thenReturn(paymentDto(1L, 10L));
+        when(paymentService.deleteById(new UUID(0, 1L))).thenReturn(paymentDto(new UUID(0, 1L), new UUID(0, 10L)));
 
-        mockMvc.perform(delete("/api/payments/1"))
+        mockMvc.perform(delete("/api/payments/" + ID))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
-    private PaymentResponseDto paymentDto(Long id, Long appointmentId) {
+    private PaymentResponseDto paymentDto(UUID id, UUID appointmentId) {
         return new PaymentResponseDto(
             id,
             appointmentId,

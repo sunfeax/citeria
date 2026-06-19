@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.controller;
 
+import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -29,6 +30,7 @@ import com.sunfeax.citeria.dto.business.BusinessPostRequestDto;
 import com.sunfeax.citeria.dto.business.BusinessResponseDto;
 import com.sunfeax.citeria.exception.GlobalExceptionHandler;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
+import com.sunfeax.citeria.config.JwtAuthenticationFilter;
 import com.sunfeax.citeria.service.BusinessService;
 
 @WebMvcTest(BusinessController.class)
@@ -45,32 +47,38 @@ class BusinessControllerWebMvcTest {
     @MockitoBean
     private BusinessService businessService;
 
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    private static final UUID ID = new UUID(0, 1L);
+    private static final UUID MISSING_ID = new UUID(0, 99L);
+
     @Test
     void getBusinessesShouldReturnPagedResponse() throws Exception {
-        BusinessResponseDto dto = businessDto(1L);
+        BusinessResponseDto dto = businessDto(new UUID(0, 1L));
         when(businessService.getAll(any())).thenReturn(new PageImpl<>(List.of(dto)));
 
         mockMvc.perform(get("/api/businesses"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content[0].id").value(1))
+            .andExpect(jsonPath("$.content[0].id").value(ID.toString()))
             .andExpect(jsonPath("$.content[0].name").value("Alpha Studio"));
     }
 
     @Test
     void getByIdShouldReturnOk() throws Exception {
-        when(businessService.getById(1L)).thenReturn(businessDto(1L));
+        when(businessService.getById(new UUID(0, 1L))).thenReturn(businessDto(new UUID(0, 1L)));
 
-        mockMvc.perform(get("/api/businesses/1"))
+        mockMvc.perform(get("/api/businesses/" + ID))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.id").value(ID.toString()))
             .andExpect(jsonPath("$.name").value("Alpha Studio"));
     }
 
     @Test
     void getByIdShouldReturnNotFoundWhenServiceThrows() throws Exception {
-        when(businessService.getById(99L)).thenThrow(new ResourceNotFoundException("Business with id 99 not found"));
+        when(businessService.getById(new UUID(0, 99L))).thenThrow(new ResourceNotFoundException("Business with id 99 not found"));
 
-        mockMvc.perform(get("/api/businesses/99"))
+        mockMvc.perform(get("/api/businesses/" + MISSING_ID))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.title").value("Resource Not Found"))
@@ -81,7 +89,6 @@ class BusinessControllerWebMvcTest {
     @Test
     void createShouldReturnCreated() throws Exception {
         BusinessPostRequestDto request = new BusinessPostRequestDto(
-            10L,
             "Alpha Studio",
             "description",
             "+34123456789",
@@ -89,13 +96,13 @@ class BusinessControllerWebMvcTest {
             "https://studio.example.com",
             "Street 1"
         );
-        when(businessService.create(any(BusinessPostRequestDto.class))).thenReturn(businessDto(1L));
+        when(businessService.create(any(BusinessPostRequestDto.class))).thenReturn(businessDto(new UUID(0, 1L)));
 
         mockMvc.perform(post("/api/businesses")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.id").value(ID.toString()))
             .andExpect(jsonPath("$.name").value("Alpha Studio"));
     }
 
@@ -103,7 +110,6 @@ class BusinessControllerWebMvcTest {
     void createShouldReturnBadRequestForInvalidBody() throws Exception {
         String invalidBody = """
             {
-              "ownerId": 10,
               "name": "",
               "description": "description",
               "phone": "+34123456789",
@@ -136,13 +142,13 @@ class BusinessControllerWebMvcTest {
             null,
             null
         );
-        when(businessService.update(eq(1L), any(BusinessPatchRequestDto.class))).thenReturn(businessDto(1L));
+        when(businessService.update(eq(new UUID(0, 1L)), any(BusinessPatchRequestDto.class))).thenReturn(businessDto(new UUID(0, 1L)));
 
-        mockMvc.perform(patch("/api/businesses/1")
+        mockMvc.perform(patch("/api/businesses/" + ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
@@ -153,7 +159,7 @@ class BusinessControllerWebMvcTest {
             }
             """;
 
-        mockMvc.perform(patch("/api/businesses/1")
+        mockMvc.perform(patch("/api/businesses/" + ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidBody))
             .andExpect(status().isBadRequest())
@@ -167,32 +173,32 @@ class BusinessControllerWebMvcTest {
 
     @Test
     void deactivateShouldReturnOk() throws Exception {
-        when(businessService.deactivateById(1L)).thenReturn(businessDto(1L));
+        when(businessService.deactivateById(new UUID(0, 1L))).thenReturn(businessDto(new UUID(0, 1L)));
 
-        mockMvc.perform(delete("/api/businesses/1"))
+        mockMvc.perform(delete("/api/businesses/" + ID))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
     void hardDeleteShouldReturnOk() throws Exception {
-        when(businessService.hardDeleteById(1L)).thenReturn(businessDto(1L));
+        when(businessService.hardDeleteById(new UUID(0, 1L))).thenReturn(businessDto(new UUID(0, 1L)));
 
-        mockMvc.perform(delete("/api/businesses/1/hard"))
+        mockMvc.perform(delete("/api/businesses/" + ID + "/hard"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
     void restoreShouldReturnOk() throws Exception {
-        when(businessService.restoreById(1L)).thenReturn(businessDto(1L));
+        when(businessService.restoreById(new UUID(0, 1L))).thenReturn(businessDto(new UUID(0, 1L)));
 
-        mockMvc.perform(patch("/api/businesses/1/restore"))
+        mockMvc.perform(patch("/api/businesses/" + ID + "/restore"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
-    private BusinessResponseDto businessDto(Long id) {
+    private BusinessResponseDto businessDto(UUID id) {
         return new BusinessResponseDto(
             id,
             "Alpha Studio",
@@ -202,7 +208,7 @@ class BusinessControllerWebMvcTest {
             "https://studio.example.com",
             "Street 1",
             true,
-            10L,
+            new UUID(0, 10L),
             "Owner Name",
             LocalDateTime.of(2026, 1, 1, 12, 0),
             LocalDateTime.of(2026, 1, 2, 12, 0)

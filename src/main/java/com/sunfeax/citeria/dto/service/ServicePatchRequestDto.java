@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.dto.service;
 
+import java.util.UUID;
 import java.math.BigDecimal;
 
 import jakarta.annotation.Nullable;
@@ -11,7 +12,7 @@ import jakarta.validation.constraints.Size;
 
 public record ServicePatchRequestDto(
     @Nullable
-    Long businessId,
+    UUID businessId,
 
     @Nullable
     @Pattern(regexp = ".*\\S.*", message = "Service name must not be empty")

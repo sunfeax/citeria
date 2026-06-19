@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.dto.business;
 
+import java.util.UUID;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
@@ -7,7 +8,7 @@ import jakarta.validation.constraints.Size;
 
 public record BusinessPatchRequestDto(
     @Nullable
-    Long ownerId,
+    UUID ownerId,
 
     @Nullable
     @Pattern(regexp = ".*\\S.*", message = "Business name must not be blank")

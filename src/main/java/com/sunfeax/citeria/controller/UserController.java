@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.controller;
 
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -43,7 +44,7 @@ public class UserController {
 
     // get one user by id
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getById(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDto> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.getById(id));
     }
 
@@ -58,7 +59,7 @@ public class UserController {
     // update profile fields for an existing user
     @PatchMapping("/{id}")
     public ResponseEntity<UserResponseDto> update(
-        @PathVariable Long id,
+        @PathVariable UUID id,
         @Valid @RequestBody UserUpdateRequestDto request
     ) {
         return ResponseEntity.ok(userService.update(id, request));
@@ -67,7 +68,7 @@ public class UserController {
     // change password for an existing user
     @PatchMapping("/{id}/password")
     public ResponseEntity<Void> changePassword(
-        @PathVariable Long id,
+        @PathVariable UUID id,
         @Valid @RequestBody UserChangePasswordRequestDto request
     ) {
         userService.changePassword(id, request);
@@ -76,19 +77,19 @@ public class UserController {
 
     // soft delete (isActive = 0)
     @DeleteMapping("/{id}")
-    public ResponseEntity<UserResponseDto> deactivateById(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDto> deactivateById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.deactivateById(id));
     }
 
     // hard delete from DB
     @DeleteMapping("/{id}/hard")
-    public ResponseEntity<UserResponseDto> hardDeleteById(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDto> hardDeleteById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.hardDeleteById(id));
     }
 
     // restore user (isActive = 1)
     @PatchMapping("/{id}/restore")
-    public ResponseEntity<UserResponseDto> restoreById(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDto> restoreById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.restoreById(id));
     }
 }

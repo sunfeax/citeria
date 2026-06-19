@@ -1,14 +1,15 @@
 package com.sunfeax.citeria.dto.specialistservice;
 
+import java.util.UUID;
 import java.time.LocalDateTime;
 
 public record SpecialistServiceResponseDto(
-    Long id,
-    Long businessId,
+    UUID id,
+    UUID businessId,
     String businessName,
-    Long specialistId,
+    UUID specialistId,
     String specialistName,
-    Long serviceId,
+    UUID serviceId,
     String serviceName,
     Boolean isActive,
     LocalDateTime createdAt) {
