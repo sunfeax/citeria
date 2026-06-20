@@ -15,7 +15,6 @@ public class AppointmentFieldNormalizer {
         return new AppointmentPostRequestDto(
             request.specialistServiceId(),
             normalizeDateTime(request.startTime()),
-            normalizeDateTime(request.endTime()),
             request.paymentMethod()
         );
     }

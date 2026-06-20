@@ -1,8 +1,9 @@
 package com.sunfeax.citeria.mapper;
 
+import java.time.Duration;
+
 import org.springframework.stereotype.Component;
 
-import com.sunfeax.citeria.dto.appointment.AppointmentPatchRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
@@ -30,7 +31,8 @@ public class AppointmentMapper {
             appointmentEntity.getEndTime(),
             appointmentEntity.getStatus(),
             appointmentEntity.getPaymentMethod(),
-            appointmentEntity.getPriceAmount()
+            appointmentEntity.getPriceAmount(),
+            appointmentEntity.getPaymentDeadline()
         );
     }
 
@@ -45,52 +47,12 @@ public class AppointmentMapper {
         entity.setSpecialist(specialistService.getSpecialist());
         entity.setSpecialistService(specialistService);
         entity.setStartTime(request.startTime());
-        entity.setEndTime(request.endTime());
+        entity.setEndTime(request.startTime().plus(Duration.ofMinutes(specialistService.getService().getDurationMinutes())));
         entity.setPaymentMethod(request.paymentMethod());
         entity.setStatus(AppointmentStatus.PENDING);
         entity.setPriceAmount(specialistService.getService().getPriceAmount());
         entity.setCurrency(specialistService.getService().getCurrency());
 
         return entity;
-    }
-
-    public AppointmentEntity applyPatch(
-        AppointmentEntity entity,
-        AppointmentPatchRequestDto request,
-        UserEntity client,
-        SpecialistServiceEntity specialistService
-    ) {
-        if (client != null) {
-            entity.setClient(client);
-        }
-        if (specialistService != null) {
-            entity.setSpecialist(specialistService.getSpecialist());
-            entity.setSpecialistService(specialistService);
-            entity.setPriceAmount(specialistService.getService().getPriceAmount());
-            entity.setCurrency(specialistService.getService().getCurrency());
-        }
-        if (request.startTime() != null) {
-            entity.setStartTime(request.startTime());
-        }
-        if (request.endTime() != null) {
-            entity.setEndTime(request.endTime());
-        }
-        if (request.status() != null) {
-            entity.setStatus(request.status());
-        }
-        if (request.paymentMethod() != null) {
-            entity.setPaymentMethod(request.paymentMethod());
-        }
-
-        return entity;
-    }
-
-    public boolean hasAnyPatchField(AppointmentPatchRequestDto request) {
-        return request.clientId() != null
-            || request.specialistServiceId() != null
-            || request.startTime() != null
-            || request.endTime() != null
-            || request.status() != null
-            || request.paymentMethod() != null;
     }
 }

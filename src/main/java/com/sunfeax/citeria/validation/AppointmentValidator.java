@@ -1,19 +1,17 @@
 package com.sunfeax.citeria.validation;
 
-import java.util.UUID;
-import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.sunfeax.citeria.dto.appointment.AppointmentPatchRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
-import com.sunfeax.citeria.entity.AppointmentEntity;
+import com.sunfeax.citeria.dto.slot.SlotResponseDto;
 import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
-import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.enums.UserType;
-import com.sunfeax.citeria.repository.AppointmentRepository;
-import com.sunfeax.citeria.mapper.AppointmentMapper;
+import com.sunfeax.citeria.service.SlotService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,8 +19,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AppointmentValidator {
 
-    private final AppointmentRepository appointmentRepository;
-    private final AppointmentMapper appointmentMapper;
+    private final SlotService slotService;
+
+    @Value("${app.booking.zone:UTC}")
+    private String bookingZone;
 
     public void validateCreate(AppointmentPostRequestDto request, UserEntity client, SpecialistServiceEntity specialistService) {
         new ValidationResult()
@@ -44,118 +44,23 @@ public class AppointmentValidator {
                 "Service for specialist service with id " + specialistService.getId() + " is inactive"
             )
             .addErrorIf(
-                !request.endTime().isAfter(request.startTime()),
-                "time",
-                "End time must be after start time"
-            )
-            .addErrorIf(
-                request.startTime().isBefore(Instant.now()),
+                !isAvailableSlot(request, specialistService),
                 "startTime",
-                "Start time must be in the future"
-            )
-            .addErrorIf(
-                appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
-                    specialistService.getSpecialist().getId(),
-                    request.endTime(),
-                    request.startTime(),
-                    AppointmentStatus.CANCELLED
-                ),
-                "time",
-                "Specialist is already booked for this time slot"
+                "Selected time is not an available slot"
             )
             .throwIfHasErrors();
     }
 
-    public void validateUpdate(
-        UUID appointmentId,
-        AppointmentEntity existingEntity,
-        AppointmentPatchRequestDto request,
-        UserEntity targetClient,
-        SpecialistServiceEntity targetSpecialistService
-    ) {
-        Instant targetStartTime = request.startTime() != null ? request.startTime() : existingEntity.getStartTime();
-        Instant targetEndTime = request.endTime() != null ? request.endTime() : existingEntity.getEndTime();
-        AppointmentStatus targetStatus = request.status() != null ? request.status() : existingEntity.getStatus();
-
-        boolean scheduleChanged = request.specialistServiceId() != null
-            || request.startTime() != null
-            || request.endTime() != null;
-        boolean restoringCancelledAppointment = existingEntity.getStatus() == AppointmentStatus.CANCELLED
-            && targetStatus != AppointmentStatus.CANCELLED;
-        boolean futureScheduleCheckRequired = scheduleChanged || restoringCancelledAppointment;
-        boolean overlapCheckRequired = (scheduleChanged || restoringCancelledAppointment)
-            && targetStatus != AppointmentStatus.CANCELLED;
-
-        new ValidationResult()
-            .addErrorIf(!appointmentMapper.hasAnyPatchField(request), "request", "No fields to update")
-            .addErrorIf(
-                request.clientId() != null && targetClient.getType() != UserType.CLIENT,
-                "clientId",
-                "User with id " + targetClient.getId() + " is not a client"
-            )
-            .addErrorIf(
-                request.clientId() != null && !targetClient.isActive(),
-                "clientId",
-                "Client with id " + targetClient.getId() + " is inactive"
-            )
-            .addErrorIf(
-                request.specialistServiceId() != null && !targetSpecialistService.isActive(),
-                "specialistServiceId",
-                "Specialist service with id " + targetSpecialistService.getId() + " is inactive"
-            )
-            .addErrorIf(
-                request.specialistServiceId() != null && !targetSpecialistService.getSpecialist().isActive(),
-                "specialistServiceId",
-                "Specialist for specialist service with id " + targetSpecialistService.getId() + " is inactive"
-            )
-            .addErrorIf(
-                request.specialistServiceId() != null && !targetSpecialistService.getService().isActive(),
-                "specialistServiceId",
-                "Service for specialist service with id " + targetSpecialistService.getId() + " is inactive"
-            )
-            .addErrorIf(
-                targetStartTime != null && targetEndTime != null && !targetEndTime.isAfter(targetStartTime),
-                "time",
-                "End time must be after start time"
-            )
-            .addErrorIf(
-                futureScheduleCheckRequired && targetStartTime != null && targetStartTime.isBefore(Instant.now()),
-                "startTime",
-                "Start time must be in the future"
-            )
-            .addErrorIf(
-                overlapCheckRequired && targetStartTime != null && targetEndTime != null
-                    && appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNotAndIdNot(
-                        targetSpecialistService.getSpecialist().getId(),
-                        targetEndTime,
-                        targetStartTime,
-                        AppointmentStatus.CANCELLED,
-                        appointmentId
-                    ),
-                "time",
-                "Specialist is already booked for this time slot"
-            )
-            .throwIfHasErrors();
-    }
-
-    public void validateRestore(AppointmentEntity appointment) {
-        new ValidationResult()
-            .addErrorIf(
-                appointment.getStartTime().isBefore(Instant.now()),
-                "startTime",
-                "Cannot restore an appointment in the past"
-            )
-            .addErrorIf(
-                appointmentRepository.existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNotAndIdNot(
-                    appointment.getSpecialist().getId(),
-                    appointment.getEndTime(),
-                    appointment.getStartTime(),
-                    AppointmentStatus.CANCELLED,
-                    appointment.getId()
-                ),
-                "time",
-                "Specialist is already booked for this time slot. Cannot restore."
-            )
-            .throwIfHasErrors();
+    /**
+     * A booking is valid only if its start matches a slot the schedule currently offers.
+     * Reusing {@link SlotService} keeps "what is shown" and "what is accepted" in sync:
+     * it already enforces the active schedule, working-hours window, slot grid, the
+     * "from next day" rule, and excludes slots taken by other appointments.
+     */
+    private boolean isAvailableSlot(AppointmentPostRequestDto request, SpecialistServiceEntity specialistService) {
+        LocalDate date = request.startTime().atZone(ZoneId.of(bookingZone)).toLocalDate();
+        return slotService.getAvailableSlots(specialistService.getId(), date, date).stream()
+            .map(SlotResponseDto::startTime)
+            .anyMatch(request.startTime()::equals);
     }
 }

@@ -14,9 +14,6 @@ public record AppointmentPostRequestDto(
     @NotNull(message = "Start time is required")
     Instant startTime,
 
-    @NotNull(message = "End time is required")
-    Instant endTime,
-
     @NotNull(message = "Payment method is required")
     PaymentMethod paymentMethod
 ) {}

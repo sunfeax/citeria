@@ -1,12 +1,13 @@
 package com.sunfeax.citeria.service;
 
+import java.util.Map;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sunfeax.citeria.dto.appointment.AppointmentPatchRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
 import com.sunfeax.citeria.dto.common.PageResponseDto;
@@ -15,16 +16,17 @@ import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.exception.ForbiddenException;
+import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.repository.AppointmentRepository;
 import com.sunfeax.citeria.repository.SpecialistServiceRepository;
-import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.mapper.AppointmentMapper;
 import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
 import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.util.PageableUtil;
 import com.sunfeax.citeria.validation.AppointmentValidator;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,20 +34,28 @@ import java.util.Set;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final AppointmentMapper appointmentMapper;
-    private final UserRepository userRepository;
     private final SpecialistServiceRepository specialistServiceRepository;
     private final AppointmentFieldNormalizer appointmentFieldNormalizer;
     private final AppointmentValidator appointmentValidator;
     private final CurrentUserProvider currentUserProvider;
+
+    @Value("${app.booking.paymentWindowHours:24}")
+    private long paymentWindowHours;
+
+    @Value("${app.booking.preAppointmentBufferHours:6}")
+    private long preAppointmentBufferHours;
 
     private static final Set<String> SORTABLE = Set.of("startTime", "status", "createdAt");
     private static final Sort DEFAULT_SORT = Sort.by(Sort.Direction.ASC, "startTime");
@@ -110,30 +120,84 @@ public class AppointmentService {
         return appointmentMapper.toResponseDto(saved);
     }
 
+    /** Specialist accepts a pending request and opens the client's payment window. */
     @Transactional
-    public AppointmentResponseDto update(UUID id, AppointmentPatchRequestDto request) {
-        AppointmentEntity entity = findAppointmentOrThrow(id);
-        assertParticipantOrAdmin(entity);
-        AppointmentPatchRequestDto normalizedRequest = appointmentFieldNormalizer.normalizePatchRequest(request);
+    public AppointmentResponseDto accept(UUID id) {
+        AppointmentEntity appointment = findAppointmentOrThrow(id);
+        assertSpecialistOrAdmin(appointment);
+        requireStatus(appointment, AppointmentStatus.PENDING);
 
-        UserEntity targetClient = normalizedRequest.clientId() == null
-            ? entity.getClient()
-            : findClientOrThrow(normalizedRequest.clientId());
+        Instant deadline = computePaymentDeadline(appointment.getStartTime(), Instant.now());
+        if (!deadline.isAfter(Instant.now())) {
+            throw transitionError("Too late to accept: the payment window would already be closed");
+        }
 
-        SpecialistServiceEntity targetSpecialistService = normalizedRequest.specialistServiceId() == null
-            ? entity.getSpecialistService()
-            : findSpecialistServiceOrThrow(normalizedRequest.specialistServiceId());
+        appointment.setStatus(AppointmentStatus.AWAITING_PAYMENT);
+        appointment.setPaymentDeadline(deadline);
 
-        appointmentValidator.validateUpdate(id, entity, normalizedRequest, targetClient, targetSpecialistService);
+        return appointmentMapper.toResponseDto(appointmentRepository.save(appointment));
+    }
 
-        UserEntity clientToApply = normalizedRequest.clientId() == null ? null : targetClient;
-        SpecialistServiceEntity specialistServiceToApply =
-            normalizedRequest.specialistServiceId() == null ? null : targetSpecialistService;
+    /** Specialist declines a pending request; the slot is released. */
+    @Transactional
+    public AppointmentResponseDto reject(UUID id) {
+        AppointmentEntity appointment = findAppointmentOrThrow(id);
+        assertSpecialistOrAdmin(appointment);
+        requireStatus(appointment, AppointmentStatus.PENDING);
 
-        appointmentMapper.applyPatch(entity, normalizedRequest, clientToApply, specialistServiceToApply);
-        AppointmentEntity saved = appointmentRepository.save(entity);
+        appointment.setStatus(AppointmentStatus.REJECTED);
 
-        return appointmentMapper.toResponseDto(saved);
+        return appointmentMapper.toResponseDto(appointmentRepository.save(appointment));
+    }
+
+    /** Client pays within the window, confirming the appointment. Payment itself is mocked for now. */
+    @Transactional
+    public AppointmentResponseDto pay(UUID id) {
+        AppointmentEntity appointment = findAppointmentOrThrow(id);
+        assertClientOrAdmin(appointment);
+        requireStatus(appointment, AppointmentStatus.AWAITING_PAYMENT);
+
+        Instant deadline = appointment.getPaymentDeadline();
+        if (deadline != null && Instant.now().isAfter(deadline)) {
+            appointment.setStatus(AppointmentStatus.EXPIRED);
+            appointmentRepository.save(appointment);
+            throw transitionError("Payment window has expired");
+        }
+
+        appointment.setStatus(AppointmentStatus.CONFIRMED);
+        appointment.setPaymentDeadline(null);
+
+        return appointmentMapper.toResponseDto(appointmentRepository.save(appointment));
+    }
+
+    /** Either participant cancels before the appointment takes place; the slot is released. */
+    @Transactional
+    public AppointmentResponseDto cancel(UUID id) {
+        AppointmentEntity appointment = findAppointmentOrThrow(id);
+        assertParticipantOrAdmin(appointment);
+        requireStatus(
+            appointment,
+            AppointmentStatus.PENDING,
+            AppointmentStatus.AWAITING_PAYMENT,
+            AppointmentStatus.CONFIRMED
+        );
+
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+        appointment.setPaymentDeadline(null);
+
+        return appointmentMapper.toResponseDto(appointmentRepository.save(appointment));
+    }
+
+    /** Specialist marks a confirmed appointment as completed after it took place. */
+    @Transactional
+    public AppointmentResponseDto complete(UUID id) {
+        AppointmentEntity appointment = findAppointmentOrThrow(id);
+        assertSpecialistOrAdmin(appointment);
+        requireStatus(appointment, AppointmentStatus.CONFIRMED);
+
+        appointment.setStatus(AppointmentStatus.COMPLETED);
+
+        return appointmentMapper.toResponseDto(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -145,6 +209,45 @@ public class AppointmentService {
         appointmentRepository.delete(appointment);
 
         return deletedAppointment;
+    }
+
+    /** Releases slots whose payment window has elapsed without payment. */
+    @Scheduled(fixedDelayString = "${app.booking.paymentExpiryCheckIntervalMs:300000}")
+    @Transactional
+    public void expireOverduePayments() {
+        List<AppointmentEntity> overdue = appointmentRepository.findByStatusAndPaymentDeadlineBefore(
+            AppointmentStatus.AWAITING_PAYMENT, Instant.now()
+        );
+        if (overdue.isEmpty()) {
+            return;
+        }
+
+        overdue.forEach(appointment -> {
+            appointment.setStatus(AppointmentStatus.EXPIRED);
+            appointment.setPaymentDeadline(null);
+        });
+        appointmentRepository.saveAll(overdue);
+
+        log.debug("Expired {} appointments with an elapsed payment window", overdue.size());
+    }
+
+    private Instant computePaymentDeadline(Instant appointmentStart, Instant acceptedAt) {
+        Instant byWindow = acceptedAt.plus(Duration.ofHours(paymentWindowHours));
+        Instant byBuffer = appointmentStart.minus(Duration.ofHours(preAppointmentBufferHours));
+        return byWindow.isBefore(byBuffer) ? byWindow : byBuffer;
+    }
+
+    private void requireStatus(AppointmentEntity appointment, AppointmentStatus... allowed) {
+        for (AppointmentStatus status : allowed) {
+            if (appointment.getStatus() == status) {
+                return;
+            }
+        }
+        throw transitionError("Action not allowed for an appointment in status " + appointment.getStatus());
+    }
+
+    private RequestValidationException transitionError(String message) {
+        return new RequestValidationException(Map.of("status", message));
     }
 
     private void assertParticipantOrAdmin(AppointmentEntity appointment) {
@@ -162,14 +265,29 @@ public class AppointmentService {
         }
     }
 
+    private void assertSpecialistOrAdmin(AppointmentEntity appointment) {
+        UserEntity current = currentUserProvider.getCurrentUser();
+        if (currentUserProvider.isAdmin(current)) {
+            return;
+        }
+        if (!current.getId().equals(appointment.getSpecialist().getId())) {
+            throw new ForbiddenException("Only the specialist can perform this action");
+        }
+    }
+
+    private void assertClientOrAdmin(AppointmentEntity appointment) {
+        UserEntity current = currentUserProvider.getCurrentUser();
+        if (currentUserProvider.isAdmin(current)) {
+            return;
+        }
+        if (!current.getId().equals(appointment.getClient().getId())) {
+            throw new ForbiddenException("Only the client can perform this action");
+        }
+    }
+
     private AppointmentEntity findAppointmentOrThrow(UUID id) {
         return appointmentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Appointment with id " + id + " not found"));
-    }
-
-    private UserEntity findClientOrThrow(UUID clientId) {
-        return userRepository.findById(clientId)
-            .orElseThrow(() -> new ResourceNotFoundException("Client user with id " + clientId + " not found"));
     }
 
     private SpecialistServiceEntity findSpecialistServiceOrThrow(UUID specialistServiceId) {

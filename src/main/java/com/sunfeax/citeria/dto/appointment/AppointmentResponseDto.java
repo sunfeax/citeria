@@ -22,5 +22,6 @@ public record AppointmentResponseDto(
     Instant endTime,
     AppointmentStatus status,
     PaymentMethod paymentMethod,
-    BigDecimal priceAmount) {
+    BigDecimal priceAmount,
+    Instant paymentDeadline) {
 }

@@ -1,5 +1,7 @@
 package com.sunfeax.citeria.controller;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,9 +19,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sunfeax.citeria.dto.common.PageResponseDto;
+import com.sunfeax.citeria.dto.slot.SlotResponseDto;
 import com.sunfeax.citeria.dto.specialistservice.SpecialistServicePatchRequestDto;
 import com.sunfeax.citeria.dto.specialistservice.SpecialistServicePostRequestDto;
 import com.sunfeax.citeria.dto.specialistservice.SpecialistServiceResponseDto;
+import com.sunfeax.citeria.service.SlotService;
 import com.sunfeax.citeria.service.SpecialistServiceService;
 
 import jakarta.validation.Valid;
@@ -31,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class SpecialistServiceController {
 
     private final SpecialistServiceService specialistServiceService;
+    private final SlotService slotService;
 
     @GetMapping
     public PageResponseDto<SpecialistServiceResponseDto> list(
@@ -46,6 +51,15 @@ public class SpecialistServiceController {
     @GetMapping("/{id}")
     public ResponseEntity<SpecialistServiceResponseDto> getSpecialistServiceById(@PathVariable UUID id) {
         return ResponseEntity.ok(specialistServiceService.getById(id));
+    }
+
+    @GetMapping("/{id}/slots")
+    public ResponseEntity<List<SlotResponseDto>> getAvailableSlots(
+        @PathVariable UUID id,
+        @RequestParam(required = false) LocalDate from,
+        @RequestParam(required = false) LocalDate to
+    ) {
+        return ResponseEntity.ok(slotService.getAvailableSlots(id, from, to));
     }
 
     @PostMapping
