@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -20,13 +20,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import tools.jackson.databind.ObjectMapper;
 
+import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
 import com.sunfeax.citeria.dto.user.UserUpdateRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
@@ -61,7 +61,7 @@ class UserControllerWebMvcTest {
     @Test
     void getUsersShouldReturnPagedResponse() throws Exception {
         UserResponseDto dto = userDto(new UUID(0, 1L));
-        when(userService.getAll(any())).thenReturn(new PageImpl<>(List.of(dto)));
+        when(userService.list(any(), any(), any(), any(), any())).thenReturn(new PageResponseDto<>(List.of(dto), 0, 20, 1, 1, true, true));
 
         mockMvc.perform(get("/api/users"))
             .andExpect(status().isOk())
@@ -190,7 +190,7 @@ class UserControllerWebMvcTest {
             UserRole.USER,
             UserType.CLIENT,
             true,
-            LocalDateTime.of(2026, 1, 1, 12, 0)
+            Instant.parse("2026-01-01T12:00:00Z")
         );
     }
 }

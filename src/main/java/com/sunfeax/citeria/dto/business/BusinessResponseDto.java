@@ -1,7 +1,7 @@
 package com.sunfeax.citeria.dto.business;
 
+import java.time.Instant;
 import java.util.UUID;
-import java.time.LocalDateTime;
 
 public record BusinessResponseDto(
     UUID id,
@@ -14,6 +14,6 @@ public record BusinessResponseDto(
     Boolean isActive,
     UUID ownerId,
     String ownerName,
-    LocalDateTime createdAt,
-    LocalDateTime updatedAt) {
+    Instant createdAt,
+    Instant updatedAt) {
 }

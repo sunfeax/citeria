@@ -1,7 +1,6 @@
 package com.sunfeax.citeria.controller;
 
 import java.util.UUID;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -14,8 +13,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.dto.specialistservice.SpecialistServicePatchRequestDto;
 import com.sunfeax.citeria.dto.specialistservice.SpecialistServicePostRequestDto;
 import com.sunfeax.citeria.dto.specialistservice.SpecialistServiceResponseDto;
@@ -32,14 +33,14 @@ public class SpecialistServiceController {
     private final SpecialistServiceService specialistServiceService;
 
     @GetMapping
-    public Page<SpecialistServiceResponseDto> getSpecialistServices(
-        @PageableDefault(
-            size = 20,
-            sort = "id",
-            direction = Sort.Direction.ASC
-        ) Pageable pageable
+    public PageResponseDto<SpecialistServiceResponseDto> list(
+        @RequestParam(required = false) UUID businessId,
+        @RequestParam(required = false) UUID specialistId,
+        @RequestParam(required = false) UUID serviceId,
+        @RequestParam(required = false) Boolean active,
+        @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return specialistServiceService.getAll(pageable);
+        return specialistServiceService.list(businessId, specialistId, serviceId, active, pageable);
     }
 
     @GetMapping("/{id}")

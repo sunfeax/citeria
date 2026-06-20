@@ -2,7 +2,7 @@ package com.sunfeax.citeria.entity;
 
 import java.util.UUID;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -59,7 +59,7 @@ public class ServiceEntity {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @OneToMany(mappedBy = "service")
     private List<SpecialistServiceEntity> specialistServices;

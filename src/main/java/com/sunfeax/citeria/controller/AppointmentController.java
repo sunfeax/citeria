@@ -1,7 +1,7 @@
 package com.sunfeax.citeria.controller;
 
+import java.time.Instant;
 import java.util.UUID;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -14,11 +14,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sunfeax.citeria.dto.appointment.AppointmentPatchRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
+import com.sunfeax.citeria.dto.common.PageResponseDto;
+import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.service.AppointmentService;
 
 import jakarta.validation.Valid;
@@ -32,14 +35,14 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
 
     @GetMapping
-    public Page<AppointmentResponseDto> getAppointments(
-        @PageableDefault(
-            size = 20,
-            sort = "id",
-            direction = Sort.Direction.ASC
-        ) Pageable pageable
+    public PageResponseDto<AppointmentResponseDto> list(
+        @RequestParam(required = false) AppointmentStatus status,
+        @RequestParam(required = false) Instant from,
+        @RequestParam(required = false) Instant to,
+        @RequestParam(required = false) UUID specialistServiceId,
+        @PageableDefault(size = 20, sort = "startTime", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return appointmentService.getAll(pageable);
+        return appointmentService.list(status, from, to, specialistServiceId, pageable);
     }
 
     @GetMapping("/{id}")

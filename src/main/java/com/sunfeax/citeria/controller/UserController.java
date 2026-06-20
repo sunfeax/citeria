@@ -1,7 +1,6 @@
 package com.sunfeax.citeria.controller;
 
 import java.util.UUID;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -13,11 +12,15 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.dto.user.UserUpdateRequestDto;
+import com.sunfeax.citeria.enums.UserRole;
+import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.service.UserService;
 
 import jakarta.validation.Valid;
@@ -30,16 +33,16 @@ public class UserController {
 
     private final UserService userService;
 
-    // get all users
+    // list users (admin only)
     @GetMapping
-    public Page<UserResponseDto> getUsers(
-        @PageableDefault(
-            size = 20,
-            sort = "id",
-            direction = Sort.Direction.ASC
-        ) Pageable pageable
+    public PageResponseDto<UserResponseDto> list(
+        @RequestParam(required = false) UserRole role,
+        @RequestParam(required = false) UserType type,
+        @RequestParam(required = false) Boolean active,
+        @RequestParam(required = false) String search,
+        @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return userService.getAll(pageable);
+        return userService.list(role, type, active, search, pageable);
     }
 
     // get one user by id

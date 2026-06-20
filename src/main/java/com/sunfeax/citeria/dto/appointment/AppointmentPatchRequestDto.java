@@ -1,7 +1,7 @@
 package com.sunfeax.citeria.dto.appointment;
 
 import java.util.UUID;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.enums.PaymentMethod;
@@ -16,10 +16,10 @@ public record AppointmentPatchRequestDto(
     UUID specialistServiceId,
 
     @Nullable
-    LocalDateTime startTime,
+    Instant startTime,
 
     @Nullable
-    LocalDateTime endTime,
+    Instant endTime,
 
     @Nullable
     AppointmentStatus status,

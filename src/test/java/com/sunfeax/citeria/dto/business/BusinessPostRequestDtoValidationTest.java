@@ -1,6 +1,5 @@
 package com.sunfeax.citeria.dto.business;
 
-import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;

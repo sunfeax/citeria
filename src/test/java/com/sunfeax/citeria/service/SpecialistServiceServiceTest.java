@@ -10,7 +10,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,10 +19,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import com.sunfeax.citeria.dto.common.PageResponseDto;
+import org.springframework.data.jpa.domain.Specification;
 
 import com.sunfeax.citeria.dto.specialistservice.SpecialistServicePatchRequestDto;
 import com.sunfeax.citeria.dto.specialistservice.SpecialistServicePostRequestDto;
@@ -86,13 +87,13 @@ class SpecialistServiceServiceTest {
         SpecialistServiceEntity entity = specialistServiceEntity(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
         SpecialistServiceResponseDto dto = specialistServiceDto(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
 
-        when(specialistServiceRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(entity)));
+        when(specialistServiceRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(entity)));
         when(specialistServiceMapper.toResponseDto(entity)).thenReturn(dto);
 
-        Page<SpecialistServiceResponseDto> result = specialistServiceService.getAll(pageable);
+        PageResponseDto<SpecialistServiceResponseDto> result = specialistServiceService.list(null, null, null, null, pageable);
 
-        assertEquals(1, result.getTotalElements());
-        assertEquals(dto, result.getContent().getFirst());
+        assertEquals(1, result.totalElements());
+        assertEquals(dto, result.content().getFirst());
     }
 
     @Test
@@ -384,7 +385,7 @@ class SpecialistServiceServiceTest {
             serviceId,
             "Service " + serviceId,
             true,
-            LocalDateTime.now()
+            Instant.now()
         );
     }
 }

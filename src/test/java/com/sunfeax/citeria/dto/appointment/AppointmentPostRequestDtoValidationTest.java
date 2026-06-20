@@ -1,9 +1,10 @@
 package com.sunfeax.citeria.dto.appointment;
 
+import java.time.Duration;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -31,8 +32,8 @@ class AppointmentPostRequestDtoValidationTest {
     void nullSpecialistServiceIdShouldFailValidation() {
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
             null,
-            LocalDateTime.now().plusDays(1),
-            LocalDateTime.now().plusDays(1).plusMinutes(60),
+            Instant.now().plus(Duration.ofDays(1)),
+            Instant.now().plus(Duration.ofDays(1)).plus(Duration.ofMinutes(60)),
             PaymentMethod.ONLINE
         );
 
@@ -46,7 +47,7 @@ class AppointmentPostRequestDtoValidationTest {
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
             new UUID(0, 100L),
             null,
-            LocalDateTime.now().plusDays(1).plusMinutes(60),
+            Instant.now().plus(Duration.ofDays(1)).plus(Duration.ofMinutes(60)),
             PaymentMethod.ONLINE
         );
 
@@ -59,8 +60,8 @@ class AppointmentPostRequestDtoValidationTest {
     void nullPaymentMethodShouldFailValidation() {
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
             new UUID(0, 100L),
-            LocalDateTime.now().plusDays(1),
-            LocalDateTime.now().plusDays(1).plusMinutes(60),
+            Instant.now().plus(Duration.ofDays(1)),
+            Instant.now().plus(Duration.ofDays(1)).plus(Duration.ofMinutes(60)),
             null
         );
 
@@ -72,8 +73,8 @@ class AppointmentPostRequestDtoValidationTest {
     private AppointmentPostRequestDto validRequest() {
         return new AppointmentPostRequestDto(
             new UUID(0, 100L),
-            LocalDateTime.now().plusDays(1),
-            LocalDateTime.now().plusDays(1).plusMinutes(60),
+            Instant.now().plus(Duration.ofDays(1)),
+            Instant.now().plus(Duration.ofDays(1)).plus(Duration.ofMinutes(60)),
             PaymentMethod.ONLINE
         );
     }

@@ -1,5 +1,7 @@
 package com.sunfeax.citeria.controller;
 
+import java.time.temporal.ChronoUnit;
+import java.time.Duration;
 import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -12,7 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -21,12 +23,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.sunfeax.citeria.config.JwtAuthenticationFilter;
+import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentPatchRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
@@ -62,7 +64,7 @@ class AppointmentControllerWebMvcTest {
     @Test
     void getAppointmentsShouldReturnPagedResponse() throws Exception {
         AppointmentResponseDto dto = appointmentDto(new UUID(0, 1L));
-        when(appointmentService.getAll(any())).thenReturn(new PageImpl<>(List.of(dto)));
+        when(appointmentService.list(any(), any(), any(), any(), any())).thenReturn(new PageResponseDto<>(List.of(dto), 0, 20, 1, 1, true, true));
 
         mockMvc.perform(get("/api/appointments"))
             .andExpect(status().isOk())
@@ -94,11 +96,11 @@ class AppointmentControllerWebMvcTest {
 
     @Test
     void createShouldReturnCreated() throws Exception {
-        LocalDateTime start = LocalDateTime.now().plusDays(1).withSecond(0).withNano(0);
+        Instant start = Instant.now().plus(Duration.ofDays(1)).truncatedTo(ChronoUnit.MINUTES);
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
             new UUID(0, 100L),
             start,
-            start.plusMinutes(60),
+            start.plus(Duration.ofMinutes(60)),
             PaymentMethod.ONLINE
         );
         when(appointmentService.create(any(AppointmentPostRequestDto.class))).thenReturn(appointmentDto(new UUID(0, 1L)));
@@ -117,7 +119,7 @@ class AppointmentControllerWebMvcTest {
             {
               "specialistServiceId": "00000000-0000-0000-0000-000000000001",
               "startTime": null,
-              "endTime": "2026-03-10T11:00:00",
+              "endTime": "2026-03-10T11:00:00Z",
               "paymentMethod": "ONLINE"
             }
             """;
@@ -134,12 +136,12 @@ class AppointmentControllerWebMvcTest {
 
     @Test
     void updateShouldReturnOk() throws Exception {
-        LocalDateTime start = LocalDateTime.now().plusDays(2).withSecond(0).withNano(0);
+        Instant start = Instant.now().plus(Duration.ofDays(2)).truncatedTo(ChronoUnit.MINUTES);
         AppointmentPatchRequestDto request = new AppointmentPatchRequestDto(
             null,
             null,
             start,
-            start.plusMinutes(60),
+            start.plus(Duration.ofMinutes(60)),
             AppointmentStatus.CONFIRMED,
             null
         );
@@ -177,7 +179,7 @@ class AppointmentControllerWebMvcTest {
     }
 
     private AppointmentResponseDto appointmentDto(UUID id) {
-        LocalDateTime start = LocalDateTime.of(2026, 3, 10, 10, 0);
+        Instant start = Instant.parse("2026-03-10T10:00:00Z");
         return new AppointmentResponseDto(
             id,
             new UUID(0, 10L),
@@ -190,7 +192,7 @@ class AppointmentControllerWebMvcTest {
             "Consultation",
             "Alpha Studio",
             start,
-            start.plusMinutes(60),
+            start.plus(Duration.ofMinutes(60)),
             AppointmentStatus.PENDING,
             PaymentMethod.ONLINE,
             BigDecimal.valueOf(95)

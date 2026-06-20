@@ -19,6 +19,16 @@ import com.sunfeax.citeria.mapper.PaymentMapper;
 import com.sunfeax.citeria.normalizer.PaymentFieldNormalizer;
 import com.sunfeax.citeria.validation.PaymentValidator;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+
+import com.sunfeax.citeria.dto.common.PageResponseDto;
+import com.sunfeax.citeria.util.PageableUtil;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -31,10 +41,24 @@ public class PaymentService {
     private final PaymentFieldNormalizer paymentFieldNormalizer;
     private final PaymentValidator paymentValidator;
 
+    private static final Set<String> SORTABLE = Set.of("createdAt", "amount");
+    private static final Sort DEFAULT_SORT = Sort.by(Sort.Direction.DESC, "createdAt");
+
     @Transactional(readOnly = true)
-    public Page<PaymentResponseDto> getAll(Pageable pageable) {
-        Page<PaymentEntity> paymentPage = paymentRepository.findAll(pageable);
-        return paymentPage.map(paymentMapper::toResponseDto);
+    public PageResponseDto<PaymentResponseDto> list(PaymentStatus status, UUID appointmentId, Pageable pageable) {
+        List<Specification<PaymentEntity>> specs = new ArrayList<>();
+        if (status != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("status"), status));
+        }
+        if (appointmentId != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("appointment").get("id"), appointmentId));
+        }
+
+        Pageable sanitized = PageableUtil.sanitizeSort(pageable, SORTABLE, DEFAULT_SORT);
+        Page<PaymentResponseDto> page = paymentRepository.findAll(Specification.allOf(specs), sanitized)
+            .map(paymentMapper::toResponseDto);
+
+        return PageResponseDto.from(page);
     }
 
     @Transactional(readOnly = true)

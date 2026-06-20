@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -21,11 +21,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.dto.payment.PaymentPatchRequestDto;
 import com.sunfeax.citeria.dto.payment.PaymentPostRequestDto;
 import com.sunfeax.citeria.dto.payment.PaymentResponseDto;
@@ -61,7 +61,7 @@ class PaymentControllerWebMvcTest {
     @Test
     void getPaymentsShouldReturnPagedResponse() throws Exception {
         PaymentResponseDto dto = paymentDto(new UUID(0, 1L), new UUID(0, 10L));
-        when(paymentService.getAll(any())).thenReturn(new PageImpl<>(List.of(dto)));
+        when(paymentService.list(any(), any(), any())).thenReturn(new PageResponseDto<>(List.of(dto), 0, 20, 1, 1, true, true));
 
         mockMvc.perform(get("/api/payments"))
             .andExpect(status().isOk())
@@ -152,8 +152,8 @@ class PaymentControllerWebMvcTest {
             BigDecimal.valueOf(95),
             "EUR",
             PaymentStatus.PENDING,
-            LocalDateTime.of(2026, 1, 1, 12, 0),
-            LocalDateTime.of(2026, 1, 1, 12, 30)
+            Instant.parse("2026-01-01T12:00:00Z"),
+            Instant.parse("2026-01-01T12:30:00Z")
         );
     }
 }

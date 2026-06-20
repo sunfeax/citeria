@@ -1,7 +1,6 @@
 package com.sunfeax.citeria.controller;
 
 import java.util.UUID;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -14,11 +13,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sunfeax.citeria.dto.business.BusinessPatchRequestDto;
 import com.sunfeax.citeria.dto.business.BusinessPostRequestDto;
 import com.sunfeax.citeria.dto.business.BusinessResponseDto;
+import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.service.BusinessService;
 
 import jakarta.validation.Valid;
@@ -32,14 +33,12 @@ public class BusinessController {
     private final BusinessService businessService;
 
     @GetMapping
-    public Page<BusinessResponseDto> getBusinesses(
-        @PageableDefault(
-            size = 20,
-            sort = "id",
-            direction = Sort.Direction.ASC
-        ) Pageable pageable
+    public PageResponseDto<BusinessResponseDto> list(
+        @RequestParam(required = false) String search,
+        @RequestParam(required = false) Boolean active,
+        @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return businessService.getAll(pageable);
+        return businessService.list(search, active, pageable);
     }
 
     @GetMapping("/{id}")

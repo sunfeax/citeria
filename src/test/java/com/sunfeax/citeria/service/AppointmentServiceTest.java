@@ -1,5 +1,7 @@
 package com.sunfeax.citeria.service;
 
+import java.time.temporal.ChronoUnit;
+import java.time.Duration;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -9,7 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,10 +20,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import com.sunfeax.citeria.dto.common.PageResponseDto;
+import org.springframework.data.jpa.domain.Specification;
 
 import com.sunfeax.citeria.dto.appointment.AppointmentPatchRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
@@ -88,13 +91,13 @@ class AppointmentServiceTest {
         AppointmentEntity entity = appointmentEntity(new UUID(0, 1L));
         AppointmentResponseDto dto = appointmentDto(new UUID(0, 1L));
 
-        when(appointmentRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(entity)));
+        when(appointmentRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(entity)));
         when(appointmentMapper.toResponseDto(entity)).thenReturn(dto);
 
-        Page<AppointmentResponseDto> result = appointmentService.getAll(pageable);
+        PageResponseDto<AppointmentResponseDto> result = appointmentService.list(null, null, null, null, pageable);
 
-        assertEquals(1, result.getTotalElements());
-        assertEquals(dto, result.getContent().getFirst());
+        assertEquals(1, result.totalElements());
+        assertEquals(dto, result.content().getFirst());
     }
 
     @Test
@@ -118,8 +121,8 @@ class AppointmentServiceTest {
 
     @Test
     void createShouldSaveAppointmentWhenRequestIsValid() {
-        LocalDateTime start = futureStart();
-        LocalDateTime end = start.plusMinutes(60);
+        Instant start = futureStart();
+        Instant end = start.plus(Duration.ofMinutes(60));
 
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(new UUID(0, 100L), start, end, PaymentMethod.ONLINE);
         UserEntity client = clientUser(new UUID(0, 10L));
@@ -150,8 +153,8 @@ class AppointmentServiceTest {
 
     @Test
     void createShouldThrowWhenCurrentUserCannotBeResolved() {
-        LocalDateTime start = futureStart();
-        LocalDateTime end = start.plusMinutes(60);
+        Instant start = futureStart();
+        Instant end = start.plus(Duration.ofMinutes(60));
 
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(new UUID(0, 100L), start, end, PaymentMethod.ONLINE);
 
@@ -164,8 +167,8 @@ class AppointmentServiceTest {
 
     @Test
     void createShouldThrowWhenSpecialistServiceNotFound() {
-        LocalDateTime start = futureStart();
-        LocalDateTime end = start.plusMinutes(60);
+        Instant start = futureStart();
+        Instant end = start.plus(Duration.ofMinutes(60));
 
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(new UUID(0, 100L), start, end, PaymentMethod.ONLINE);
         UserEntity client = clientUser(new UUID(0, 10L));
@@ -180,8 +183,8 @@ class AppointmentServiceTest {
 
     @Test
     void createShouldThrowWhenClientHasWrongType() {
-        LocalDateTime start = futureStart();
-        LocalDateTime end = start.plusMinutes(60);
+        Instant start = futureStart();
+        Instant end = start.plus(Duration.ofMinutes(60));
 
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(new UUID(0, 100L), start, end, PaymentMethod.ONLINE);
         UserEntity specialistAsClient = specialistUser(new UUID(0, 10L));
@@ -205,8 +208,8 @@ class AppointmentServiceTest {
 
     @Test
     void createShouldThrowWhenTimeRangeIsInvalid() {
-        LocalDateTime start = futureStart();
-        LocalDateTime end = start.minusMinutes(30);
+        Instant start = futureStart();
+        Instant end = start.minus(Duration.ofMinutes(30));
 
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(new UUID(0, 100L), start, end, PaymentMethod.ONLINE);
         UserEntity client = clientUser(new UUID(0, 10L));
@@ -230,8 +233,8 @@ class AppointmentServiceTest {
 
     @Test
     void createShouldThrowWhenSpecialistIsAlreadyBooked() {
-        LocalDateTime start = futureStart();
-        LocalDateTime end = start.plusMinutes(60);
+        Instant start = futureStart();
+        Instant end = start.plus(Duration.ofMinutes(60));
 
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(new UUID(0, 100L), start, end, PaymentMethod.ONLINE);
         UserEntity client = clientUser(new UUID(0, 10L));
@@ -293,8 +296,8 @@ class AppointmentServiceTest {
     void updateShouldThrowWhenSpecialistIsAlreadyBooked() {
         stubAdminCurrentUser();
         AppointmentEntity entity = appointmentEntity(new UUID(0, 1L));
-        LocalDateTime newStart = futureStart().plusHours(1);
-        LocalDateTime newEnd = newStart.plusMinutes(60);
+        Instant newStart = futureStart().plus(Duration.ofHours(1));
+        Instant newEnd = newStart.plus(Duration.ofMinutes(60));
         AppointmentPatchRequestDto request = new AppointmentPatchRequestDto(null, null, newStart, newEnd, null, null);
 
         when(appointmentRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
@@ -318,8 +321,8 @@ class AppointmentServiceTest {
     void updateShouldApplyPatchAndSaveWhenRequestIsValid() {
         stubAdminCurrentUser();
         AppointmentEntity entity = appointmentEntity(new UUID(0, 1L));
-        LocalDateTime newStart = futureStart().plusHours(1);
-        LocalDateTime newEnd = newStart.plusMinutes(60);
+        Instant newStart = futureStart().plus(Duration.ofHours(1));
+        Instant newEnd = newStart.plus(Duration.ofMinutes(60));
         AppointmentPatchRequestDto request = new AppointmentPatchRequestDto(
             null,
             new UUID(0, 200L),
@@ -388,8 +391,8 @@ class AppointmentServiceTest {
         return admin;
     }
 
-    private LocalDateTime futureStart() {
-        return LocalDateTime.now().plusDays(1).withSecond(0).withNano(0);
+    private Instant futureStart() {
+        return Instant.now().plus(Duration.ofDays(1)).truncatedTo(ChronoUnit.MINUTES);
     }
 
     private UserEntity clientUser(UUID id) {
@@ -443,7 +446,7 @@ class AppointmentServiceTest {
         entity.setSpecialist(specialistService.getSpecialist());
         entity.setSpecialistService(specialistService);
         entity.setStartTime(futureStart());
-        entity.setEndTime(futureStart().plusMinutes(60));
+        entity.setEndTime(futureStart().plus(Duration.ofMinutes(60)));
         entity.setStatus(AppointmentStatus.PENDING);
         entity.setPaymentMethod(PaymentMethod.ONLINE);
         entity.setPriceAmount(BigDecimal.valueOf(95));
@@ -464,7 +467,7 @@ class AppointmentServiceTest {
             "Consultation",
             "Alpha Studio",
             futureStart(),
-            futureStart().plusMinutes(60),
+            futureStart().plus(Duration.ofMinutes(60)),
             AppointmentStatus.PENDING,
             PaymentMethod.ONLINE,
             BigDecimal.valueOf(95)

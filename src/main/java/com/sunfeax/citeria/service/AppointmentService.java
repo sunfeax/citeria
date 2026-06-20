@@ -9,9 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sunfeax.citeria.dto.appointment.AppointmentPatchRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
+import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
 import com.sunfeax.citeria.entity.SpecialistServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
+import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.exception.ForbiddenException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.repository.AppointmentRepository;
@@ -20,7 +22,16 @@ import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.mapper.AppointmentMapper;
 import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
 import com.sunfeax.citeria.security.CurrentUserProvider;
+import com.sunfeax.citeria.util.PageableUtil;
 import com.sunfeax.citeria.validation.AppointmentValidator;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,13 +47,45 @@ public class AppointmentService {
     private final AppointmentValidator appointmentValidator;
     private final CurrentUserProvider currentUserProvider;
 
+    private static final Set<String> SORTABLE = Set.of("startTime", "status", "createdAt");
+    private static final Sort DEFAULT_SORT = Sort.by(Sort.Direction.ASC, "startTime");
+
     @Transactional(readOnly = true)
-    public Page<AppointmentResponseDto> getAll(Pageable pageable) {
+    public PageResponseDto<AppointmentResponseDto> list(
+        AppointmentStatus status,
+        Instant from,
+        Instant to,
+        UUID specialistServiceId,
+        Pageable pageable
+    ) {
         UserEntity current = currentUserProvider.getCurrentUser();
-        Page<AppointmentEntity> appointmentPage = currentUserProvider.isAdmin(current)
-            ? appointmentRepository.findAll(pageable)
-            : appointmentRepository.findByClientIdOrSpecialistId(current.getId(), current.getId(), pageable);
-        return appointmentPage.map(appointmentMapper::toResponseDto);
+
+        List<Specification<AppointmentEntity>> specs = new ArrayList<>();
+        if (!currentUserProvider.isAdmin(current)) {
+            UUID me = current.getId();
+            specs.add((root, query, cb) -> cb.or(
+                cb.equal(root.get("client").get("id"), me),
+                cb.equal(root.get("specialist").get("id"), me)
+            ));
+        }
+        if (status != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("status"), status));
+        }
+        if (from != null) {
+            specs.add((root, query, cb) -> cb.greaterThanOrEqualTo(root.<Instant>get("startTime"), from));
+        }
+        if (to != null) {
+            specs.add((root, query, cb) -> cb.lessThanOrEqualTo(root.<Instant>get("startTime"), to));
+        }
+        if (specialistServiceId != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("specialistService").get("id"), specialistServiceId));
+        }
+
+        Pageable sanitized = PageableUtil.sanitizeSort(pageable, SORTABLE, DEFAULT_SORT);
+        Page<AppointmentResponseDto> page = appointmentRepository.findAll(Specification.allOf(specs), sanitized)
+            .map(appointmentMapper::toResponseDto);
+
+        return PageResponseDto.from(page);
     }
 
     @Transactional(readOnly = true)

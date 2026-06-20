@@ -19,6 +19,18 @@ import com.sunfeax.citeria.normalizer.ServiceFieldNormalizer;
 import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.validation.ServiceValidator;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.StringUtils;
+
+import com.sunfeax.citeria.dto.common.PageResponseDto;
+import com.sunfeax.citeria.util.PageableUtil;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -32,10 +44,41 @@ public class ServiceService {
     private final ServiceValidator serviceValidator;
     private final CurrentUserProvider currentUserProvider;
 
+    private static final Set<String> SORTABLE = Set.of("name", "priceAmount", "createdAt");
+    private static final Sort DEFAULT_SORT = Sort.by("name");
+
     @Transactional(readOnly = true)
-    public Page<ServiceResponseDto> getAll(Pageable pageable) {
-        Page<ServiceEntity> servicePage = serviceRepository.findAll(pageable);
-        return servicePage.map(serviceMapper::toResponseDto);
+    public PageResponseDto<ServiceResponseDto> list(
+        String search,
+        UUID businessId,
+        Boolean active,
+        BigDecimal minPrice,
+        BigDecimal maxPrice,
+        Pageable pageable
+    ) {
+        List<Specification<ServiceEntity>> specs = new ArrayList<>();
+        if (businessId != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("business").get("id"), businessId));
+        }
+        if (active != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("isActive"), active));
+        }
+        if (minPrice != null) {
+            specs.add((root, query, cb) -> cb.greaterThanOrEqualTo(root.<BigDecimal>get("priceAmount"), minPrice));
+        }
+        if (maxPrice != null) {
+            specs.add((root, query, cb) -> cb.lessThanOrEqualTo(root.<BigDecimal>get("priceAmount"), maxPrice));
+        }
+        if (StringUtils.hasText(search)) {
+            String pattern = "%" + search.trim().toLowerCase() + "%";
+            specs.add((root, query, cb) -> cb.like(cb.lower(root.get("name")), pattern));
+        }
+
+        Pageable sanitized = PageableUtil.sanitizeSort(pageable, SORTABLE, DEFAULT_SORT);
+        Page<ServiceResponseDto> page = serviceRepository.findAll(Specification.allOf(specs), sanitized)
+            .map(serviceMapper::toResponseDto);
+
+        return PageResponseDto.from(page);
     }
 
     @Transactional(readOnly = true)

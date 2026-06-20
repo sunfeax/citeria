@@ -1,7 +1,7 @@
 package com.sunfeax.citeria.dto.specialistservice;
 
 import java.util.UUID;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record SpecialistServiceResponseDto(
     UUID id,
@@ -12,5 +12,5 @@ public record SpecialistServiceResponseDto(
     UUID serviceId,
     String serviceName,
     Boolean isActive,
-    LocalDateTime createdAt) {
+    Instant createdAt) {
 }

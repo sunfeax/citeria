@@ -20,6 +20,19 @@ import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.validation.UserValidator;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.StringUtils;
+
+import com.sunfeax.citeria.dto.common.PageResponseDto;
+import com.sunfeax.citeria.enums.UserRole;
+import com.sunfeax.citeria.enums.UserType;
+import com.sunfeax.citeria.util.PageableUtil;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -33,11 +46,43 @@ public class UserService {
     private final UserValidator userValidator;
     private final CurrentUserProvider currentUserProvider;
 
+    private static final Set<String> SORTABLE = Set.of("createdAt", "lastName", "email");
+    private static final Sort DEFAULT_SORT = Sort.by(Sort.Direction.DESC, "createdAt");
+
     @Transactional(readOnly = true)
-    public Page<UserResponseDto> getAll(Pageable pageable) {
+    public PageResponseDto<UserResponseDto> list(
+        UserRole role,
+        UserType type,
+        Boolean active,
+        String search,
+        Pageable pageable
+    ) {
         currentUserProvider.requireAdmin();
-        Page<UserEntity> userPage = userRepository.findAll(pageable);
-        return userPage.map(userMapper::toResponseDto);
+
+        List<Specification<UserEntity>> specs = new ArrayList<>();
+        if (role != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("role"), role));
+        }
+        if (type != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("type"), type));
+        }
+        if (active != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("isActive"), active));
+        }
+        if (StringUtils.hasText(search)) {
+            String pattern = "%" + search.trim().toLowerCase() + "%";
+            specs.add((root, query, cb) -> cb.or(
+                cb.like(cb.lower(root.get("firstName")), pattern),
+                cb.like(cb.lower(root.get("lastName")), pattern),
+                cb.like(cb.lower(root.get("email")), pattern)
+            ));
+        }
+
+        Pageable sanitized = PageableUtil.sanitizeSort(pageable, SORTABLE, DEFAULT_SORT);
+        Page<UserResponseDto> page = userRepository.findAll(Specification.allOf(specs), sanitized)
+            .map(userMapper::toResponseDto);
+
+        return PageResponseDto.from(page);
     }
 
     @Transactional(readOnly = true)

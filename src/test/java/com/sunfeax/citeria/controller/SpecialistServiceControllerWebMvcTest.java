@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -20,11 +20,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.dto.specialistservice.SpecialistServicePatchRequestDto;
 import com.sunfeax.citeria.dto.specialistservice.SpecialistServicePostRequestDto;
 import com.sunfeax.citeria.dto.specialistservice.SpecialistServiceResponseDto;
@@ -59,7 +59,7 @@ class SpecialistServiceControllerWebMvcTest {
     @Test
     void getSpecialistServicesShouldReturnPagedResponse() throws Exception {
         SpecialistServiceResponseDto dto = specialistServiceDto(new UUID(0, 1L), new UUID(0, 10L), new UUID(0, 20L), new UUID(0, 30L));
-        when(specialistServiceService.getAll(any())).thenReturn(new PageImpl<>(List.of(dto)));
+        when(specialistServiceService.list(any(), any(), any(), any(), any())).thenReturn(new PageResponseDto<>(List.of(dto), 0, 20, 1, 1, true, true));
 
         mockMvc.perform(get("/api/specialist-services"))
             .andExpect(status().isOk())
@@ -176,7 +176,7 @@ class SpecialistServiceControllerWebMvcTest {
             serviceId,
             "Service " + serviceId,
             true,
-            LocalDateTime.of(2026, 1, 1, 12, 0)
+            Instant.parse("2026-01-01T12:00:00Z")
         );
     }
 }

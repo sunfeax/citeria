@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -19,12 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import tools.jackson.databind.ObjectMapper;
+import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.dto.business.BusinessPatchRequestDto;
 import com.sunfeax.citeria.dto.business.BusinessPostRequestDto;
 import com.sunfeax.citeria.dto.business.BusinessResponseDto;
@@ -56,7 +56,7 @@ class BusinessControllerWebMvcTest {
     @Test
     void getBusinessesShouldReturnPagedResponse() throws Exception {
         BusinessResponseDto dto = businessDto(new UUID(0, 1L));
-        when(businessService.getAll(any())).thenReturn(new PageImpl<>(List.of(dto)));
+        when(businessService.list(any(), any(), any())).thenReturn(new PageResponseDto<>(List.of(dto), 0, 20, 1, 1, true, true));
 
         mockMvc.perform(get("/api/businesses"))
             .andExpect(status().isOk())
@@ -210,8 +210,8 @@ class BusinessControllerWebMvcTest {
             true,
             new UUID(0, 10L),
             "Owner Name",
-            LocalDateTime.of(2026, 1, 1, 12, 0),
-            LocalDateTime.of(2026, 1, 2, 12, 0)
+            Instant.parse("2026-01-01T12:00:00Z"),
+            Instant.parse("2026-01-02T12:00:00Z")
         );
     }
 }

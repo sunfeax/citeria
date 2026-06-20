@@ -1,6 +1,7 @@
 package com.sunfeax.citeria.normalizer;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import org.springframework.stereotype.Component;
 
@@ -30,7 +31,7 @@ public class AppointmentFieldNormalizer {
         );
     }
 
-    private LocalDateTime normalizeDateTime(LocalDateTime value) {
-        return value == null ? null : value.withSecond(0).withNano(0);
+    private Instant normalizeDateTime(Instant value) {
+        return value == null ? null : value.truncatedTo(ChronoUnit.MINUTES);
     }
 }

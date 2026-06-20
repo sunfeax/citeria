@@ -1,7 +1,7 @@
 package com.sunfeax.citeria.dto.appointment;
 
 import java.util.UUID;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import com.sunfeax.citeria.enums.PaymentMethod;
 
@@ -12,10 +12,10 @@ public record AppointmentPostRequestDto(
     UUID specialistServiceId,
 
     @NotNull(message = "Start time is required")
-    LocalDateTime startTime,
+    Instant startTime,
 
     @NotNull(message = "End time is required")
-    LocalDateTime endTime,
+    Instant endTime,
 
     @NotNull(message = "Payment method is required")
     PaymentMethod paymentMethod

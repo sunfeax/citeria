@@ -2,7 +2,7 @@ package com.sunfeax.citeria.service;
 
 import java.util.UUID;
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -224,7 +224,7 @@ class AuthServiceTest {
             UserRole.USER,
             UserType.CLIENT,
             true,
-            LocalDateTime.of(2026, 1, 1, 12, 0)
+            Instant.parse("2026-01-01T12:00:00Z")
         );
     }
 }

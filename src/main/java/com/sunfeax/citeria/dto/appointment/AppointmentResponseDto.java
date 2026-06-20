@@ -2,7 +2,7 @@ package com.sunfeax.citeria.dto.appointment;
 
 import java.util.UUID;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.enums.PaymentMethod;
@@ -18,8 +18,8 @@ public record AppointmentResponseDto(
     UUID serviceId,
     String serviceName,
     String businessName,
-    LocalDateTime startTime,
-    LocalDateTime endTime,
+    Instant startTime,
+    Instant endTime,
     AppointmentStatus status,
     PaymentMethod paymentMethod,
     BigDecimal priceAmount) {

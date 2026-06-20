@@ -1,7 +1,7 @@
 package com.sunfeax.citeria.validation;
 
 import java.util.UUID;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import org.springframework.stereotype.Component;
 
@@ -49,7 +49,7 @@ public class AppointmentValidator {
                 "End time must be after start time"
             )
             .addErrorIf(
-                request.startTime().isBefore(LocalDateTime.now()),
+                request.startTime().isBefore(Instant.now()),
                 "startTime",
                 "Start time must be in the future"
             )
@@ -73,8 +73,8 @@ public class AppointmentValidator {
         UserEntity targetClient,
         SpecialistServiceEntity targetSpecialistService
     ) {
-        LocalDateTime targetStartTime = request.startTime() != null ? request.startTime() : existingEntity.getStartTime();
-        LocalDateTime targetEndTime = request.endTime() != null ? request.endTime() : existingEntity.getEndTime();
+        Instant targetStartTime = request.startTime() != null ? request.startTime() : existingEntity.getStartTime();
+        Instant targetEndTime = request.endTime() != null ? request.endTime() : existingEntity.getEndTime();
         AppointmentStatus targetStatus = request.status() != null ? request.status() : existingEntity.getStatus();
 
         boolean scheduleChanged = request.specialistServiceId() != null
@@ -119,7 +119,7 @@ public class AppointmentValidator {
                 "End time must be after start time"
             )
             .addErrorIf(
-                futureScheduleCheckRequired && targetStartTime != null && targetStartTime.isBefore(LocalDateTime.now()),
+                futureScheduleCheckRequired && targetStartTime != null && targetStartTime.isBefore(Instant.now()),
                 "startTime",
                 "Start time must be in the future"
             )
@@ -141,7 +141,7 @@ public class AppointmentValidator {
     public void validateRestore(AppointmentEntity appointment) {
         new ValidationResult()
             .addErrorIf(
-                appointment.getStartTime().isBefore(LocalDateTime.now()),
+                appointment.getStartTime().isBefore(Instant.now()),
                 "startTime",
                 "Cannot restore an appointment in the past"
             )

@@ -11,7 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,10 +20,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import com.sunfeax.citeria.dto.common.PageResponseDto;
+import org.springframework.data.jpa.domain.Specification;
 
 import com.sunfeax.citeria.dto.service.ServicePatchRequestDto;
 import com.sunfeax.citeria.dto.service.ServicePostRequestDto;
@@ -77,13 +78,13 @@ class ServiceServiceTest {
         ServiceEntity entity = serviceEntity(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
         ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
 
-        when(serviceRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(entity)));
+        when(serviceRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(entity)));
         when(serviceMapper.toResponseDto(entity)).thenReturn(dto);
 
-        Page<ServiceResponseDto> result = serviceService.getAll(pageable);
+        PageResponseDto<ServiceResponseDto> result = serviceService.list(null, null, null, null, null, pageable);
 
-        assertEquals(1, result.getTotalElements());
-        assertEquals(dto, result.getContent().getFirst());
+        assertEquals(1, result.totalElements());
+        assertEquals(dto, result.content().getFirst());
     }
 
     @Test
@@ -352,7 +353,7 @@ class ServiceServiceTest {
             60,
             "EUR",
             true,
-            LocalDateTime.now()
+            Instant.now()
         );
     }
 }

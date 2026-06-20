@@ -1,7 +1,6 @@
 package com.sunfeax.citeria.controller;
 
 import java.util.UUID;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -14,11 +13,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.dto.payment.PaymentPatchRequestDto;
 import com.sunfeax.citeria.dto.payment.PaymentPostRequestDto;
 import com.sunfeax.citeria.dto.payment.PaymentResponseDto;
+import com.sunfeax.citeria.enums.PaymentStatus;
 import com.sunfeax.citeria.service.PaymentService;
 
 import jakarta.validation.Valid;
@@ -32,14 +34,12 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @GetMapping
-    public Page<PaymentResponseDto> getPayments(
-        @PageableDefault(
-            size = 20,
-            sort = "id",
-            direction = Sort.Direction.ASC
-        ) Pageable pageable
+    public PageResponseDto<PaymentResponseDto> list(
+        @RequestParam(required = false) PaymentStatus status,
+        @RequestParam(required = false) UUID appointmentId,
+        @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return paymentService.getAll(pageable);
+        return paymentService.list(status, appointmentId, pageable);
     }
 
     @GetMapping("/{id}")

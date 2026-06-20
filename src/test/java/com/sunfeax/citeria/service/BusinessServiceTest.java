@@ -10,7 +10,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,10 +19,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import com.sunfeax.citeria.dto.common.PageResponseDto;
+import org.springframework.data.jpa.domain.Specification;
 
 import com.sunfeax.citeria.dto.business.BusinessPatchRequestDto;
 import com.sunfeax.citeria.dto.business.BusinessPostRequestDto;
@@ -76,13 +77,13 @@ class BusinessServiceTest {
         BusinessEntity entity = businessEntity(new UUID(0, 1L), "Alpha");
         BusinessResponseDto dto = businessResponseDto(new UUID(0, 1L), "Alpha");
 
-        when(businessRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(entity)));
+        when(businessRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(entity)));
         when(businessMapper.toResponseDto(entity)).thenReturn(dto);
 
-        Page<BusinessResponseDto> result = businessService.getAll(pageable);
+        PageResponseDto<BusinessResponseDto> result = businessService.list(null, null, pageable);
 
-        assertEquals(1, result.getTotalElements());
-        assertEquals(dto, result.getContent().getFirst());
+        assertEquals(1, result.totalElements());
+        assertEquals(dto, result.content().getFirst());
     }
 
     @Test
@@ -336,8 +337,8 @@ class BusinessServiceTest {
             true,
             new UUID(0, 10L),
             "Owner Name",
-            LocalDateTime.now(),
-            LocalDateTime.now()
+            Instant.now(),
+            Instant.now()
         );
     }
 }

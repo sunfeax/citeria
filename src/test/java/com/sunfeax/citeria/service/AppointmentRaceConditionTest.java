@@ -1,10 +1,12 @@
 package com.sunfeax.citeria.service;
 
+import java.time.temporal.ChronoUnit;
+import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -56,8 +58,8 @@ class AppointmentRaceConditionTest {
     @Test
     void concurrentCreateForSameSlotShouldPersistOnlyOneAppointment() throws Exception {
         TestFixture fixture = createFixture();
-        LocalDateTime start = LocalDateTime.now().plusDays(5).withHour(10).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime end = start.plusMinutes(60);
+        Instant start = Instant.now().truncatedTo(ChronoUnit.DAYS).plus(Duration.ofDays(5)).plus(Duration.ofHours(10));
+        Instant end = start.plus(Duration.ofMinutes(60));
 
         AttemptResult[] results = runConcurrentAttempts(
             bookingTask(fixture.clientOneEmail(), fixture.specialistServiceId(), start, end),
@@ -83,10 +85,10 @@ class AppointmentRaceConditionTest {
     @Test
     void concurrentCreateForAdjacentSlotsShouldPersistBothAppointments() throws Exception {
         TestFixture fixture = createFixture();
-        LocalDateTime firstStart = LocalDateTime.now().plusDays(6).withHour(10).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime firstEnd = firstStart.plusMinutes(60);
-        LocalDateTime secondStart = firstEnd;
-        LocalDateTime secondEnd = secondStart.plusMinutes(60);
+        Instant firstStart = Instant.now().truncatedTo(ChronoUnit.DAYS).plus(Duration.ofDays(6)).plus(Duration.ofHours(10));
+        Instant firstEnd = firstStart.plus(Duration.ofMinutes(60));
+        Instant secondStart = firstEnd;
+        Instant secondEnd = secondStart.plus(Duration.ofMinutes(60));
 
         AttemptResult[] results = runConcurrentAttempts(
             bookingTask(fixture.clientOneEmail(), fixture.specialistServiceId(), firstStart, firstEnd),
@@ -143,8 +145,8 @@ class AppointmentRaceConditionTest {
     private Callable<AttemptResult> bookingTask(
         String clientEmail,
         UUID specialistServiceId,
-        LocalDateTime start,
-        LocalDateTime end
+        Instant start,
+        Instant end
     ) {
         return () -> {
             SecurityContextHolder.getContext().setAuthentication(
@@ -256,7 +258,7 @@ class AppointmentRaceConditionTest {
         specialistService.setSpecialist(specialist);
         specialistService.setService(service);
         specialistService.setActive(true);
-        specialistService.setCreatedAt(LocalDateTime.now());
+        specialistService.setCreatedAt(Instant.now());
         specialistService = specialistServiceRepository.save(specialistService);
 
         return new TestFixture(

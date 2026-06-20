@@ -2,7 +2,7 @@ package com.sunfeax.citeria.dto.service;
 
 import java.util.UUID;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record ServiceResponseDto(
     UUID id,
@@ -14,5 +14,5 @@ public record ServiceResponseDto(
     Integer durationMinutes,
     String currency,
     Boolean isActive,
-    LocalDateTime createdAt) {
+    Instant createdAt) {
 }

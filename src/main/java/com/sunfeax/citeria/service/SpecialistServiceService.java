@@ -23,6 +23,16 @@ import com.sunfeax.citeria.normalizer.SpecialistServiceFieldNormalizer;
 import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.validation.SpecialistServiceValidator;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+
+import com.sunfeax.citeria.dto.common.PageResponseDto;
+import com.sunfeax.citeria.util.PageableUtil;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -38,10 +48,37 @@ public class SpecialistServiceService {
     private final SpecialistServiceValidator specialistServiceValidator;
     private final CurrentUserProvider currentUserProvider;
 
+    private static final Set<String> SORTABLE = Set.of("createdAt");
+    private static final Sort DEFAULT_SORT = Sort.by(Sort.Direction.DESC, "createdAt");
+
     @Transactional(readOnly = true)
-    public Page<SpecialistServiceResponseDto> getAll(Pageable pageable) {
-        Page<SpecialistServiceEntity> specialistServicePage = specialistServiceRepository.findAll(pageable);
-        return specialistServicePage.map(specialistServiceMapper::toResponseDto);
+    public PageResponseDto<SpecialistServiceResponseDto> list(
+        UUID businessId,
+        UUID specialistId,
+        UUID serviceId,
+        Boolean active,
+        Pageable pageable
+    ) {
+        List<Specification<SpecialistServiceEntity>> specs = new ArrayList<>();
+        if (businessId != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("business").get("id"), businessId));
+        }
+        if (specialistId != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("specialist").get("id"), specialistId));
+        }
+        if (serviceId != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("service").get("id"), serviceId));
+        }
+        if (active != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("isActive"), active));
+        }
+
+        Pageable sanitized = PageableUtil.sanitizeSort(pageable, SORTABLE, DEFAULT_SORT);
+        Page<SpecialistServiceResponseDto> page =
+            specialistServiceRepository.findAll(Specification.allOf(specs), sanitized)
+                .map(specialistServiceMapper::toResponseDto);
+
+        return PageResponseDto.from(page);
     }
 
     @Transactional(readOnly = true)
