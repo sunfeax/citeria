@@ -1,7 +1,5 @@
 package com.sunfeax.citeria.dto.user;
 
-import com.sunfeax.citeria.enums.UserType;
-
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
@@ -31,8 +29,5 @@ public record UserUpdateRequestDto(
 
     @Nullable
     @Size(min = 7, max = 20)
-    String phone,
-
-    @Nullable
-    UserType type
+    String phone
 ) {}

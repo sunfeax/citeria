@@ -23,19 +23,4 @@ public interface AppointmentRepository extends JpaRepository<AppointmentEntity, 
     );
 
     List<AppointmentEntity> findByStatusAndPaymentDeadlineBefore(AppointmentStatus status, Instant cutoff);
-
-    boolean existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNot(
-        UUID specialistId,
-        Instant endTime,
-        Instant startTime,
-        AppointmentStatus status
-    );
-
-    boolean existsBySpecialistIdAndStartTimeLessThanAndEndTimeGreaterThanAndStatusNotAndIdNot(
-        UUID specialistId,
-        Instant endTime,
-        Instant startTime,
-        AppointmentStatus status,
-        UUID id
-    );
 }
