@@ -14,9 +14,7 @@ import com.sunfeax.citeria.entity.WorkingHoursEntity;
 public interface WorkingHoursRepository
     extends JpaRepository<WorkingHoursEntity, UUID>, JpaSpecificationExecutor<WorkingHoursEntity> {
 
-    boolean existsByBusinessIdAndSpecialistIdAndDayOfWeek(UUID businessId, UUID specialistId, DayOfWeek dayOfWeek);
+    boolean existsBySpecialistIdAndDayOfWeek(UUID specialistId, DayOfWeek dayOfWeek);
 
-    boolean existsBySpecialistIdAndBusinessIdAndIsActiveTrue(UUID specialistId, UUID businessId);
-
-    List<WorkingHoursEntity> findBySpecialistIdAndBusinessIdAndIsActiveTrue(UUID specialistId, UUID businessId);
+    List<WorkingHoursEntity> findBySpecialistIdAndIsActiveTrue(UUID specialistId);
 }

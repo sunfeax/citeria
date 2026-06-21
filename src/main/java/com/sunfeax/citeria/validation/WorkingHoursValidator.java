@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 
 import com.sunfeax.citeria.dto.workinghours.WorkingHoursPatchRequestDto;
 import com.sunfeax.citeria.dto.workinghours.WorkingHoursPostRequestDto;
-import com.sunfeax.citeria.entity.BusinessEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.entity.WorkingHoursEntity;
 import com.sunfeax.citeria.enums.UserType;
@@ -22,28 +21,18 @@ public class WorkingHoursValidator {
     private final WorkingHoursRepository workingHoursRepository;
     private final WorkingHoursMapper workingHoursMapper;
 
-    public void validateCreate(
-        WorkingHoursPostRequestDto request,
-        BusinessEntity business,
-        UserEntity specialist
-    ) {
+    public void validateCreate(WorkingHoursPostRequestDto request, UserEntity specialist) {
         new ValidationResult()
-            .addErrorIf(specialist.getType() != UserType.SPECIALIST, "specialistId", "User must have SPECIALIST type")
-            .addErrorIf(!specialist.isActive(), "specialistId", "Specialist must be active")
-            .addErrorIf(!business.isActive(), "businessId", "Business must be active")
+            .addErrorIf(specialist.getType() != UserType.SPECIALIST, "specialist", "Only a specialist can define working hours")
             .addErrorIf(
                 !request.endTime().isAfter(request.startTime()),
                 "time",
                 "End time must be after start time"
             )
             .addErrorIf(
-                workingHoursRepository.existsByBusinessIdAndSpecialistIdAndDayOfWeek(
-                    business.getId(),
-                    specialist.getId(),
-                    request.dayOfWeek()
-                ),
+                workingHoursRepository.existsBySpecialistIdAndDayOfWeek(specialist.getId(), request.dayOfWeek()),
                 "dayOfWeek",
-                "Working hours for this specialist, business and day already exist"
+                "Working hours for this day already exist"
             )
             .throwIfHasErrors();
     }

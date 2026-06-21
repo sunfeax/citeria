@@ -12,14 +12,14 @@ import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
 import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
-import com.sunfeax.citeria.entity.SpecialistServiceEntity;
+import com.sunfeax.citeria.entity.ServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.exception.ForbiddenException;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.repository.AppointmentRepository;
-import com.sunfeax.citeria.repository.SpecialistServiceRepository;
+import com.sunfeax.citeria.repository.ServiceRepository;
 import com.sunfeax.citeria.mapper.AppointmentMapper;
 import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
 import com.sunfeax.citeria.security.CurrentUserProvider;
@@ -46,7 +46,7 @@ public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final AppointmentMapper appointmentMapper;
-    private final SpecialistServiceRepository specialistServiceRepository;
+    private final ServiceRepository serviceRepository;
     private final AppointmentFieldNormalizer appointmentFieldNormalizer;
     private final AppointmentValidator appointmentValidator;
     private final CurrentUserProvider currentUserProvider;
@@ -65,7 +65,7 @@ public class AppointmentService {
         AppointmentStatus status,
         Instant from,
         Instant to,
-        UUID specialistServiceId,
+        UUID serviceId,
         Pageable pageable
     ) {
         UserEntity current = currentUserProvider.getCurrentUser();
@@ -87,8 +87,8 @@ public class AppointmentService {
         if (to != null) {
             specs.add((root, query, cb) -> cb.lessThanOrEqualTo(root.<Instant>get("startTime"), to));
         }
-        if (specialistServiceId != null) {
-            specs.add((root, query, cb) -> cb.equal(root.get("specialistService").get("id"), specialistServiceId));
+        if (serviceId != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("service").get("id"), serviceId));
         }
 
         Pageable sanitized = PageableUtil.sanitizeSort(pageable, SORTABLE, DEFAULT_SORT);
@@ -110,11 +110,11 @@ public class AppointmentService {
         AppointmentPostRequestDto normalizedRequest = appointmentFieldNormalizer.normalizePostRequest(request);
 
         UserEntity client = currentUserProvider.getCurrentUser();
-        SpecialistServiceEntity specialistService = findSpecialistServiceOrThrow(normalizedRequest.specialistServiceId());
+        ServiceEntity service = findServiceOrThrow(normalizedRequest.serviceId());
 
-        appointmentValidator.validateCreate(normalizedRequest, client, specialistService);
+        appointmentValidator.validateCreate(normalizedRequest, client, service);
 
-        AppointmentEntity entity = appointmentMapper.createEntity(normalizedRequest, client, specialistService);
+        AppointmentEntity entity = appointmentMapper.createEntity(normalizedRequest, client, service);
         AppointmentEntity saved = appointmentRepository.save(entity);
 
         return appointmentMapper.toResponseDto(saved);
@@ -290,10 +290,10 @@ public class AppointmentService {
             .orElseThrow(() -> new ResourceNotFoundException("Appointment with id " + id + " not found"));
     }
 
-    private SpecialistServiceEntity findSpecialistServiceOrThrow(UUID specialistServiceId) {
-        return specialistServiceRepository.findById(specialistServiceId)
+    private ServiceEntity findServiceOrThrow(UUID serviceId) {
+        return serviceRepository.findById(serviceId)
             .orElseThrow(
-                () -> new ResourceNotFoundException("Specialist service with id " + specialistServiceId + " not found")
+                () -> new ResourceNotFoundException("Service with id " + serviceId + " not found")
             );
     }
 }

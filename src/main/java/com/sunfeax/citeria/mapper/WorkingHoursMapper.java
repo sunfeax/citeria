@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import com.sunfeax.citeria.dto.workinghours.WorkingHoursPatchRequestDto;
 import com.sunfeax.citeria.dto.workinghours.WorkingHoursPostRequestDto;
 import com.sunfeax.citeria.dto.workinghours.WorkingHoursResponseDto;
-import com.sunfeax.citeria.entity.BusinessEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.entity.WorkingHoursEntity;
 
@@ -17,8 +16,6 @@ public class WorkingHoursMapper {
             entity.getId(),
             entity.getSpecialist().getId(),
             entity.getSpecialist().getFirstName() + " " + entity.getSpecialist().getLastName(),
-            entity.getBusiness().getId(),
-            entity.getBusiness().getName(),
             entity.getDayOfWeek(),
             entity.getStartTime(),
             entity.getEndTime(),
@@ -27,14 +24,9 @@ public class WorkingHoursMapper {
         );
     }
 
-    public WorkingHoursEntity createEntity(
-        WorkingHoursPostRequestDto request,
-        BusinessEntity business,
-        UserEntity specialist
-    ) {
+    public WorkingHoursEntity createEntity(WorkingHoursPostRequestDto request, UserEntity specialist) {
         WorkingHoursEntity entity = new WorkingHoursEntity();
 
-        entity.setBusiness(business);
         entity.setSpecialist(specialist);
         entity.setDayOfWeek(request.dayOfWeek());
         entity.setStartTime(request.startTime());

@@ -13,8 +13,6 @@ public class WorkingHoursFieldNormalizer {
 
     public WorkingHoursPostRequestDto normalizePostRequest(WorkingHoursPostRequestDto request) {
         return new WorkingHoursPostRequestDto(
-            request.businessId(),
-            request.specialistId(),
             request.dayOfWeek(),
             normalizeTime(request.startTime()),
             normalizeTime(request.endTime())

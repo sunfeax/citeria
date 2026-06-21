@@ -6,9 +6,9 @@ import java.time.Instant;
 
 public record ServiceResponseDto(
     UUID id,
-    UUID businessId,
+    UUID specialistId,
+    String specialistName,
     String name,
-    String businessName,
     String description,
     BigDecimal priceAmount,
     Integer durationMinutes,

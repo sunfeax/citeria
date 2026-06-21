@@ -41,10 +41,6 @@ public class WorkingHoursEntity {
     @JoinColumn(name = "specialist_id", nullable = false)
     private UserEntity specialist;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "business_id", nullable = false)
-    private BusinessEntity business;
-
     @Column(name = "day_of_week", nullable = false, length = 9)
     @Enumerated(EnumType.STRING)
     private DayOfWeek dayOfWeek;

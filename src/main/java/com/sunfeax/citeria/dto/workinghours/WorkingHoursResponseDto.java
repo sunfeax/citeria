@@ -9,8 +9,6 @@ public record WorkingHoursResponseDto(
     UUID id,
     UUID specialistId,
     String specialistName,
-    UUID businessId,
-    String businessName,
     DayOfWeek dayOfWeek,
     LocalTime startTime,
     LocalTime endTime,

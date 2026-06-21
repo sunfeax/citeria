@@ -9,6 +9,6 @@ import com.sunfeax.citeria.entity.ServiceEntity;
 
 @Repository
 public interface ServiceRepository extends JpaRepository<ServiceEntity, UUID>, JpaSpecificationExecutor<ServiceEntity> {
-    boolean existsByBusinessIdAndNameIgnoreCase(UUID businessId, String name);
-    boolean existsByBusinessIdAndNameIgnoreCaseAndIdNot(UUID businessId, String name, UUID id);
+    boolean existsBySpecialistIdAndNameIgnoreCase(UUID specialistId, String name);
+    boolean existsBySpecialistIdAndNameIgnoreCaseAndIdNot(UUID specialistId, String name, UUID id);
 }

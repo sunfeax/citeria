@@ -17,14 +17,11 @@ import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.dto.workinghours.WorkingHoursPatchRequestDto;
 import com.sunfeax.citeria.dto.workinghours.WorkingHoursPostRequestDto;
 import com.sunfeax.citeria.dto.workinghours.WorkingHoursResponseDto;
-import com.sunfeax.citeria.entity.BusinessEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.entity.WorkingHoursEntity;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.WorkingHoursMapper;
 import com.sunfeax.citeria.normalizer.WorkingHoursFieldNormalizer;
-import com.sunfeax.citeria.repository.BusinessRepository;
-import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.repository.WorkingHoursRepository;
 import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.util.PageableUtil;
@@ -38,8 +35,6 @@ public class WorkingHoursService {
 
     private final WorkingHoursRepository workingHoursRepository;
     private final WorkingHoursMapper workingHoursMapper;
-    private final BusinessRepository businessRepository;
-    private final UserRepository userRepository;
     private final WorkingHoursFieldNormalizer workingHoursFieldNormalizer;
     private final WorkingHoursValidator workingHoursValidator;
     private final CurrentUserProvider currentUserProvider;
@@ -50,7 +45,6 @@ public class WorkingHoursService {
     @Transactional(readOnly = true)
     public PageResponseDto<WorkingHoursResponseDto> list(
         UUID specialistId,
-        UUID businessId,
         DayOfWeek dayOfWeek,
         Boolean active,
         Pageable pageable
@@ -58,9 +52,6 @@ public class WorkingHoursService {
         List<Specification<WorkingHoursEntity>> specs = new ArrayList<>();
         if (specialistId != null) {
             specs.add((root, query, cb) -> cb.equal(root.get("specialist").get("id"), specialistId));
-        }
-        if (businessId != null) {
-            specs.add((root, query, cb) -> cb.equal(root.get("business").get("id"), businessId));
         }
         if (dayOfWeek != null) {
             specs.add((root, query, cb) -> cb.equal(root.get("dayOfWeek"), dayOfWeek));
@@ -85,13 +76,10 @@ public class WorkingHoursService {
     public WorkingHoursResponseDto create(WorkingHoursPostRequestDto request) {
         WorkingHoursPostRequestDto normalizedRequest = workingHoursFieldNormalizer.normalizePostRequest(request);
 
-        BusinessEntity business = findBusinessOrThrow(normalizedRequest.businessId());
-        currentUserProvider.requireSelfOrAdmin(business.getOwner().getId());
-        UserEntity specialist = findUserOrThrow(normalizedRequest.specialistId());
+        UserEntity specialist = currentUserProvider.getCurrentUser();
+        workingHoursValidator.validateCreate(normalizedRequest, specialist);
 
-        workingHoursValidator.validateCreate(normalizedRequest, business, specialist);
-
-        WorkingHoursEntity entity = workingHoursMapper.createEntity(normalizedRequest, business, specialist);
+        WorkingHoursEntity entity = workingHoursMapper.createEntity(normalizedRequest, specialist);
         WorkingHoursEntity saved = workingHoursRepository.save(entity);
 
         return workingHoursMapper.toResponseDto(saved);
@@ -100,7 +88,7 @@ public class WorkingHoursService {
     @Transactional
     public WorkingHoursResponseDto update(UUID id, WorkingHoursPatchRequestDto request) {
         WorkingHoursEntity entity = findWorkingHoursOrThrow(id);
-        currentUserProvider.requireSelfOrAdmin(entity.getBusiness().getOwner().getId());
+        currentUserProvider.requireSelfOrAdmin(entity.getSpecialist().getId());
 
         WorkingHoursPatchRequestDto normalizedRequest = workingHoursFieldNormalizer.normalizePatchRequest(request);
         workingHoursValidator.validateUpdate(entity, normalizedRequest);
@@ -114,7 +102,7 @@ public class WorkingHoursService {
     @Transactional
     public WorkingHoursResponseDto deleteById(UUID id) {
         WorkingHoursEntity entity = findWorkingHoursOrThrow(id);
-        currentUserProvider.requireSelfOrAdmin(entity.getBusiness().getOwner().getId());
+        currentUserProvider.requireSelfOrAdmin(entity.getSpecialist().getId());
 
         WorkingHoursResponseDto deleted = workingHoursMapper.toResponseDto(entity);
         workingHoursRepository.delete(entity);
@@ -125,15 +113,5 @@ public class WorkingHoursService {
     private WorkingHoursEntity findWorkingHoursOrThrow(UUID id) {
         return workingHoursRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Working hours with id " + id + " not found"));
-    }
-
-    private BusinessEntity findBusinessOrThrow(UUID businessId) {
-        return businessRepository.findById(businessId)
-            .orElseThrow(() -> new ResourceNotFoundException("Business with id " + businessId + " not found"));
-    }
-
-    private UserEntity findUserOrThrow(UUID userId) {
-        return userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
     }
 }

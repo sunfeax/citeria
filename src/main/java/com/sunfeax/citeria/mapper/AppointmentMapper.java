@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
-import com.sunfeax.citeria.entity.SpecialistServiceEntity;
+import com.sunfeax.citeria.entity.ServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.AppointmentStatus;
 
@@ -15,18 +15,19 @@ import com.sunfeax.citeria.enums.AppointmentStatus;
 public class AppointmentMapper {
 
     public AppointmentResponseDto toResponseDto(AppointmentEntity appointmentEntity) {
+        ServiceEntity service = appointmentEntity.getService();
+        UserEntity client = appointmentEntity.getClient();
+        UserEntity specialist = appointmentEntity.getSpecialist();
+
         return new AppointmentResponseDto(
             appointmentEntity.getId(),
-            appointmentEntity.getClient().getId(),
-            appointmentEntity.getClient().getFirstName() + " " + appointmentEntity.getClient().getLastName(),
-            appointmentEntity.getClient().getEmail(),
-            appointmentEntity.getSpecialistService().getId(),
-            appointmentEntity.getSpecialistService().getSpecialist().getId(),
-            appointmentEntity.getSpecialistService().getSpecialist().getFirstName() + " "
-                + appointmentEntity.getSpecialistService().getSpecialist().getLastName(),
-            appointmentEntity.getSpecialistService().getService().getId(),
-            appointmentEntity.getSpecialistService().getService().getName(),
-            appointmentEntity.getSpecialistService().getBusiness().getName(),
+            client.getId(),
+            client.getFirstName() + " " + client.getLastName(),
+            client.getEmail(),
+            service.getId(),
+            service.getName(),
+            specialist.getId(),
+            specialist.getFirstName() + " " + specialist.getLastName(),
             appointmentEntity.getStartTime(),
             appointmentEntity.getEndTime(),
             appointmentEntity.getStatus(),
@@ -39,19 +40,19 @@ public class AppointmentMapper {
     public AppointmentEntity createEntity(
         AppointmentPostRequestDto request,
         UserEntity client,
-        SpecialistServiceEntity specialistService
+        ServiceEntity service
     ) {
         AppointmentEntity entity = new AppointmentEntity();
 
         entity.setClient(client);
-        entity.setSpecialist(specialistService.getSpecialist());
-        entity.setSpecialistService(specialistService);
+        entity.setSpecialist(service.getSpecialist());
+        entity.setService(service);
         entity.setStartTime(request.startTime());
-        entity.setEndTime(request.startTime().plus(Duration.ofMinutes(specialistService.getService().getDurationMinutes())));
+        entity.setEndTime(request.startTime().plus(Duration.ofMinutes(service.getDurationMinutes())));
         entity.setPaymentMethod(request.paymentMethod());
         entity.setStatus(AppointmentStatus.PENDING);
-        entity.setPriceAmount(specialistService.getService().getPriceAmount());
-        entity.setCurrency(specialistService.getService().getCurrency());
+        entity.setPriceAmount(service.getPriceAmount());
+        entity.setCurrency(service.getCurrency());
 
         return entity;
     }

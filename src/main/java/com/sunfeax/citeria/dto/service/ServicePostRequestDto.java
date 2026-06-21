@@ -1,6 +1,5 @@
 package com.sunfeax.citeria.dto.service;
 
-import java.util.UUID;
 import java.math.BigDecimal;
 
 import jakarta.annotation.Nullable;
@@ -13,9 +12,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record ServicePostRequestDto(
-    @NotNull(message = "Business id is required")
-    UUID businessId,
-
     @NotBlank(message = "Service name is required")
     @Size(min = 3, max = 120)
     String name,

@@ -1,6 +1,8 @@
 package com.sunfeax.citeria.controller;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -21,7 +23,9 @@ import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.dto.service.ServicePatchRequestDto;
 import com.sunfeax.citeria.dto.service.ServicePostRequestDto;
 import com.sunfeax.citeria.dto.service.ServiceResponseDto;
+import com.sunfeax.citeria.dto.slot.SlotResponseDto;
 import com.sunfeax.citeria.service.ServiceService;
+import com.sunfeax.citeria.service.SlotService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,22 +36,32 @@ import lombok.RequiredArgsConstructor;
 public class ServiceController {
 
     private final ServiceService serviceService;
+    private final SlotService slotService;
 
     @GetMapping
     public PageResponseDto<ServiceResponseDto> list(
         @RequestParam(required = false) String search,
-        @RequestParam(required = false) UUID businessId,
+        @RequestParam(required = false) UUID specialistId,
         @RequestParam(required = false) Boolean active,
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice,
         @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return serviceService.list(search, businessId, active, minPrice, maxPrice, pageable);
+        return serviceService.list(search, specialistId, active, minPrice, maxPrice, pageable);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ServiceResponseDto> getServiceById(@PathVariable UUID id) {
         return ResponseEntity.ok(serviceService.getById(id));
+    }
+
+    @GetMapping("/{id}/slots")
+    public ResponseEntity<List<SlotResponseDto>> getAvailableSlots(
+        @PathVariable UUID id,
+        @RequestParam(required = false) LocalDate from,
+        @RequestParam(required = false) LocalDate to
+    ) {
+        return ResponseEntity.ok(slotService.getAvailableSlots(id, from, to));
     }
 
     @PostMapping

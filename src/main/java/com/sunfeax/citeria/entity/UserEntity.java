@@ -66,12 +66,6 @@ public class UserEntity {
     @CreationTimestamp
     private Instant createdAt;
 
-    @OneToMany(mappedBy = "owner")
-    private List<BusinessEntity> ownedBusinesses;
-
-    @OneToMany(mappedBy = "specialist")
-    private List<SpecialistServiceEntity> specialistServices;
-
     @OneToMany(mappedBy = "client")
     private List<AppointmentEntity> clientAppointments;
 }

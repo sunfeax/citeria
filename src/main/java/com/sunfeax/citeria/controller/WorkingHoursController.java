@@ -37,12 +37,11 @@ public class WorkingHoursController {
     @GetMapping
     public PageResponseDto<WorkingHoursResponseDto> list(
         @RequestParam(required = false) UUID specialistId,
-        @RequestParam(required = false) UUID businessId,
         @RequestParam(required = false) DayOfWeek dayOfWeek,
         @RequestParam(required = false) Boolean active,
         @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return workingHoursService.list(specialistId, businessId, dayOfWeek, active, pageable);
+        return workingHoursService.list(specialistId, dayOfWeek, active, pageable);
     }
 
     @GetMapping("/{id}")

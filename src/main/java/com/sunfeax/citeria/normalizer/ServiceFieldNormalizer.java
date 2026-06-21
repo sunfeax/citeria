@@ -12,7 +12,6 @@ public class ServiceFieldNormalizer {
 
     public ServicePostRequestDto normalizePostRequest(ServicePostRequestDto request) {
         return new ServicePostRequestDto(
-            request.businessId(),
             normalizeText(request.name()),
             normalizeText(request.description()),
             request.durationMinutes(),
@@ -23,7 +22,6 @@ public class ServiceFieldNormalizer {
 
     public ServicePatchRequestDto normalizePatchRequest(ServicePatchRequestDto request) {
         return new ServicePatchRequestDto(
-            request.businessId(),
             normalizeText(request.name()),
             normalizeText(request.description()),
             request.durationMinutes(),
