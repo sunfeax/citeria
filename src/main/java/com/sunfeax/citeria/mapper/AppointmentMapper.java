@@ -31,7 +31,6 @@ public class AppointmentMapper {
             appointmentEntity.getStartTime(),
             appointmentEntity.getEndTime(),
             appointmentEntity.getStatus(),
-            appointmentEntity.getPaymentMethod(),
             appointmentEntity.getPriceAmount(),
             appointmentEntity.getPaymentDeadline()
         );
@@ -49,7 +48,6 @@ public class AppointmentMapper {
         entity.setService(service);
         entity.setStartTime(request.startTime());
         entity.setEndTime(request.startTime().plus(Duration.ofMinutes(service.getDurationMinutes())));
-        entity.setPaymentMethod(request.paymentMethod());
         entity.setStatus(AppointmentStatus.PENDING);
         entity.setPriceAmount(service.getPriceAmount());
         entity.setCurrency(service.getCurrency());

@@ -3,8 +3,6 @@ package com.sunfeax.citeria.dto.appointment;
 import java.util.UUID;
 import java.time.Instant;
 
-import com.sunfeax.citeria.enums.PaymentMethod;
-
 import jakarta.validation.constraints.NotNull;
 
 public record AppointmentPostRequestDto(
@@ -12,8 +10,5 @@ public record AppointmentPostRequestDto(
     UUID serviceId,
 
     @NotNull(message = "Start time is required")
-    Instant startTime,
-
-    @NotNull(message = "Payment method is required")
-    PaymentMethod paymentMethod
+    Instant startTime
 ) {}

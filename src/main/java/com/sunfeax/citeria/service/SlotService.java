@@ -61,11 +61,11 @@ public class SlotService {
             lastDay = maxDay;
         }
 
-        if (lastDay.isBefore(firstDay) || !service.isActive()) {
+        UserEntity specialist = service.getSpecialist();
+        if (lastDay.isBefore(firstDay) || !service.isActive() || !specialist.isActive()) {
             return List.of();
         }
 
-        UserEntity specialist = service.getSpecialist();
         Duration duration = Duration.ofMinutes(service.getDurationMinutes());
 
         List<WorkingHoursEntity> workingHours =

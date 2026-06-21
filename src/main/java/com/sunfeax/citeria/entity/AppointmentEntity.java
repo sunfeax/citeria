@@ -8,7 +8,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.sunfeax.citeria.enums.AppointmentStatus;
-import com.sunfeax.citeria.enums.PaymentMethod;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -65,10 +64,6 @@ public class AppointmentEntity {
 
     @Column(name = "payment_deadline")
     private Instant paymentDeadline;
-
-    @Column(name = "payment_method", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private PaymentMethod paymentMethod = PaymentMethod.ONLINE;
 
     @Column(name = "price_amount", nullable = false, precision = 12, scale = 2)
     @DecimalMin("0.00")

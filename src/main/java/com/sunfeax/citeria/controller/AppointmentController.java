@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
+import com.sunfeax.citeria.dto.appointment.PaymentRequestDto;
 import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.service.AppointmentService;
@@ -65,7 +66,11 @@ public class AppointmentController {
     }
 
     @PostMapping("/{id}/pay")
-    public ResponseEntity<AppointmentResponseDto> pay(@PathVariable UUID id) {
+    public ResponseEntity<AppointmentResponseDto> pay(
+        @PathVariable UUID id,
+        @RequestBody(required = false) PaymentRequestDto card
+    ) {
+        // Mocked payment: card details are accepted but never validated or charged.
         return ResponseEntity.ok(appointmentService.pay(id));
     }
 

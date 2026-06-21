@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 import com.sunfeax.citeria.enums.AppointmentStatus;
-import com.sunfeax.citeria.enums.PaymentMethod;
 
 public record AppointmentResponseDto(
     UUID id,
@@ -19,7 +18,6 @@ public record AppointmentResponseDto(
     Instant startTime,
     Instant endTime,
     AppointmentStatus status,
-    PaymentMethod paymentMethod,
     BigDecimal priceAmount,
     Instant paymentDeadline) {
 }

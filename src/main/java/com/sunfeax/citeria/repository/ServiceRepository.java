@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.repository;
 
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -11,4 +12,5 @@ import com.sunfeax.citeria.entity.ServiceEntity;
 public interface ServiceRepository extends JpaRepository<ServiceEntity, UUID>, JpaSpecificationExecutor<ServiceEntity> {
     boolean existsBySpecialistIdAndNameIgnoreCase(UUID specialistId, String name);
     boolean existsBySpecialistIdAndNameIgnoreCaseAndIdNot(UUID specialistId, String name, UUID id);
+    List<ServiceEntity> findBySpecialistIdAndIsActiveTrue(UUID specialistId);
 }
