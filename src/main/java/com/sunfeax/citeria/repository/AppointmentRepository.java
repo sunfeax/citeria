@@ -15,12 +15,31 @@ import com.sunfeax.citeria.enums.AppointmentStatus;
 @Repository
 public interface AppointmentRepository extends JpaRepository<AppointmentEntity, UUID>, JpaSpecificationExecutor<AppointmentEntity> {
 
-    List<AppointmentEntity> findBySpecialistIdAndStatusNotInAndEndTimeGreaterThanAndStartTimeLessThan(
+    // Slot-blocking appointments overlapping a window (for slot computation).
+    List<AppointmentEntity> findBySpecialistIdAndStatusInAndEndTimeGreaterThanAndStartTimeLessThan(
         UUID specialistId,
         Collection<AppointmentStatus> statuses,
         Instant rangeStart,
         Instant rangeEnd
     );
+
+    // Pending requests for one specialist overlapping a window (for auto-rejecting siblings on accept).
+    List<AppointmentEntity> findBySpecialistIdAndStatusAndEndTimeGreaterThanAndStartTimeLessThan(
+        UUID specialistId,
+        AppointmentStatus status,
+        Instant rangeStart,
+        Instant rangeEnd
+    );
+
+    // Does this client already hold an overlapping live booking?
+    boolean existsByClientIdAndStatusInAndEndTimeGreaterThanAndStartTimeLessThan(
+        UUID clientId,
+        Collection<AppointmentStatus> statuses,
+        Instant rangeStart,
+        Instant rangeEnd
+    );
+
+    long countByClientIdAndStatus(UUID clientId, AppointmentStatus status);
 
     List<AppointmentEntity> findByStatusAndPaymentDeadlineBefore(AppointmentStatus status, Instant cutoff);
 }

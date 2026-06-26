@@ -135,7 +135,33 @@ public class AppointmentService {
         appointment.setStatus(AppointmentStatus.AWAITING_PAYMENT);
         appointment.setPaymentDeadline(deadline);
 
-        return appointmentMapper.toResponseDto(appointmentRepository.save(appointment));
+        AppointmentEntity saved = appointmentRepository.save(appointment);
+        rejectCompetingPendingRequests(saved);
+
+        return appointmentMapper.toResponseDto(saved);
+    }
+
+    /**
+     * Once one request for a slot is accepted, any other pending requests for the same
+     * specialist slot can no longer be honoured, so they are auto-rejected.
+     */
+    private void rejectCompetingPendingRequests(AppointmentEntity accepted) {
+        List<AppointmentEntity> competing = appointmentRepository
+            .findBySpecialistIdAndStatusAndEndTimeGreaterThanAndStartTimeLessThan(
+                accepted.getSpecialist().getId(),
+                AppointmentStatus.PENDING,
+                accepted.getStartTime(),
+                accepted.getEndTime()
+            )
+            .stream()
+            .filter(competitor -> !competitor.getId().equals(accepted.getId()))
+            .toList();
+        if (competing.isEmpty()) {
+            return;
+        }
+
+        competing.forEach(competitor -> competitor.setStatus(AppointmentStatus.REJECTED));
+        appointmentRepository.saveAll(competing);
     }
 
     /** Specialist declines a pending request; the slot is released. */

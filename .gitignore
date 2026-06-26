@@ -1,10 +1,9 @@
 HELP.md
 target/
-.m2
-.m2-local
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+.claude/
 
 ### STS ###
 .apt_generated

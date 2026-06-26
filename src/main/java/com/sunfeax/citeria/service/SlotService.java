@@ -77,8 +77,8 @@ public class SlotService {
         Instant rangeStart = firstDay.atStartOfDay(zone).toInstant();
         Instant rangeEnd = lastDay.plusDays(1).atStartOfDay(zone).toInstant();
         List<AppointmentEntity> bookedAppointments =
-            appointmentRepository.findBySpecialistIdAndStatusNotInAndEndTimeGreaterThanAndStartTimeLessThan(
-                specialist.getId(), AppointmentStatus.SLOT_RELEASING, rangeStart, rangeEnd
+            appointmentRepository.findBySpecialistIdAndStatusInAndEndTimeGreaterThanAndStartTimeLessThan(
+                specialist.getId(), AppointmentStatus.SLOT_BLOCKING, rangeStart, rangeEnd
             );
 
         List<SlotResponseDto> slots = new ArrayList<>();
