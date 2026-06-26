@@ -1,6 +1,7 @@
 package com.sunfeax.citeria.validation;
 
 import java.util.UUID;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -8,8 +9,8 @@ import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
 import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
 import com.sunfeax.citeria.dto.user.UserUpdateRequestDto;
 import com.sunfeax.citeria.entity.UserEntity;
-import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.mapper.UserMapper;
+import com.sunfeax.citeria.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,16 +27,14 @@ public class UserValidator {
     }
 
     public ValidationResult collectRegisterErrors(RegisterRequestDto request) {
+        boolean emailTaken = hasText(request.email()) && userRepository.existsByEmail(request.email());
+        boolean phoneTaken = hasText(request.phone()) && userRepository.existsByPhone(request.phone());
+
         return new ValidationResult()
             .addErrorIf(
-                hasText(request.email()) && userRepository.existsByEmail(request.email()),
-                "email",
-                "Email " + request.email() + " is already taken"
-            )
-            .addErrorIf(
-                hasText(request.phone()) && userRepository.existsByPhone(request.phone()),
-                "phone",
-                "Phone " + request.phone() + " is already busy"
+                emailTaken || phoneTaken,
+                "request",
+                "We couldn't complete the registration. Please check your details or try logging in."
             );
     }
 

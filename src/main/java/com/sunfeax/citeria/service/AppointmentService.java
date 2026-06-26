@@ -1,10 +1,19 @@
 package com.sunfeax.citeria.service;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,23 +27,13 @@ import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.exception.ForbiddenException;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
-import com.sunfeax.citeria.repository.AppointmentRepository;
-import com.sunfeax.citeria.repository.ServiceRepository;
 import com.sunfeax.citeria.mapper.AppointmentMapper;
 import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
+import com.sunfeax.citeria.repository.AppointmentRepository;
+import com.sunfeax.citeria.repository.ServiceRepository;
 import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.util.PageableUtil;
 import com.sunfeax.citeria.validation.AppointmentValidator;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.scheduling.annotation.Scheduled;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -120,7 +119,6 @@ public class AppointmentService {
         return appointmentMapper.toResponseDto(saved);
     }
 
-    /** Specialist accepts a pending request and opens the client's payment window. */
     @Transactional
     public AppointmentResponseDto accept(UUID id) {
         AppointmentEntity appointment = findAppointmentOrThrow(id);
@@ -141,10 +139,6 @@ public class AppointmentService {
         return appointmentMapper.toResponseDto(saved);
     }
 
-    /**
-     * Once one request for a slot is accepted, any other pending requests for the same
-     * specialist slot can no longer be honoured, so they are auto-rejected.
-     */
     private void rejectCompetingPendingRequests(AppointmentEntity accepted) {
         List<AppointmentEntity> competing = appointmentRepository
             .findBySpecialistIdAndStatusAndEndTimeGreaterThanAndStartTimeLessThan(
@@ -164,7 +158,6 @@ public class AppointmentService {
         appointmentRepository.saveAll(competing);
     }
 
-    /** Specialist declines a pending request; the slot is released. */
     @Transactional
     public AppointmentResponseDto reject(UUID id) {
         AppointmentEntity appointment = findAppointmentOrThrow(id);
@@ -176,7 +169,6 @@ public class AppointmentService {
         return appointmentMapper.toResponseDto(appointmentRepository.save(appointment));
     }
 
-    /** Client pays within the window, confirming the appointment. Payment itself is mocked for now. */
     @Transactional
     public AppointmentResponseDto pay(UUID id) {
         AppointmentEntity appointment = findAppointmentOrThrow(id);
@@ -196,7 +188,6 @@ public class AppointmentService {
         return appointmentMapper.toResponseDto(appointmentRepository.save(appointment));
     }
 
-    /** Either participant cancels before the appointment takes place; the slot is released. */
     @Transactional
     public AppointmentResponseDto cancel(UUID id) {
         AppointmentEntity appointment = findAppointmentOrThrow(id);
@@ -214,7 +205,6 @@ public class AppointmentService {
         return appointmentMapper.toResponseDto(appointmentRepository.save(appointment));
     }
 
-    /** Specialist marks a confirmed appointment as completed after it took place. */
     @Transactional
     public AppointmentResponseDto complete(UUID id) {
         AppointmentEntity appointment = findAppointmentOrThrow(id);
@@ -228,8 +218,8 @@ public class AppointmentService {
 
     @Transactional
     public AppointmentResponseDto deleteById(UUID id) {
+        currentUserProvider.requireAdmin();
         AppointmentEntity appointment = findAppointmentOrThrow(id);
-        assertParticipantOrAdmin(appointment);
 
         AppointmentResponseDto deletedAppointment = appointmentMapper.toResponseDto(appointment);
         appointmentRepository.delete(appointment);
@@ -237,24 +227,25 @@ public class AppointmentService {
         return deletedAppointment;
     }
 
-    /** Releases slots whose payment window has elapsed without payment. */
     @Scheduled(fixedDelayString = "${app.booking.paymentExpiryCheckIntervalMs:300000}")
     @Transactional
-    public void expireOverduePayments() {
-        List<AppointmentEntity> overdue = appointmentRepository.findByStatusAndPaymentDeadlineBefore(
-            AppointmentStatus.AWAITING_PAYMENT, Instant.now()
-        );
-        if (overdue.isEmpty()) {
+    public void releaseStaleAppointments() {
+        Instant now = Instant.now();
+
+        List<AppointmentEntity> stale = new ArrayList<>();
+        stale.addAll(appointmentRepository.findByStatusAndPaymentDeadlineBefore(AppointmentStatus.AWAITING_PAYMENT, now));
+        stale.addAll(appointmentRepository.findByStatusAndStartTimeBefore(AppointmentStatus.PENDING, now));
+        if (stale.isEmpty()) {
             return;
         }
 
-        overdue.forEach(appointment -> {
+        stale.forEach(appointment -> {
             appointment.setStatus(AppointmentStatus.EXPIRED);
             appointment.setPaymentDeadline(null);
         });
-        appointmentRepository.saveAll(overdue);
+        appointmentRepository.saveAll(stale);
 
-        log.debug("Expired {} appointments with an elapsed payment window", overdue.size());
+        log.debug("Released {} stale appointments (unpaid windows + lapsed requests)", stale.size());
     }
 
     private Instant computePaymentDeadline(Instant appointmentStart, Instant acceptedAt) {

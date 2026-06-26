@@ -91,6 +91,13 @@
       <version>3.0.2</version>
     </dependency>
 
+    <!-- Rate limiting -->
+    <dependency>
+      <groupId>com.bucket4j</groupId>
+      <artifactId>bucket4j_jdk17-core</artifactId>
+      <version>8.14.0</version>
+    </dependency>
+
     <!-- Validation -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
