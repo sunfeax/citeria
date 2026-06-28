@@ -70,12 +70,6 @@ public class AppointmentValidator {
             .throwIfHasErrors();
     }
 
-    /**
-     * A booking is valid only if its start matches a slot the schedule currently offers.
-     * Reusing {@link SlotService} keeps "what is shown" and "what is accepted" in sync:
-     * it already enforces the active schedule, working-hours window, slot grid, the
-     * "from next day" rule, and excludes slots taken by accepted/confirmed appointments.
-     */
     private boolean isAvailableSlot(AppointmentPostRequestDto request, ServiceEntity service) {
         LocalDate date = request.startTime().atZone(ZoneId.of(bookingZone)).toLocalDate();
         return slotService.getAvailableSlots(service.getId(), date, date).stream()

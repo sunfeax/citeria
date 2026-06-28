@@ -57,7 +57,6 @@ class AppointmentRaceConditionTest {
         TestFixture fixture = createFixture();
         Instant start = slotStart(5);
 
-        // Both requests are accepted as PENDING (a request no longer blocks the slot).
         UUID firstId = book(fixture.clientOneEmail(), fixture.serviceId(), start);
         UUID secondId = book(fixture.clientTwoEmail(), fixture.serviceId(), start);
 
@@ -96,7 +95,7 @@ class AppointmentRaceConditionTest {
     }
 
     private Instant slotStart(int daysAhead) {
-        // 10:00 UTC aligns to the 08:00 working-hours grid with 60-minute slots.
+
         return LocalDate.now(ZoneOffset.UTC).plusDays(daysAhead).atTime(10, 0).toInstant(ZoneOffset.UTC);
     }
 

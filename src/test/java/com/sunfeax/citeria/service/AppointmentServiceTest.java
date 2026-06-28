@@ -286,8 +286,6 @@ class AppointmentServiceTest {
         verify(appointmentRepository).delete(entity);
     }
 
-    // helpers
-
     private static final Instant FIXED_START = Instant.parse("2026-09-01T10:00:00Z");
 
     private Instant futureStart() {

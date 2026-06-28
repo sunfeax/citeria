@@ -70,7 +70,7 @@ public class AppointmentController {
         @PathVariable UUID id,
         @RequestBody(required = false) PaymentRequestDto card
     ) {
-        // Mocked payment: card details are accepted but never validated or charged.
+
         return ResponseEntity.ok(appointmentService.pay(id));
     }
 

@@ -110,7 +110,7 @@ public class RefreshTokenService {
         if (token == null || token.isBlank()) {
             return;
         }
-        
+
         refreshTokenRepository.deleteByTokenHash(hashToken(token));
     }
 
@@ -129,7 +129,7 @@ public class RefreshTokenService {
     @Transactional
     public void cleanupExpiredTokens() {
         int deleted = refreshTokenRepository.deleteExpiredTokens(Instant.now());
-        
+
         if (deleted > 0) {
             log.debug("Deleted {} expired refresh tokens", deleted);
         }
@@ -139,7 +139,7 @@ public class RefreshTokenService {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
-            
+
             return HexFormat.of().formatHex(hash);
 
         } catch (NoSuchAlgorithmException ex) {

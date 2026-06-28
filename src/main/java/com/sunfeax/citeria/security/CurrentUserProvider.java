@@ -37,10 +37,6 @@ public class CurrentUserProvider {
         return user.getRole() == UserRole.ADMIN;
     }
 
-    /**
-     * Grants access when the current user is the expected owner or an admin.
-     * Throws {@link ForbiddenException} otherwise.
-     */
     public UserEntity requireSelfOrAdmin(UUID ownerId) {
         UserEntity current = getCurrentUser();
         if (!isAdmin(current) && !current.getId().equals(ownerId)) {

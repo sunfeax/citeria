@@ -36,7 +36,7 @@ public class JwtProvider {
             .setExpiration(new Date((new Date()).getTime() + jwtExpiration))
             .claim("id", user.getId())
             .claim("role", user.getRole())
-            .signWith(getSigningKey()) 
+            .signWith(getSigningKey())
             .compact();
     }
 

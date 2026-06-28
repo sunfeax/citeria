@@ -16,7 +16,7 @@ import com.sunfeax.citeria.entity.UserEntity;
 
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshTokenEntity, UUID> {
-    
+
     Optional<RefreshTokenEntity> findByTokenHash(String tokenHash);
 
     Optional<RefreshTokenEntity> findByUser(UserEntity user);

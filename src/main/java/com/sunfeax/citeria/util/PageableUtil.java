@@ -7,10 +7,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-/**
- * Restricts client-supplied sorting to a whitelist of sortable properties, so
- * callers cannot sort by arbitrary (or non-existent) entity fields.
- */
 public final class PageableUtil {
 
     private PageableUtil() {

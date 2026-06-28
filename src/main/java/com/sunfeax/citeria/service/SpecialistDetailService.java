@@ -30,7 +30,6 @@ public class SpecialistDetailService {
     private final ServiceMapper serviceMapper;
     private final WorkingHoursMapper workingHoursMapper;
 
-    /** Public profile of a specialist: their active services and working hours. */
     @Transactional(readOnly = true)
     public SpecialistDetailResponseDto getDetail(UUID specialistId) {
         UserEntity specialist = userRepository.findById(specialistId)

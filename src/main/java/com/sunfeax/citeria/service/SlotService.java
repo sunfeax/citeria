@@ -50,12 +50,10 @@ public class SlotService {
 
         ZoneId zone = ZoneId.of(bookingZone);
 
-        // Bookings can only start from the next day onward.
         LocalDate earliest = LocalDate.now(zone).plusDays(1);
         LocalDate firstDay = (from == null || from.isBefore(earliest)) ? earliest : from;
         LocalDate lastDay = (to == null) ? firstDay.plusDays(defaultHorizonDays) : to;
 
-        // Cap the window so a single request cannot scan an unbounded range.
         LocalDate maxDay = firstDay.plusDays(maxHorizonDays);
         if (lastDay.isAfter(maxDay)) {
             lastDay = maxDay;
@@ -105,7 +103,6 @@ public class SlotService {
         Instant cursor = ZonedDateTime.of(date, window.getStartTime(), zone).toInstant();
         Instant windowEnd = ZonedDateTime.of(date, window.getEndTime(), zone).toInstant();
 
-        // Round down: a trailing gap shorter than one slot is dropped.
         while (!cursor.plus(duration).isAfter(windowEnd)) {
             Instant slotEnd = cursor.plus(duration);
             if (isFree(cursor, slotEnd, bookedAppointments)) {

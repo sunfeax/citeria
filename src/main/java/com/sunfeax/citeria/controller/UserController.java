@@ -33,7 +33,6 @@ public class UserController {
 
     private final UserService userService;
 
-    // list users (admin only)
     @GetMapping
     public PageResponseDto<UserResponseDto> list(
         @RequestParam(required = false) UserRole role,
@@ -45,13 +44,11 @@ public class UserController {
         return userService.list(role, type, active, search, pageable);
     }
 
-    // get one user by id
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.getById(id));
     }
 
-    // get info about user by access token
     @GetMapping("/me")
     public ResponseEntity<UserResponseDto> getMe(Authentication auth) {
         String email = auth.getName();
@@ -59,7 +56,6 @@ public class UserController {
         return ResponseEntity.ok(userService.getMe(email));
     }
 
-    // update profile fields for an existing user
     @PatchMapping("/{id}")
     public ResponseEntity<UserResponseDto> update(
         @PathVariable UUID id,
@@ -68,7 +64,6 @@ public class UserController {
         return ResponseEntity.ok(userService.update(id, request));
     }
 
-    // change password for an existing user
     @PatchMapping("/{id}/password")
     public ResponseEntity<Void> changePassword(
         @PathVariable UUID id,
@@ -78,19 +73,16 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // soft delete (isActive = 0)
     @DeleteMapping("/{id}")
     public ResponseEntity<UserResponseDto> deactivateById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.deactivateById(id));
     }
 
-    // hard delete from DB
     @DeleteMapping("/{id}/hard")
     public ResponseEntity<UserResponseDto> hardDeleteById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.hardDeleteById(id));
     }
 
-    // restore user (isActive = 1)
     @PatchMapping("/{id}/restore")
     public ResponseEntity<UserResponseDto> restoreById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.restoreById(id));

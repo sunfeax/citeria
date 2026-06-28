@@ -4,10 +4,6 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
-/**
- * Stable, frontend-facing pagination envelope. Unlike returning a raw Spring
- * {@code Page}, this shape will not change between Spring versions.
- */
 public record PageResponseDto<T>(
     List<T> content,
     int page,
