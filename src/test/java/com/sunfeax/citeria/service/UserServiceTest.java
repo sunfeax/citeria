@@ -101,7 +101,7 @@ class UserServiceTest {
 
     @Test
     void updateShouldThrowWhenUserNotFound() {
-        UserUpdateRequestDto request = new UserUpdateRequestDto("John", null, null, null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto("John", null, null, null);
 
         when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
@@ -111,7 +111,7 @@ class UserServiceTest {
     @Test
     void updateShouldThrowWhenNoFieldsProvided() {
         UserEntity entity = userEntity(new UUID(0, 1L));
-        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, null, null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, null, null);
 
         when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(userFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
@@ -123,7 +123,7 @@ class UserServiceTest {
     @Test
     void updateShouldThrowWhenEmailAlreadyTaken() {
         UserEntity entity = userEntity(new UUID(0, 1L));
-        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, "new@example.com", null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, "new@example.com", null);
 
         when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(userFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
@@ -137,7 +137,7 @@ class UserServiceTest {
     @Test
     void updateShouldThrowWhenPhoneAlreadyTaken() {
         UserEntity entity = userEntity(new UUID(0, 1L));
-        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, null, "99887766", null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, null, "99887766");
 
         when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(userFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
@@ -151,7 +151,7 @@ class UserServiceTest {
     @Test
     void updateShouldApplyPatchAndSaveWhenRequestIsValid() {
         UserEntity entity = userEntity(new UUID(0, 1L));
-        UserUpdateRequestDto request = new UserUpdateRequestDto("Jane", null, "jane@example.com", "99887766", UserType.SPECIALIST);
+        UserUpdateRequestDto request = new UserUpdateRequestDto("Jane", null, "jane@example.com", "99887766");
         UserResponseDto dto = userResponseDto(new UUID(0, 1L));
 
         when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));

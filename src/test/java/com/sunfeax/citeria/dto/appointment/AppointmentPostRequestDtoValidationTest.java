@@ -9,8 +9,6 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import com.sunfeax.citeria.enums.PaymentMethod;
-
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -29,26 +27,22 @@ class AppointmentPostRequestDtoValidationTest {
     }
 
     @Test
-    void nullSpecialistServiceIdShouldFailValidation() {
+    void nullServiceIdShouldFailValidation() {
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
             null,
-            Instant.now().plus(Duration.ofDays(1)),
-            Instant.now().plus(Duration.ofDays(1)).plus(Duration.ofMinutes(60)),
-            PaymentMethod.ONLINE
+            Instant.now().plus(Duration.ofDays(1))
         );
 
         Set<ConstraintViolation<AppointmentPostRequestDto>> violations = validator.validate(request);
 
-        assertTrue(hasFieldMessage(violations, "specialistServiceId", "Specialist service id is required"));
+        assertTrue(hasFieldMessage(violations, "serviceId", "Service id is required"));
     }
 
     @Test
     void nullStartTimeShouldFailValidation() {
         AppointmentPostRequestDto request = new AppointmentPostRequestDto(
             new UUID(0, 100L),
-            null,
-            Instant.now().plus(Duration.ofDays(1)).plus(Duration.ofMinutes(60)),
-            PaymentMethod.ONLINE
+            null
         );
 
         Set<ConstraintViolation<AppointmentPostRequestDto>> violations = validator.validate(request);
@@ -56,26 +50,10 @@ class AppointmentPostRequestDtoValidationTest {
         assertTrue(hasFieldMessage(violations, "startTime", "Start time is required"));
     }
 
-    @Test
-    void nullPaymentMethodShouldFailValidation() {
-        AppointmentPostRequestDto request = new AppointmentPostRequestDto(
-            new UUID(0, 100L),
-            Instant.now().plus(Duration.ofDays(1)),
-            Instant.now().plus(Duration.ofDays(1)).plus(Duration.ofMinutes(60)),
-            null
-        );
-
-        Set<ConstraintViolation<AppointmentPostRequestDto>> violations = validator.validate(request);
-
-        assertTrue(hasFieldMessage(violations, "paymentMethod", "Payment method is required"));
-    }
-
     private AppointmentPostRequestDto validRequest() {
         return new AppointmentPostRequestDto(
             new UUID(0, 100L),
-            Instant.now().plus(Duration.ofDays(1)),
-            Instant.now().plus(Duration.ofDays(1)).plus(Duration.ofMinutes(60)),
-            PaymentMethod.ONLINE
+            Instant.now().plus(Duration.ofDays(1))
         );
     }
 

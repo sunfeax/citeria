@@ -29,12 +29,11 @@ import org.springframework.data.jpa.domain.Specification;
 import com.sunfeax.citeria.dto.service.ServicePatchRequestDto;
 import com.sunfeax.citeria.dto.service.ServicePostRequestDto;
 import com.sunfeax.citeria.dto.service.ServiceResponseDto;
-import com.sunfeax.citeria.entity.BusinessEntity;
 import com.sunfeax.citeria.entity.ServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
+import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
-import com.sunfeax.citeria.repository.BusinessRepository;
 import com.sunfeax.citeria.repository.ServiceRepository;
 import com.sunfeax.citeria.mapper.ServiceMapper;
 import com.sunfeax.citeria.normalizer.ServiceFieldNormalizer;
@@ -44,12 +43,12 @@ import com.sunfeax.citeria.validation.ServiceValidator;
 @ExtendWith(MockitoExtension.class)
 class ServiceServiceTest {
 
+    private static final UUID SPECIALIST_ID = new UUID(0, 10L);
+
     @Mock
     private ServiceRepository serviceRepository;
     @Mock
     private ServiceMapper serviceMapper;
-    @Mock
-    private BusinessRepository businessRepository;
     @Mock
     private ServiceFieldNormalizer serviceFieldNormalizer;
     @Mock
@@ -65,7 +64,6 @@ class ServiceServiceTest {
         serviceService = new ServiceService(
             serviceRepository,
             serviceMapper,
-            businessRepository,
             serviceFieldNormalizer,
             serviceValidator,
             currentUserProvider
@@ -75,8 +73,8 @@ class ServiceServiceTest {
     @Test
     void getAllShouldReturnMappedPage() {
         Pageable pageable = PageRequest.of(0, 20);
-        ServiceEntity entity = serviceEntity(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
-        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
+        ServiceEntity entity = serviceEntity(new UUID(0, 1L), "Consultation");
+        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), "Consultation");
 
         when(serviceRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(entity)));
         when(serviceMapper.toResponseDto(entity)).thenReturn(dto);
@@ -89,8 +87,8 @@ class ServiceServiceTest {
 
     @Test
     void getByIdShouldReturnServiceWhenExists() {
-        ServiceEntity entity = serviceEntity(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
-        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
+        ServiceEntity entity = serviceEntity(new UUID(0, 1L), "Consultation");
+        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), "Consultation");
 
         when(serviceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(serviceMapper.toResponseDto(entity)).thenReturn(dto);
@@ -109,20 +107,20 @@ class ServiceServiceTest {
 
     @Test
     void createShouldSaveServiceWhenRequestIsValid() {
-        BusinessEntity business = businessEntity(new UUID(0, 10L));
+        UserEntity specialist = specialist();
         ServicePostRequestDto request = new ServicePostRequestDto(
-            new UUID(0, 10L), "  Consultation  ", "desc", 60, BigDecimal.valueOf(95), "eur"
+            "  Consultation  ", "desc", 60, BigDecimal.valueOf(95), "eur"
         );
         ServicePostRequestDto normalized = new ServicePostRequestDto(
-            new UUID(0, 10L), "Consultation", "desc", 60, BigDecimal.valueOf(95), "EUR"
+            "Consultation", "desc", 60, BigDecimal.valueOf(95), "EUR"
         );
-        ServiceEntity entity = serviceEntity(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
-        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
+        ServiceEntity entity = serviceEntity(new UUID(0, 1L), "Consultation");
+        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), "Consultation");
 
         when(serviceFieldNormalizer.normalizePostRequest(request)).thenReturn(normalized);
-        when(serviceRepository.existsByBusinessIdAndNameIgnoreCase(new UUID(0, 10L), "Consultation")).thenReturn(false);
-        when(businessRepository.findById(new UUID(0, 10L))).thenReturn(Optional.of(business));
-        when(serviceMapper.createEntity(normalized, business)).thenReturn(entity);
+        when(currentUserProvider.getCurrentUser()).thenReturn(specialist);
+        when(serviceRepository.existsBySpecialistIdAndNameIgnoreCase(SPECIALIST_ID, "Consultation")).thenReturn(false);
+        when(serviceMapper.createEntity(normalized, specialist)).thenReturn(entity);
         when(serviceRepository.save(entity)).thenReturn(entity);
         when(serviceMapper.toResponseDto(entity)).thenReturn(dto);
 
@@ -133,35 +131,40 @@ class ServiceServiceTest {
     }
 
     @Test
-    void createShouldThrowWhenServiceNameExistsInBusiness() {
+    void createShouldThrowWhenServiceNameExistsForSpecialist() {
+        UserEntity specialist = specialist();
         ServicePostRequestDto request = new ServicePostRequestDto(
-            new UUID(0, 10L), "Consultation", "desc", 60, BigDecimal.valueOf(95), "EUR"
+            "Consultation", "desc", 60, BigDecimal.valueOf(95), "EUR"
         );
 
         when(serviceFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(serviceRepository.existsByBusinessIdAndNameIgnoreCase(new UUID(0, 10L), "Consultation")).thenReturn(true);
+        when(currentUserProvider.getCurrentUser()).thenReturn(specialist);
+        when(serviceRepository.existsBySpecialistIdAndNameIgnoreCase(SPECIALIST_ID, "Consultation")).thenReturn(true);
 
         assertThrows(RequestValidationException.class, () -> serviceService.create(request));
         verify(serviceRepository, never()).save(any(ServiceEntity.class));
     }
 
     @Test
-    void createShouldThrowWhenBusinessNotFound() {
+    void createShouldThrowWhenUserIsNotSpecialist() {
+        UserEntity client = new UserEntity();
+        client.setId(new UUID(0, 99L));
+        client.setType(UserType.CLIENT);
+        client.setActive(true);
         ServicePostRequestDto request = new ServicePostRequestDto(
-            new UUID(0, 10L), "Consultation", "desc", 60, BigDecimal.valueOf(95), "EUR"
+            "Consultation", "desc", 60, BigDecimal.valueOf(95), "EUR"
         );
 
         when(serviceFieldNormalizer.normalizePostRequest(request)).thenReturn(request);
-        when(serviceRepository.existsByBusinessIdAndNameIgnoreCase(new UUID(0, 10L), "Consultation")).thenReturn(false);
-        when(businessRepository.findById(new UUID(0, 10L))).thenReturn(Optional.empty());
+        when(currentUserProvider.getCurrentUser()).thenReturn(client);
 
-        assertThrows(ResourceNotFoundException.class, () -> serviceService.create(request));
+        assertThrows(RequestValidationException.class, () -> serviceService.create(request));
         verify(serviceRepository, never()).save(any(ServiceEntity.class));
     }
 
     @Test
     void updateShouldThrowWhenServiceNotFound() {
-        ServicePatchRequestDto request = new ServicePatchRequestDto(null, "Consultation", null, null, null, null);
+        ServicePatchRequestDto request = new ServicePatchRequestDto("Consultation", null, null, null, null);
 
         when(serviceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
@@ -170,80 +173,48 @@ class ServiceServiceTest {
 
     @Test
     void updateShouldThrowWhenNoFieldsProvided() {
-        ServiceEntity entity = serviceEntity(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
-        ServicePatchRequestDto request = new ServicePatchRequestDto(null, null, null, null, null, null);
+        ServiceEntity entity = serviceEntity(new UUID(0, 1L), "Consultation");
+        ServicePatchRequestDto request = new ServicePatchRequestDto(null, null, null, null, null);
 
         when(serviceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(serviceFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
         when(serviceMapper.hasAnyPatchField(request)).thenReturn(false);
-        when(serviceRepository.existsByBusinessIdAndNameIgnoreCaseAndIdNot(new UUID(0, 10L), "Consultation", new UUID(0, 1L))).thenReturn(false);
+        when(serviceRepository.existsBySpecialistIdAndNameIgnoreCaseAndIdNot(SPECIALIST_ID, "Consultation", new UUID(0, 1L))).thenReturn(false);
 
         assertThrows(RequestValidationException.class, () -> serviceService.update(new UUID(0, 1L), request));
     }
 
     @Test
-    void updateShouldThrowWhenDuplicateNameInSameBusiness() {
-        ServiceEntity entity = serviceEntity(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
-        ServicePatchRequestDto request = new ServicePatchRequestDto(null, "Therapy", null, null, null, null);
+    void updateShouldThrowWhenDuplicateName() {
+        ServiceEntity entity = serviceEntity(new UUID(0, 1L), "Consultation");
+        ServicePatchRequestDto request = new ServicePatchRequestDto("Therapy", null, null, null, null);
 
         when(serviceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(serviceFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
         when(serviceMapper.hasAnyPatchField(request)).thenReturn(true);
-        when(serviceRepository.existsByBusinessIdAndNameIgnoreCaseAndIdNot(new UUID(0, 10L), "Therapy", new UUID(0, 1L))).thenReturn(true);
+        when(serviceRepository.existsBySpecialistIdAndNameIgnoreCaseAndIdNot(SPECIALIST_ID, "Therapy", new UUID(0, 1L))).thenReturn(true);
 
         assertThrows(RequestValidationException.class, () -> serviceService.update(new UUID(0, 1L), request));
-        verify(serviceRepository, never()).save(any(ServiceEntity.class));
-    }
-
-    @Test
-    void updateShouldThrowWhenMovingServiceCausesDuplicateName() {
-        ServiceEntity entity = serviceEntity(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
-        ServicePatchRequestDto request = new ServicePatchRequestDto(new UUID(0, 20L), null, null, null, null, null);
-
-        when(serviceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
-        when(serviceFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
-        when(serviceMapper.hasAnyPatchField(request)).thenReturn(true);
-        when(serviceRepository.existsByBusinessIdAndNameIgnoreCaseAndIdNot(new UUID(0, 20L), "Consultation", new UUID(0, 1L))).thenReturn(true);
-
-        assertThrows(RequestValidationException.class, () -> serviceService.update(new UUID(0, 1L), request));
-        verify(serviceRepository, never()).save(any(ServiceEntity.class));
-    }
-
-    @Test
-    void updateShouldThrowWhenTargetBusinessNotFound() {
-        ServiceEntity entity = serviceEntity(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
-        ServicePatchRequestDto request = new ServicePatchRequestDto(new UUID(0, 20L), "Therapy", "desc", 90, BigDecimal.valueOf(120), "USD");
-
-        when(serviceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
-        when(serviceFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
-        when(serviceMapper.hasAnyPatchField(request)).thenReturn(true);
-        when(serviceRepository.existsByBusinessIdAndNameIgnoreCaseAndIdNot(new UUID(0, 20L), "Therapy", new UUID(0, 1L))).thenReturn(false);
-        when(businessRepository.findById(new UUID(0, 20L))).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> serviceService.update(new UUID(0, 1L), request));
         verify(serviceRepository, never()).save(any(ServiceEntity.class));
     }
 
     @Test
     void updateShouldApplyPatchAndSaveWhenRequestIsValid() {
-        ServiceEntity entity = serviceEntity(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
-        BusinessEntity targetBusiness = businessEntity(new UUID(0, 20L));
+        ServiceEntity entity = serviceEntity(new UUID(0, 1L), "Consultation");
         ServicePatchRequestDto request = new ServicePatchRequestDto(
-            new UUID(0, 20L),
             "Therapy",
             "new desc",
             90,
             BigDecimal.valueOf(120),
             "USD"
         );
-        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), new UUID(0, 20L), "Therapy");
+        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), "Therapy");
 
         when(serviceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(serviceFieldNormalizer.normalizePatchRequest(request)).thenReturn(request);
         when(serviceMapper.hasAnyPatchField(request)).thenReturn(true);
-        when(serviceRepository.existsByBusinessIdAndNameIgnoreCaseAndIdNot(new UUID(0, 20L), "Therapy", new UUID(0, 1L))).thenReturn(false);
-        when(businessRepository.findById(new UUID(0, 20L))).thenReturn(Optional.of(targetBusiness));
-        when(serviceMapper.applyPatch(entity, request, targetBusiness)).thenReturn(entity);
+        when(serviceRepository.existsBySpecialistIdAndNameIgnoreCaseAndIdNot(SPECIALIST_ID, "Therapy", new UUID(0, 1L))).thenReturn(false);
+        when(serviceMapper.applyPatch(entity, request)).thenReturn(entity);
         when(serviceRepository.save(entity)).thenReturn(entity);
         when(serviceMapper.toResponseDto(entity)).thenReturn(dto);
 
@@ -255,8 +226,8 @@ class ServiceServiceTest {
 
     @Test
     void deactivateShouldSetInactiveAndSave() {
-        ServiceEntity entity = serviceEntity(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
-        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
+        ServiceEntity entity = serviceEntity(new UUID(0, 1L), "Consultation");
+        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), "Consultation");
 
         when(serviceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(serviceRepository.save(entity)).thenReturn(entity);
@@ -277,8 +248,8 @@ class ServiceServiceTest {
 
     @Test
     void hardDeleteShouldReturnDeletedService() {
-        ServiceEntity entity = serviceEntity(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
-        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
+        ServiceEntity entity = serviceEntity(new UUID(0, 1L), "Consultation");
+        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), "Consultation");
 
         when(serviceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(serviceMapper.toResponseDto(entity)).thenReturn(dto);
@@ -298,9 +269,9 @@ class ServiceServiceTest {
 
     @Test
     void restoreShouldSetActiveAndSave() {
-        ServiceEntity entity = serviceEntity(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
+        ServiceEntity entity = serviceEntity(new UUID(0, 1L), "Consultation");
         entity.setActive(false);
-        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), new UUID(0, 10L), "Consultation");
+        ServiceResponseDto dto = serviceResponseDto(new UUID(0, 1L), "Consultation");
 
         when(serviceRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(serviceRepository.save(entity)).thenReturn(entity);
@@ -319,20 +290,20 @@ class ServiceServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> serviceService.restoreById(new UUID(0, 1L)));
     }
 
-    private BusinessEntity businessEntity(UUID id) {
-        BusinessEntity business = new BusinessEntity();
-        business.setId(id);
-        business.setName("Business " + id);
-        UserEntity owner = new UserEntity();
-        owner.setId(new UUID(0, 777L));
-        business.setOwner(owner);
-        return business;
+    private UserEntity specialist() {
+        UserEntity specialist = new UserEntity();
+        specialist.setId(SPECIALIST_ID);
+        specialist.setFirstName("Spec");
+        specialist.setLastName("Ialist");
+        specialist.setType(UserType.SPECIALIST);
+        specialist.setActive(true);
+        return specialist;
     }
 
-    private ServiceEntity serviceEntity(UUID id, UUID businessId, String name) {
+    private ServiceEntity serviceEntity(UUID id, String name) {
         ServiceEntity entity = new ServiceEntity();
         entity.setId(id);
-        entity.setBusiness(businessEntity(businessId));
+        entity.setSpecialist(specialist());
         entity.setName(name);
         entity.setDescription("desc");
         entity.setDurationMinutes(60);
@@ -342,12 +313,12 @@ class ServiceServiceTest {
         return entity;
     }
 
-    private ServiceResponseDto serviceResponseDto(UUID id, UUID businessId, String name) {
+    private ServiceResponseDto serviceResponseDto(UUID id, String name) {
         return new ServiceResponseDto(
             id,
-            businessId,
+            SPECIALIST_ID,
+            "Spec Ialist",
             name,
-            "Business " + businessId,
             "desc",
             BigDecimal.valueOf(95),
             60,

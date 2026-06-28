@@ -32,7 +32,9 @@ import com.sunfeax.citeria.dto.service.ServiceResponseDto;
 import com.sunfeax.citeria.exception.GlobalExceptionHandler;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.config.JwtAuthenticationFilter;
+import com.sunfeax.citeria.config.RateLimitFilter;
 import com.sunfeax.citeria.service.ServiceService;
+import com.sunfeax.citeria.service.SlotService;
 
 @WebMvcTest(ServiceController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -50,6 +52,12 @@ class ServiceControllerWebMvcTest {
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private RateLimitFilter rateLimitFilter;
+
+    @MockitoBean
+    private SlotService slotService;
 
     private static final UUID ID = new UUID(0, 1L);
     private static final UUID MISSING_ID = new UUID(0, 99L);
@@ -90,7 +98,6 @@ class ServiceControllerWebMvcTest {
     @Test
     void createShouldReturnCreated() throws Exception {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            new UUID(0, 10L),
             "Consultation",
             "desc",
             60,
@@ -111,7 +118,6 @@ class ServiceControllerWebMvcTest {
     void createShouldReturnBadRequestForInvalidBody() throws Exception {
         String invalidBody = """
             {
-              "businessId": "00000000-0000-0000-0000-000000000001",
               "name": "",
               "description": "desc",
               "durationMinutes": 60,
@@ -134,7 +140,7 @@ class ServiceControllerWebMvcTest {
 
     @Test
     void updateShouldReturnOk() throws Exception {
-        ServicePatchRequestDto request = new ServicePatchRequestDto(null, "Therapy", null, null, null, null);
+        ServicePatchRequestDto request = new ServicePatchRequestDto("Therapy", null, null, null, null);
         when(serviceService.update(eq(new UUID(0, 1L)), any(ServicePatchRequestDto.class))).thenReturn(serviceDto(new UUID(0, 1L), new UUID(0, 10L), "Therapy"));
 
         mockMvc.perform(patch("/api/services/" + ID)
@@ -192,12 +198,12 @@ class ServiceControllerWebMvcTest {
             .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
-    private ServiceResponseDto serviceDto(UUID id, UUID businessId, String name) {
+    private ServiceResponseDto serviceDto(UUID id, UUID specialistId, String name) {
         return new ServiceResponseDto(
             id,
-            businessId,
+            specialistId,
+            "Specialist Name",
             name,
-            "Alpha Studio",
             "desc",
             BigDecimal.valueOf(95),
             60,

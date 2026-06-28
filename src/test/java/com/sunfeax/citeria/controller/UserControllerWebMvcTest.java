@@ -93,7 +93,7 @@ class UserControllerWebMvcTest {
 
     @Test
     void updateShouldReturnOk() throws Exception {
-        UserUpdateRequestDto request = new UserUpdateRequestDto("Jane", null, null, null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto("Jane", null, null, null);
         when(userService.update(eq(new UUID(0, 1L)), any(UserUpdateRequestDto.class))).thenReturn(userDto(new UUID(0, 1L)));
 
         mockMvc.perform(patch("/api/users/" + ID)
@@ -105,7 +105,7 @@ class UserControllerWebMvcTest {
 
     @Test
     void updateShouldReturnBadRequestForServiceValidationError() throws Exception {
-        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, "taken@example.com", null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, "taken@example.com", null);
         when(userService.update(eq(new UUID(0, 1L)), any(UserUpdateRequestDto.class)))
             .thenThrow(new RequestValidationException(Map.of("email", "Email taken@example.com is already taken")));
 

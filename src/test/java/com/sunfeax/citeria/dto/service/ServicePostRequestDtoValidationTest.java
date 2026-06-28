@@ -1,6 +1,5 @@
 package com.sunfeax.citeria.dto.service;
 
-import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
@@ -19,7 +18,6 @@ class ServicePostRequestDtoValidationTest {
     @Test
     void validBoundaryValuesShouldPassValidation() {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            new UUID(0, 1L),
             "Consultation",
             "description",
             15,
@@ -35,7 +33,6 @@ class ServicePostRequestDtoValidationTest {
     @Test
     void maxBoundaryDurationShouldPassValidation() {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            new UUID(0, 1L),
             "Consultation",
             "description",
             480,
@@ -51,7 +48,6 @@ class ServicePostRequestDtoValidationTest {
     @Test
     void durationBelowMinimumShouldFailValidation() {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            new UUID(0, 1L),
             "Consultation",
             "description",
             14,
@@ -67,7 +63,6 @@ class ServicePostRequestDtoValidationTest {
     @Test
     void durationAboveMaximumShouldFailValidation() {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            new UUID(0, 1L),
             "Consultation",
             "description",
             481,
@@ -83,7 +78,6 @@ class ServicePostRequestDtoValidationTest {
     @Test
     void negativePriceShouldFailValidation() {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            new UUID(0, 1L),
             "Consultation",
             "description",
             60,
@@ -99,7 +93,6 @@ class ServicePostRequestDtoValidationTest {
     @Test
     void invalidCurrencyShouldFailValidation() {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            new UUID(0, 1L),
             "Consultation",
             "description",
             60,
