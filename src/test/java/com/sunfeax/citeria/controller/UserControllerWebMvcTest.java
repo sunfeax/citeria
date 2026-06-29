@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.controller;
 
+import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -10,7 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -19,13 +20,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import tools.jackson.databind.ObjectMapper;
 
+import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
 import com.sunfeax.citeria.dto.user.UserUpdateRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
@@ -34,6 +35,7 @@ import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.GlobalExceptionHandler;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
+import com.sunfeax.citeria.config.JwtAuthenticationFilter;
 import com.sunfeax.citeria.service.UserService;
 
 @WebMvcTest(UserController.class)
@@ -50,32 +52,38 @@ class UserControllerWebMvcTest {
     @MockitoBean
     private UserService userService;
 
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    private static final UUID ID = new UUID(0, 1L);
+    private static final UUID MISSING_ID = new UUID(0, 99L);
+
     @Test
     void getUsersShouldReturnPagedResponse() throws Exception {
-        UserResponseDto dto = userDto(1L);
-        when(userService.getAll(any())).thenReturn(new PageImpl<>(List.of(dto)));
+        UserResponseDto dto = userDto(new UUID(0, 1L));
+        when(userService.list(any(), any(), any(), any(), any())).thenReturn(new PageResponseDto<>(List.of(dto), 0, 20, 1, 1, true, true));
 
         mockMvc.perform(get("/api/users"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content[0].id").value(1))
+            .andExpect(jsonPath("$.content[0].id").value(ID.toString()))
             .andExpect(jsonPath("$.content[0].email").value("john@example.com"));
     }
 
     @Test
     void getByIdShouldReturnOk() throws Exception {
-        when(userService.getById(1L)).thenReturn(userDto(1L));
+        when(userService.getById(new UUID(0, 1L))).thenReturn(userDto(new UUID(0, 1L)));
 
-        mockMvc.perform(get("/api/users/1"))
+        mockMvc.perform(get("/api/users/" + ID))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.id").value(ID.toString()))
             .andExpect(jsonPath("$.email").value("john@example.com"));
     }
 
     @Test
     void getByIdShouldReturnNotFoundWhenServiceThrows() throws Exception {
-        when(userService.getById(99L)).thenThrow(new ResourceNotFoundException("User with id 99 not found"));
+        when(userService.getById(new UUID(0, 99L))).thenThrow(new ResourceNotFoundException("User with id 99 not found"));
 
-        mockMvc.perform(get("/api/users/99"))
+        mockMvc.perform(get("/api/users/" + MISSING_ID))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.title").value("Resource Not Found"))
@@ -85,23 +93,23 @@ class UserControllerWebMvcTest {
 
     @Test
     void updateShouldReturnOk() throws Exception {
-        UserUpdateRequestDto request = new UserUpdateRequestDto("Jane", null, null, null, null);
-        when(userService.update(eq(1L), any(UserUpdateRequestDto.class))).thenReturn(userDto(1L));
+        UserUpdateRequestDto request = new UserUpdateRequestDto("Jane", null, null, null);
+        when(userService.update(eq(new UUID(0, 1L)), any(UserUpdateRequestDto.class))).thenReturn(userDto(new UUID(0, 1L)));
 
-        mockMvc.perform(patch("/api/users/1")
+        mockMvc.perform(patch("/api/users/" + ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
     void updateShouldReturnBadRequestForServiceValidationError() throws Exception {
-        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, "taken@example.com", null, null);
-        when(userService.update(eq(1L), any(UserUpdateRequestDto.class)))
+        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, "taken@example.com", null);
+        when(userService.update(eq(new UUID(0, 1L)), any(UserUpdateRequestDto.class)))
             .thenThrow(new RequestValidationException(Map.of("email", "Email taken@example.com is already taken")));
 
-        mockMvc.perform(patch("/api/users/1")
+        mockMvc.perform(patch("/api/users/" + ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
@@ -116,9 +124,9 @@ class UserControllerWebMvcTest {
     @Test
     void changePasswordShouldReturnNoContent() throws Exception {
         UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "NewPassword!");
-        doNothing().when(userService).changePassword(eq(1L), any(UserChangePasswordRequestDto.class));
+        doNothing().when(userService).changePassword(eq(new UUID(0, 1L)), any(UserChangePasswordRequestDto.class));
 
-        mockMvc.perform(patch("/api/users/1/password")
+        mockMvc.perform(patch("/api/users/" + ID + "/password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isNoContent());
@@ -133,7 +141,7 @@ class UserControllerWebMvcTest {
             }
             """;
 
-        mockMvc.perform(patch("/api/users/1/password")
+        mockMvc.perform(patch("/api/users/" + ID + "/password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidBody))
             .andExpect(status().isBadRequest())
@@ -147,32 +155,32 @@ class UserControllerWebMvcTest {
 
     @Test
     void deactivateShouldReturnOk() throws Exception {
-        when(userService.deactivateById(1L)).thenReturn(userDto(1L));
+        when(userService.deactivateById(new UUID(0, 1L))).thenReturn(userDto(new UUID(0, 1L)));
 
-        mockMvc.perform(delete("/api/users/1"))
+        mockMvc.perform(delete("/api/users/" + ID))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
     void hardDeleteShouldReturnOk() throws Exception {
-        when(userService.hardDeleteById(1L)).thenReturn(userDto(1L));
+        when(userService.hardDeleteById(new UUID(0, 1L))).thenReturn(userDto(new UUID(0, 1L)));
 
-        mockMvc.perform(delete("/api/users/1/hard"))
+        mockMvc.perform(delete("/api/users/" + ID + "/hard"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
     @Test
     void restoreShouldReturnOk() throws Exception {
-        when(userService.restoreById(1L)).thenReturn(userDto(1L));
+        when(userService.restoreById(new UUID(0, 1L))).thenReturn(userDto(new UUID(0, 1L)));
 
-        mockMvc.perform(patch("/api/users/1/restore"))
+        mockMvc.perform(patch("/api/users/" + ID + "/restore"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1));
+            .andExpect(jsonPath("$.id").value(ID.toString()));
     }
 
-    private UserResponseDto userDto(Long id) {
+    private UserResponseDto userDto(UUID id) {
         return new UserResponseDto(
             id,
             "John",
@@ -182,7 +190,7 @@ class UserControllerWebMvcTest {
             UserRole.USER,
             UserType.CLIENT,
             true,
-            LocalDateTime.of(2026, 1, 1, 12, 0)
+            Instant.parse("2026-01-01T12:00:00Z")
         );
     }
 }

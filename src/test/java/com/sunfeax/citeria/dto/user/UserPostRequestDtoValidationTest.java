@@ -18,7 +18,7 @@ class UserPostRequestDtoValidationTest {
 
     @Test
     void validPasswordShouldPassValidation() {
-        Set<ConstraintViolation<RegisterRequestDto>> violations = validatePassword("Password!");
+        Set<ConstraintViolation<RegisterRequestDto>> violations = validatePassword("Password1!");
 
         assertTrue(violations.isEmpty());
     }

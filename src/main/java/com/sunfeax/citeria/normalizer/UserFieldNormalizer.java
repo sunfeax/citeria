@@ -26,8 +26,7 @@ public class UserFieldNormalizer {
             normalizeName(request.firstName()),
             normalizeName(request.lastName()),
             normalizeEmail(request.email()),
-            normalizePhone(request.phone()),
-            request.type()
+            normalizePhone(request.phone())
         );
     }
 

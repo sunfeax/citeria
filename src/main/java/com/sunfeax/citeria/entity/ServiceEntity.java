@@ -1,8 +1,8 @@
 package com.sunfeax.citeria.entity;
 
+import java.util.UUID;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
+import java.time.Instant;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -14,7 +14,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,12 +30,12 @@ public class ServiceEntity {
 
     @Column(name = "id")
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "business_id", nullable = false)
-    private BusinessEntity business;
+    @JoinColumn(name = "specialist_id", nullable = false)
+    private UserEntity specialist;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -58,8 +57,5 @@ public class ServiceEntity {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @OneToMany(mappedBy = "service")
-    private List<SpecialistServiceEntity> specialistServices;
+    private Instant createdAt;
 }

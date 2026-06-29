@@ -1,17 +1,18 @@
 package com.sunfeax.citeria.dto.service;
 
+import java.util.UUID;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record ServiceResponseDto(
-    Long id,
-    Long businessId,
+    UUID id,
+    UUID specialistId,
+    String specialistName,
     String name,
-    String businessName,
     String description,
     BigDecimal priceAmount,
     Integer durationMinutes,
     String currency,
     Boolean isActive,
-    LocalDateTime createdAt) {
+    Instant createdAt) {
 }

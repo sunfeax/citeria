@@ -17,7 +17,7 @@ class ServicePatchRequestDtoValidationTest {
 
     @Test
     void emptyPatchShouldPassValidation() {
-        ServicePatchRequestDto request = new ServicePatchRequestDto(null, null, null, null, null, null);
+        ServicePatchRequestDto request = new ServicePatchRequestDto(null, null, null, null, null);
 
         Set<ConstraintViolation<ServicePatchRequestDto>> violations = validator.validate(request);
 
@@ -26,7 +26,7 @@ class ServicePatchRequestDtoValidationTest {
 
     @Test
     void blankNameShouldFailValidation() {
-        ServicePatchRequestDto request = new ServicePatchRequestDto(null, "   ", null, null, null, null);
+        ServicePatchRequestDto request = new ServicePatchRequestDto("   ", null, null, null, null);
 
         Set<ConstraintViolation<ServicePatchRequestDto>> violations = validator.validate(request);
 
@@ -35,7 +35,7 @@ class ServicePatchRequestDtoValidationTest {
 
     @Test
     void durationBelowMinimumShouldFailValidation() {
-        ServicePatchRequestDto request = new ServicePatchRequestDto(null, null, null, 10, null, null);
+        ServicePatchRequestDto request = new ServicePatchRequestDto(null, null, 10, null, null);
 
         Set<ConstraintViolation<ServicePatchRequestDto>> violations = validator.validate(request);
 
@@ -44,7 +44,7 @@ class ServicePatchRequestDtoValidationTest {
 
     @Test
     void durationAboveMaximumShouldFailValidation() {
-        ServicePatchRequestDto request = new ServicePatchRequestDto(null, null, null, 600, null, null);
+        ServicePatchRequestDto request = new ServicePatchRequestDto(null, null, 600, null, null);
 
         Set<ConstraintViolation<ServicePatchRequestDto>> violations = validator.validate(request);
 
@@ -54,7 +54,6 @@ class ServicePatchRequestDtoValidationTest {
     @Test
     void negativePriceShouldFailValidation() {
         ServicePatchRequestDto request = new ServicePatchRequestDto(
-            null,
             null,
             null,
             null,
@@ -69,7 +68,7 @@ class ServicePatchRequestDtoValidationTest {
 
     @Test
     void invalidCurrencyShouldFailValidation() {
-        ServicePatchRequestDto request = new ServicePatchRequestDto(null, null, null, null, null, "US");
+        ServicePatchRequestDto request = new ServicePatchRequestDto(null, null, null, null, "US");
 
         Set<ConstraintViolation<ServicePatchRequestDto>> violations = validator.validate(request);
 

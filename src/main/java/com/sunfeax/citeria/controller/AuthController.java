@@ -78,7 +78,7 @@ public class AuthController {
             session.response().accessToken(),
             session.response().tokenType()
         );
-        
+
         return ResponseEntity.ok(tokenResponse);
     }
 

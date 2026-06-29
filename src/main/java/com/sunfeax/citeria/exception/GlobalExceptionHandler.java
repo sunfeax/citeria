@@ -11,6 +11,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -49,7 +50,6 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
-    // 404 Not Found
     @ExceptionHandler({ResourceNotFoundException.class, NoResourceFoundException.class, NoHandlerFoundException.class})
     public ProblemDetail handleNotFound(Exception ex) {
         return createDetail(
@@ -72,13 +72,12 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // 409 Conflict
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         log.debug("Data integrity violation", ex);
 
         Throwable specificCause = ex.getMostSpecificCause();
-        
+
         String message = (specificCause != null) ? specificCause.getMessage() : ex.getMessage();
 
         if (message != null && message.contains("exclude_overlapping_appointments")) {
@@ -100,10 +99,9 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // 400 Bad Request (Validation)
     @ExceptionHandler({
-        MethodArgumentNotValidException.class, 
-        ConstraintViolationException.class, 
+        MethodArgumentNotValidException.class,
+        ConstraintViolationException.class,
         RequestValidationException.class
     })
     public ProblemDetail handleValidationExceptions(Exception ex) {
@@ -121,17 +119,17 @@ public class GlobalExceptionHandler {
         Map<String, String> errors = new LinkedHashMap<>();
 
         switch (ex) {
-            case MethodArgumentNotValidException e -> 
-                e.getBindingResult().getFieldErrors().forEach(err -> 
+            case MethodArgumentNotValidException e ->
+                e.getBindingResult().getFieldErrors().forEach(err ->
                     errors.putIfAbsent(err.getField(), err.getDefaultMessage()));
-            
-            case ConstraintViolationException e -> 
-                e.getConstraintViolations().forEach(v -> 
+
+            case ConstraintViolationException e ->
+                e.getConstraintViolations().forEach(v ->
                     errors.putIfAbsent(resolveConstraintField(v), v.getMessage()));
-            
-            case RequestValidationException e -> 
+
+            case RequestValidationException e ->
                 errors.putAll(e.getErrors());
-            
+
             default -> errors.put("request", VALIDATION_DETAIL);
         }
 
@@ -162,8 +160,7 @@ public class GlobalExceptionHandler {
             Map.of("request", INVALID_JSON_DETAIL)
         );
     }
-    
-    // 401 Unauthorized
+
     @ExceptionHandler(UnauthorizedException.class)
     public ProblemDetail handleUnauthorized(UnauthorizedException ex) {
         return createDetail(
@@ -175,6 +172,19 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler({ForbiddenException.class, AccessDeniedException.class})
+    public ProblemDetail handleForbidden(Exception ex) {
+        log.debug("Access denied: {}", ex.getMessage());
+
+        return createDetail(
+            HttpStatus.FORBIDDEN,
+            "FORBIDDEN",
+            "Forbidden",
+            "You do not have permission to perform this action",
+            EMPTY_ERRORS
+        );
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ProblemDetail handleBadCredentials(BadCredentialsException ex) {
         log.warn("Authentication failed: {}", ex.getMessage());
@@ -182,7 +192,7 @@ public class GlobalExceptionHandler {
         return createDetail(
             HttpStatus.UNAUTHORIZED,
             "AUTHENTICATION_FAILED",
-            "Authentication Failed", 
+            "Authentication Failed",
             "Invalid email or password",
             EMPTY_ERRORS
         );
@@ -201,7 +211,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // 500 Internal Server Error
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleAll(Exception ex) {
         log.error("Unhandled exception", ex);

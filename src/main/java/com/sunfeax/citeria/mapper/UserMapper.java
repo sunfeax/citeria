@@ -52,18 +52,14 @@ public class UserMapper {
         if (request.phone() != null) {
             entity.setPhone(request.phone());
         }
-        if (request.type() != null) {
-            entity.setType(request.type());
-        }
-    
+
         return entity;
     }
-    
+
     public boolean hasAnyPatchField(UserUpdateRequestDto request) {
         return request.firstName() != null
             || request.lastName() != null
             || request.email() != null
-            || request.phone() != null
-            || request.type() != null;
+            || request.phone() != null;
     }
 }

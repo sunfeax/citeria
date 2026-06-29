@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.entity;
 
+import java.util.UUID;
 import java.time.Instant;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,8 +29,8 @@ import lombok.Setter;
 public class RefreshTokenEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(name = "token_hash", nullable = false, unique = true, length = 64)
     private String tokenHash;

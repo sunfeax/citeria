@@ -16,7 +16,7 @@ class UserPatchRequestDtoValidationTest {
 
     @Test
     void emptyPatchShouldPassValidation() {
-        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, null, null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, null, null);
 
         Set<ConstraintViolation<UserUpdateRequestDto>> violations = validator.validate(request);
 
@@ -25,7 +25,7 @@ class UserPatchRequestDtoValidationTest {
 
     @Test
     void invalidEmailShouldFailValidation() {
-        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, "invalid-email", null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto(null, null, "invalid-email", null);
 
         Set<ConstraintViolation<UserUpdateRequestDto>> violations = validator.validate(request);
 
@@ -34,7 +34,7 @@ class UserPatchRequestDtoValidationTest {
 
     @Test
     void invalidFirstNameShouldFailValidation() {
-        UserUpdateRequestDto request = new UserUpdateRequestDto("123", null, null, null, null);
+        UserUpdateRequestDto request = new UserUpdateRequestDto("123", null, null, null);
 
         Set<ConstraintViolation<UserUpdateRequestDto>> violations = validator.validate(request);
 

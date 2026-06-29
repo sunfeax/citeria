@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -39,7 +40,7 @@ public class RefreshTokenService {
     private final UserRepository userRepository;
 
     @Transactional
-    public String createRefreshToken(Long userId) {
+    public String createRefreshToken(UUID userId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -109,7 +110,7 @@ public class RefreshTokenService {
         if (token == null || token.isBlank()) {
             return;
         }
-        
+
         refreshTokenRepository.deleteByTokenHash(hashToken(token));
     }
 
@@ -128,7 +129,7 @@ public class RefreshTokenService {
     @Transactional
     public void cleanupExpiredTokens() {
         int deleted = refreshTokenRepository.deleteExpiredTokens(Instant.now());
-        
+
         if (deleted > 0) {
             log.debug("Deleted {} expired refresh tokens", deleted);
         }
@@ -138,7 +139,7 @@ public class RefreshTokenService {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
-            
+
             return HexFormat.of().formatHex(hash);
 
         } catch (NoSuchAlgorithmException ex) {

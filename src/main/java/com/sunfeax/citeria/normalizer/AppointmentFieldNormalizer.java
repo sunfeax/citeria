@@ -1,10 +1,10 @@
 package com.sunfeax.citeria.normalizer;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import org.springframework.stereotype.Component;
 
-import com.sunfeax.citeria.dto.appointment.AppointmentPatchRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 
 @Component
@@ -12,26 +12,12 @@ public class AppointmentFieldNormalizer {
 
     public AppointmentPostRequestDto normalizePostRequest(AppointmentPostRequestDto request) {
         return new AppointmentPostRequestDto(
-            request.clientId(),
-            request.specialistServiceId(),
-            normalizeDateTime(request.startTime()),
-            normalizeDateTime(request.endTime()),
-            request.paymentMethod()
+            request.serviceId(),
+            normalizeDateTime(request.startTime())
         );
     }
 
-    public AppointmentPatchRequestDto normalizePatchRequest(AppointmentPatchRequestDto request) {
-        return new AppointmentPatchRequestDto(
-            request.clientId(),
-            request.specialistServiceId(),
-            normalizeDateTime(request.startTime()),
-            normalizeDateTime(request.endTime()),
-            request.status(),
-            request.paymentMethod()
-        );
-    }
-
-    private LocalDateTime normalizeDateTime(LocalDateTime value) {
-        return value == null ? null : value.withSecond(0).withNano(0);
+    private Instant normalizeDateTime(Instant value) {
+        return value == null ? null : value.truncatedTo(ChronoUnit.MINUTES);
     }
 }

@@ -1,5 +1,5 @@
 CREATE TABLE users (
-  id BIGSERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   first_name VARCHAR(50) NOT NULL,
   last_name VARCHAR(50) NOT NULL,
   email VARCHAR(100) NOT NULL UNIQUE,
@@ -14,9 +14,9 @@ CREATE TABLE users (
 );
 
 CREATE TABLE businesses (
-  id BIGSERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(120) NOT NULL UNIQUE,
-  owner_user_id BIGINT NOT NULL,
+  owner_user_id UUID NOT NULL,
   description TEXT,
   phone VARCHAR(20),
   email VARCHAR(100),
@@ -29,8 +29,8 @@ CREATE TABLE businesses (
 );
 
 CREATE TABLE services (
-  id BIGSERIAL PRIMARY KEY,
-  business_id BIGINT NOT NULL,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  business_id UUID NOT NULL,
   name VARCHAR(120) NOT NULL,
   description TEXT,
   duration_minutes INTEGER NOT NULL,
@@ -45,10 +45,10 @@ CREATE TABLE services (
 );
 
 CREATE TABLE specialist_services (
-  id BIGSERIAL PRIMARY KEY,
-  business_id BIGINT NOT NULL,
-  specialist_id BIGINT NOT NULL,
-  service_id BIGINT NOT NULL,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  business_id UUID NOT NULL,
+  specialist_id UUID NOT NULL,
+  service_id UUID NOT NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_specialist_services_business FOREIGN KEY (business_id) REFERENCES businesses(id),
@@ -59,9 +59,9 @@ CREATE TABLE specialist_services (
 );
 
 CREATE TABLE appointments (
-  id BIGSERIAL PRIMARY KEY,
-  client_id BIGINT NOT NULL,
-  specialist_service_id BIGINT NOT NULL,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID NOT NULL,
+  specialist_service_id UUID NOT NULL,
   start_time TIMESTAMPTZ NOT NULL,
   end_time TIMESTAMPTZ NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
@@ -79,8 +79,8 @@ CREATE TABLE appointments (
 );
 
 CREATE TABLE payments (
-  id BIGSERIAL PRIMARY KEY,
-  appointment_id BIGINT NOT NULL UNIQUE,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  appointment_id UUID NOT NULL UNIQUE,
   amount NUMERIC(12,2) NOT NULL,
   currency CHAR(3) NOT NULL DEFAULT 'EUR',
   status VARCHAR(20) NOT NULL DEFAULT 'PENDING',

@@ -1,13 +1,13 @@
 package com.sunfeax.citeria.entity;
 
+import java.util.UUID;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.sunfeax.citeria.enums.AppointmentStatus;
-import com.sunfeax.citeria.enums.PaymentMethod;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,8 +37,8 @@ public class AppointmentEntity {
 
     @Column(name = "id")
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
@@ -49,22 +49,21 @@ public class AppointmentEntity {
     private UserEntity specialist;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "specialist_service_id", nullable = false)
-    private SpecialistServiceEntity specialistService;
+    @JoinColumn(name = "service_id", nullable = false)
+    private ServiceEntity service;
 
     @Column(name = "start_time", nullable = false)
-    private LocalDateTime startTime;
+    private Instant startTime;
 
     @Column(name = "end_time", nullable = false)
-    private LocalDateTime endTime;
+    private Instant endTime;
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status = AppointmentStatus.PENDING;
 
-    @Column(name = "payment_method", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private PaymentMethod paymentMethod = PaymentMethod.ONLINE;
+    @Column(name = "payment_deadline")
+    private Instant paymentDeadline;
 
     @Column(name = "price_amount", nullable = false, precision = 12, scale = 2)
     @DecimalMin("0.00")
@@ -76,9 +75,9 @@ public class AppointmentEntity {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
     @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }

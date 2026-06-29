@@ -5,8 +5,8 @@ import org.springframework.stereotype.Component;
 import com.sunfeax.citeria.dto.service.ServicePatchRequestDto;
 import com.sunfeax.citeria.dto.service.ServicePostRequestDto;
 import com.sunfeax.citeria.dto.service.ServiceResponseDto;
-import com.sunfeax.citeria.entity.BusinessEntity;
 import com.sunfeax.citeria.entity.ServiceEntity;
+import com.sunfeax.citeria.entity.UserEntity;
 
 @Component
 public class ServiceMapper {
@@ -14,9 +14,9 @@ public class ServiceMapper {
     public ServiceResponseDto toResponseDto(ServiceEntity serviceEntity) {
         return new ServiceResponseDto(
             serviceEntity.getId(),
-            serviceEntity.getBusiness().getId(),
+            serviceEntity.getSpecialist().getId(),
+            serviceEntity.getSpecialist().getFirstName() + " " + serviceEntity.getSpecialist().getLastName(),
             serviceEntity.getName(),
-            serviceEntity.getBusiness().getName(),
             serviceEntity.getDescription(),
             serviceEntity.getPriceAmount(),
             serviceEntity.getDurationMinutes(),
@@ -26,10 +26,10 @@ public class ServiceMapper {
         );
     }
 
-    public ServiceEntity createEntity(ServicePostRequestDto request, BusinessEntity business) {
+    public ServiceEntity createEntity(ServicePostRequestDto request, UserEntity specialist) {
         ServiceEntity entity = new ServiceEntity();
 
-        entity.setBusiness(business);
+        entity.setSpecialist(specialist);
         entity.setName(request.name());
         entity.setDescription(request.description());
         entity.setDurationMinutes(request.durationMinutes());
@@ -39,10 +39,7 @@ public class ServiceMapper {
         return entity;
     }
 
-    public ServiceEntity applyPatch(ServiceEntity entity, ServicePatchRequestDto request, BusinessEntity business) {
-        if (business != null) {
-            entity.setBusiness(business);
-        }
+    public ServiceEntity applyPatch(ServiceEntity entity, ServicePatchRequestDto request) {
         if (request.name() != null) {
             entity.setName(request.name());
         }
@@ -63,8 +60,7 @@ public class ServiceMapper {
     }
 
     public boolean hasAnyPatchField(ServicePatchRequestDto request) {
-        return request.businessId() != null
-            || request.name() != null
+        return request.name() != null
             || request.description() != null
             || request.durationMinutes() != null
             || request.priceAmount() != null

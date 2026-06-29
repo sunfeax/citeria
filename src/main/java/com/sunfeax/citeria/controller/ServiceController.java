@@ -1,6 +1,9 @@
 package com.sunfeax.citeria.controller;
 
-import org.springframework.data.domain.Page;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -13,12 +16,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.dto.service.ServicePatchRequestDto;
 import com.sunfeax.citeria.dto.service.ServicePostRequestDto;
 import com.sunfeax.citeria.dto.service.ServiceResponseDto;
+import com.sunfeax.citeria.dto.slot.SlotResponseDto;
 import com.sunfeax.citeria.service.ServiceService;
+import com.sunfeax.citeria.service.SlotService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,21 +36,32 @@ import lombok.RequiredArgsConstructor;
 public class ServiceController {
 
     private final ServiceService serviceService;
+    private final SlotService slotService;
 
     @GetMapping
-    public Page<ServiceResponseDto> getServices(
-        @PageableDefault(
-            size = 20,
-            sort = "id",
-            direction = Sort.Direction.ASC
-        ) Pageable pageable
+    public PageResponseDto<ServiceResponseDto> list(
+        @RequestParam(required = false) String search,
+        @RequestParam(required = false) UUID specialistId,
+        @RequestParam(required = false) Boolean active,
+        @RequestParam(required = false) BigDecimal minPrice,
+        @RequestParam(required = false) BigDecimal maxPrice,
+        @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return serviceService.getAll(pageable);
+        return serviceService.list(search, specialistId, active, minPrice, maxPrice, pageable);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ServiceResponseDto> getServiceById(@PathVariable Long id) {
+    public ResponseEntity<ServiceResponseDto> getServiceById(@PathVariable UUID id) {
         return ResponseEntity.ok(serviceService.getById(id));
+    }
+
+    @GetMapping("/{id}/slots")
+    public ResponseEntity<List<SlotResponseDto>> getAvailableSlots(
+        @PathVariable UUID id,
+        @RequestParam(required = false) LocalDate from,
+        @RequestParam(required = false) LocalDate to
+    ) {
+        return ResponseEntity.ok(slotService.getAvailableSlots(id, from, to));
     }
 
     @PostMapping
@@ -54,24 +72,24 @@ public class ServiceController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<ServiceResponseDto> update(
-        @PathVariable Long id,
+        @PathVariable UUID id,
         @Valid @RequestBody ServicePatchRequestDto request
     ) {
         return ResponseEntity.ok(serviceService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ServiceResponseDto> deactivateById(@PathVariable Long id) {
+    public ResponseEntity<ServiceResponseDto> deactivateById(@PathVariable UUID id) {
         return ResponseEntity.ok(serviceService.deactivateById(id));
     }
 
     @DeleteMapping("/{id}/hard")
-    public ResponseEntity<ServiceResponseDto> hardDeleteById(@PathVariable Long id) {
+    public ResponseEntity<ServiceResponseDto> hardDeleteById(@PathVariable UUID id) {
         return ResponseEntity.ok(serviceService.hardDeleteById(id));
     }
 
     @PatchMapping("/{id}/restore")
-    public ResponseEntity<ServiceResponseDto> restoreById(@PathVariable Long id) {
+    public ResponseEntity<ServiceResponseDto> restoreById(@PathVariable UUID id) {
         return ResponseEntity.ok(serviceService.restoreById(id));
     }
 }

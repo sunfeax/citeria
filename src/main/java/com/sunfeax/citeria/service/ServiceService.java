@@ -1,5 +1,6 @@
 package com.sunfeax.citeria.service;
 
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -8,14 +9,26 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sunfeax.citeria.dto.service.ServicePatchRequestDto;
 import com.sunfeax.citeria.dto.service.ServicePostRequestDto;
 import com.sunfeax.citeria.dto.service.ServiceResponseDto;
-import com.sunfeax.citeria.entity.BusinessEntity;
 import com.sunfeax.citeria.entity.ServiceEntity;
+import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
-import com.sunfeax.citeria.repository.BusinessRepository;
 import com.sunfeax.citeria.repository.ServiceRepository;
 import com.sunfeax.citeria.mapper.ServiceMapper;
 import com.sunfeax.citeria.normalizer.ServiceFieldNormalizer;
+import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.validation.ServiceValidator;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.StringUtils;
+
+import com.sunfeax.citeria.dto.common.PageResponseDto;
+import com.sunfeax.citeria.util.PageableUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,18 +38,49 @@ public class ServiceService {
 
     private final ServiceRepository serviceRepository;
     private final ServiceMapper serviceMapper;
-    private final BusinessRepository businessRepository;
     private final ServiceFieldNormalizer serviceFieldNormalizer;
     private final ServiceValidator serviceValidator;
+    private final CurrentUserProvider currentUserProvider;
+
+    private static final Set<String> SORTABLE = Set.of("name", "priceAmount", "createdAt");
+    private static final Sort DEFAULT_SORT = Sort.by("name");
 
     @Transactional(readOnly = true)
-    public Page<ServiceResponseDto> getAll(Pageable pageable) {
-        Page<ServiceEntity> servicePage = serviceRepository.findAll(pageable);
-        return servicePage.map(serviceMapper::toResponseDto);
+    public PageResponseDto<ServiceResponseDto> list(
+        String search,
+        UUID specialistId,
+        Boolean active,
+        BigDecimal minPrice,
+        BigDecimal maxPrice,
+        Pageable pageable
+    ) {
+        List<Specification<ServiceEntity>> specs = new ArrayList<>();
+        if (specialistId != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("specialist").get("id"), specialistId));
+        }
+        if (active != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("isActive"), active));
+        }
+        if (minPrice != null) {
+            specs.add((root, query, cb) -> cb.greaterThanOrEqualTo(root.<BigDecimal>get("priceAmount"), minPrice));
+        }
+        if (maxPrice != null) {
+            specs.add((root, query, cb) -> cb.lessThanOrEqualTo(root.<BigDecimal>get("priceAmount"), maxPrice));
+        }
+        if (StringUtils.hasText(search)) {
+            String pattern = "%" + search.trim().toLowerCase() + "%";
+            specs.add((root, query, cb) -> cb.like(cb.lower(root.get("name")), pattern));
+        }
+
+        Pageable sanitized = PageableUtil.sanitizeSort(pageable, SORTABLE, DEFAULT_SORT);
+        Page<ServiceResponseDto> page = serviceRepository.findAll(Specification.allOf(specs), sanitized)
+            .map(serviceMapper::toResponseDto);
+
+        return PageResponseDto.from(page);
     }
 
     @Transactional(readOnly = true)
-    public ServiceResponseDto getById(Long id) {
+    public ServiceResponseDto getById(UUID id) {
         return serviceRepository.findById(id)
             .map(serviceMapper::toResponseDto)
             .orElseThrow(() -> new ResourceNotFoundException("Service with id " + id + " not found"));
@@ -45,36 +89,34 @@ public class ServiceService {
     @Transactional
     public ServiceResponseDto create(ServicePostRequestDto request) {
         ServicePostRequestDto normalizedRequest = serviceFieldNormalizer.normalizePostRequest(request);
-        serviceValidator.validateCreate(normalizedRequest);
 
-        BusinessEntity business = findBusinessOrThrow(normalizedRequest.businessId());
+        UserEntity specialist = currentUserProvider.getCurrentUser();
+        serviceValidator.validateCreate(normalizedRequest, specialist);
 
-        ServiceEntity entity = serviceMapper.createEntity(normalizedRequest, business);
+        ServiceEntity entity = serviceMapper.createEntity(normalizedRequest, specialist);
         ServiceEntity saved = serviceRepository.save(entity);
 
         return serviceMapper.toResponseDto(saved);
     }
 
     @Transactional
-    public ServiceResponseDto update(Long id, ServicePatchRequestDto request) {
+    public ServiceResponseDto update(UUID id, ServicePatchRequestDto request) {
         ServiceEntity entity = findServiceOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(entity.getSpecialist().getId());
 
         ServicePatchRequestDto normalizedRequest = serviceFieldNormalizer.normalizePatchRequest(request);
         serviceValidator.validateUpdate(id, entity, normalizedRequest);
 
-        BusinessEntity business = normalizedRequest.businessId() == null
-            ? null
-            : findBusinessOrThrow(normalizedRequest.businessId());
-
-        serviceMapper.applyPatch(entity, normalizedRequest, business);
+        serviceMapper.applyPatch(entity, normalizedRequest);
         ServiceEntity saved = serviceRepository.save(entity);
 
         return serviceMapper.toResponseDto(saved);
     }
 
     @Transactional
-    public ServiceResponseDto deactivateById(Long id) {
+    public ServiceResponseDto deactivateById(UUID id) {
         ServiceEntity service = findServiceOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(service.getSpecialist().getId());
 
         service.setActive(false);
         ServiceEntity saved = serviceRepository.save(service);
@@ -83,8 +125,9 @@ public class ServiceService {
     }
 
     @Transactional
-    public ServiceResponseDto hardDeleteById(Long id) {
+    public ServiceResponseDto hardDeleteById(UUID id) {
         ServiceEntity service = findServiceOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(service.getSpecialist().getId());
 
         ServiceResponseDto deletedService = serviceMapper.toResponseDto(service);
         serviceRepository.delete(service);
@@ -93,8 +136,9 @@ public class ServiceService {
     }
 
     @Transactional
-    public ServiceResponseDto restoreById(Long id) {
+    public ServiceResponseDto restoreById(UUID id) {
         ServiceEntity service = findServiceOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(service.getSpecialist().getId());
 
         service.setActive(true);
         ServiceEntity saved = serviceRepository.save(service);
@@ -102,12 +146,7 @@ public class ServiceService {
         return serviceMapper.toResponseDto(saved);
     }
 
-    private BusinessEntity findBusinessOrThrow(Long businessId) {
-        return businessRepository.findById(businessId)
-            .orElseThrow(() -> new ResourceNotFoundException("Business with id " + businessId + " not found"));
-    }
-
-    private ServiceEntity findServiceOrThrow(Long id) {
+    private ServiceEntity findServiceOrThrow(UUID id) {
         return serviceRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Service with id " + id + " not found"));
     }

@@ -18,7 +18,6 @@ class ServicePostRequestDtoValidationTest {
     @Test
     void validBoundaryValuesShouldPassValidation() {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            1L,
             "Consultation",
             "description",
             15,
@@ -34,7 +33,6 @@ class ServicePostRequestDtoValidationTest {
     @Test
     void maxBoundaryDurationShouldPassValidation() {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            1L,
             "Consultation",
             "description",
             480,
@@ -50,7 +48,6 @@ class ServicePostRequestDtoValidationTest {
     @Test
     void durationBelowMinimumShouldFailValidation() {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            1L,
             "Consultation",
             "description",
             14,
@@ -66,7 +63,6 @@ class ServicePostRequestDtoValidationTest {
     @Test
     void durationAboveMaximumShouldFailValidation() {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            1L,
             "Consultation",
             "description",
             481,
@@ -82,7 +78,6 @@ class ServicePostRequestDtoValidationTest {
     @Test
     void negativePriceShouldFailValidation() {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            1L,
             "Consultation",
             "description",
             60,
@@ -98,7 +93,6 @@ class ServicePostRequestDtoValidationTest {
     @Test
     void invalidCurrencyShouldFailValidation() {
         ServicePostRequestDto request = new ServicePostRequestDto(
-            1L,
             "Consultation",
             "description",
             60,

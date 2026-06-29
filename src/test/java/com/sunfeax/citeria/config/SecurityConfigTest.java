@@ -16,6 +16,7 @@ class SecurityConfigTest {
     void corsConfigurationShouldAllowAngularDevServerWithCredentials() {
         SecurityConfig securityConfig = new SecurityConfig(
             mock(JwtAuthenticationFilter.class),
+            mock(RateLimitFilter.class),
             mock(AuthenticationProvider.class)
         );
         ReflectionTestUtils.setField(securityConfig, "allowedOrigin", "http://localhost:4200");

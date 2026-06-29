@@ -1,6 +1,7 @@
 package com.sunfeax.citeria.entity;
 
-import java.time.LocalDateTime;
+import java.util.UUID;
+import java.time.Instant;
 import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -32,8 +33,8 @@ public class UserEntity {
 
     @Column(name = "id")
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(name = "first_name", nullable = false)
     private String firstName;
@@ -63,13 +64,7 @@ public class UserEntity {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @OneToMany(mappedBy = "owner")
-    private List<BusinessEntity> ownedBusinesses;
-
-    @OneToMany(mappedBy = "specialist")
-    private List<SpecialistServiceEntity> specialistServices;
+    private Instant createdAt;
 
     @OneToMany(mappedBy = "client")
     private List<AppointmentEntity> clientAppointments;

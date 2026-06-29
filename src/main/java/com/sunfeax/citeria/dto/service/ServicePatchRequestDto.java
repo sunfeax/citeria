@@ -11,9 +11,6 @@ import jakarta.validation.constraints.Size;
 
 public record ServicePatchRequestDto(
     @Nullable
-    Long businessId,
-
-    @Nullable
     @Pattern(regexp = ".*\\S.*", message = "Service name must not be empty")
     @Size(min = 3, max = 120)
     String name,

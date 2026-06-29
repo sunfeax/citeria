@@ -12,9 +12,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record ServicePostRequestDto(
-    @NotNull(message = "Business id is required")
-    Long businessId,
-
     @NotBlank(message = "Service name is required")
     @Size(min = 3, max = 120)
     String name,
