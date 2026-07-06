@@ -15,6 +15,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -147,6 +148,19 @@ public class GlobalExceptionHandler {
             return EMPTY_ERRORS;
         }
         return Map.copyOf(errors);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ProblemDetail handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        log.debug("Upload size exceeded", ex);
+        String detail = "Uploaded file exceeds the maximum allowed size.";
+        return createDetail(
+            HttpStatus.CONTENT_TOO_LARGE,
+            "CONTENT_TOO_LARGE",
+            "Content Too Large",
+            detail,
+            Map.of("file", detail)
+        );
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

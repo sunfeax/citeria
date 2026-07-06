@@ -13,6 +13,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -34,6 +36,7 @@ import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.UnauthorizedException;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
+import com.sunfeax.citeria.repository.UserAvatarRepository;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.util.JwtProvider;
 import com.sunfeax.citeria.validation.UserValidator;
@@ -45,6 +48,8 @@ class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private UserAvatarRepository userAvatarRepository;
     @Mock
     private UserMapper userMapper;
     @Mock
@@ -68,6 +73,7 @@ class AuthServiceTest {
         userValidator = new UserValidator(userRepository, userMapper, passwordEncoder);
         authService = new AuthService(
             userRepository,
+            userAvatarRepository,
             userMapper,
             userFieldNormalizer,
             userValidator,
@@ -120,7 +126,7 @@ class AuthServiceTest {
         when(userRepository.save(entity)).thenReturn(entity);
         when(jwtProvider.generateToken(entity)).thenReturn("access-token");
         when(refreshTokenService.createRefreshToken(new UUID(0, 1L))).thenReturn("refresh-token");
-        when(userMapper.toResponseDto(entity)).thenReturn(dto);
+        when(userMapper.toResponseDto(eq(entity), anyBoolean())).thenReturn(dto);
 
         AuthSessionDto result = authService.register(request);
 
@@ -142,7 +148,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(entity));
         when(jwtProvider.generateToken(entity)).thenReturn("access-token");
         when(refreshTokenService.createRefreshToken(new UUID(0, 1L))).thenReturn("refresh-token");
-        when(userMapper.toResponseDto(entity)).thenReturn(userResponseDto(new UUID(0, 1L)));
+        when(userMapper.toResponseDto(eq(entity), anyBoolean())).thenReturn(userResponseDto(new UUID(0, 1L)));
 
         AuthSessionDto result = authService.login(request);
 
@@ -224,7 +230,8 @@ class AuthServiceTest {
             UserRole.USER,
             UserType.CLIENT,
             true,
-            Instant.parse("2026-01-01T12:00:00Z")
+            Instant.parse("2026-01-01T12:00:00Z"),
+            false
         );
     }
 }

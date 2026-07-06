@@ -15,5 +15,6 @@ public record UserResponseDto(
     UserRole role,
     UserType type,
     Boolean isActive,
-    Instant createdAt
+    Instant createdAt,
+    boolean hasAvatar
 ) {}

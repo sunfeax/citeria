@@ -11,7 +11,7 @@ import com.sunfeax.citeria.enums.UserRole;
 @Component
 public class UserMapper {
 
-    public UserResponseDto toResponseDto(UserEntity userEntity) {
+    public UserResponseDto toResponseDto(UserEntity userEntity, boolean hasAvatar) {
         return new UserResponseDto(
             userEntity.getId(),
             userEntity.getFirstName(),
@@ -21,7 +21,8 @@ public class UserMapper {
             userEntity.getRole(),
             userEntity.getType(),
             userEntity.isActive(),
-            userEntity.getCreatedAt()
+            userEntity.getCreatedAt(),
+            hasAvatar
         );
     }
 
