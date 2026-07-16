@@ -38,7 +38,7 @@ public record RegisterRequestDto(
     @Size(min = 8, message = "Password must be at least 8 characters")
     @Pattern(
         regexp = "^[A-Za-z0-9@#$%^&+=!]+$",
-        message = "Password must contain only Latin letters and allowed special characters (@#$%^&+=!)"
+        message = "Password must contain only Latin letters, digits, and allowed special characters (@#$%^&+=!)"
     )
     @Pattern(regexp = ".*[0-9].*", message = "Password must contain at least one digit")
     @Pattern(regexp = ".*[A-Z].*", message = "Password must contain at least one uppercase letter")

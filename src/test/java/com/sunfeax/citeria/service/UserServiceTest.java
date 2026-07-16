@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -43,8 +44,13 @@ import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
 import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.validation.UserValidator;
 
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
+
+    private static final Validator BEAN_VALIDATOR = Validation.buildDefaultValidatorFactory().getValidator();
 
     @Mock
     private UserRepository userRepository;
@@ -65,7 +71,7 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        userValidator = new UserValidator(userRepository, userMapper, passwordEncoder);
+        userValidator = new UserValidator(userRepository, userMapper, passwordEncoder, BEAN_VALIDATOR);
         userService = new UserService(userRepository, userAvatarRepository, userMapper, userFieldNormalizer, passwordEncoder, userValidator, currentUserProvider);
     }
 
@@ -177,7 +183,7 @@ class UserServiceTest {
     @Test
     void changePasswordShouldThrowWhenUserNotFound() {
         when(currentUserProvider.getCurrentUser()).thenReturn(userEntity(new UUID(0, 1L)));
-        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "NewPassword!");
+        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "NewPassword1!");
 
         when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.empty());
 
@@ -185,16 +191,41 @@ class UserServiceTest {
     }
 
     @Test
-    void changePasswordShouldThrowWhenCurrentPasswordIsWrong() {
+    void changePasswordShouldReportWrongCurrentPasswordBeforeInvalidNewPassword() {
         when(currentUserProvider.getCurrentUser()).thenReturn(userEntity(new UUID(0, 1L)));
         UserEntity entity = userEntity(new UUID(0, 1L));
         entity.setPassword("encoded-old");
-        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("WrongOld!", "NewPassword!");
+        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("WrongOld!", "short");
 
         when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(passwordEncoder.matches("WrongOld!", "encoded-old")).thenReturn(false);
 
-        assertThrows(RequestValidationException.class, () -> userService.changePassword(new UUID(0, 1L), request));
+        RequestValidationException exception = assertThrows(
+            RequestValidationException.class,
+            () -> userService.changePassword(new UUID(0, 1L), request)
+        );
+
+        assertEquals(Map.of("currentPassword", "Current password is incorrect."), exception.getErrors());
+        verify(passwordEncoder, never()).encode(any(String.class));
+    }
+
+    @Test
+    void changePasswordShouldValidateNewPasswordAfterCurrentMatches() {
+        when(currentUserProvider.getCurrentUser()).thenReturn(userEntity(new UUID(0, 1L)));
+        UserEntity entity = userEntity(new UUID(0, 1L));
+        entity.setPassword("encoded-old");
+        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "short");
+
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
+        when(passwordEncoder.matches("OldPassword!", "encoded-old")).thenReturn(true);
+
+        RequestValidationException exception = assertThrows(
+            RequestValidationException.class,
+            () -> userService.changePassword(new UUID(0, 1L), request)
+        );
+
+        assertTrue(exception.getErrors().containsKey("newPassword"));
+        verify(passwordEncoder, never()).encode(any(String.class));
     }
 
     @Test
@@ -202,10 +233,10 @@ class UserServiceTest {
         when(currentUserProvider.getCurrentUser()).thenReturn(userEntity(new UUID(0, 1L)));
         UserEntity entity = userEntity(new UUID(0, 1L));
         entity.setPassword("encoded-old");
-        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "OldPassword!");
+        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword1!", "OldPassword1!");
 
         when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
-        when(passwordEncoder.matches("OldPassword!", "encoded-old")).thenReturn(true);
+        when(passwordEncoder.matches("OldPassword1!", "encoded-old")).thenReturn(true);
 
         assertThrows(RequestValidationException.class, () -> userService.changePassword(new UUID(0, 1L), request));
         verify(passwordEncoder, never()).encode(any(String.class));
@@ -216,11 +247,11 @@ class UserServiceTest {
         when(currentUserProvider.getCurrentUser()).thenReturn(userEntity(new UUID(0, 1L)));
         UserEntity entity = userEntity(new UUID(0, 1L));
         entity.setPassword("encoded-old");
-        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "NewPassword!");
+        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "Password@2");
 
         when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(passwordEncoder.matches("OldPassword!", "encoded-old")).thenReturn(true);
-        when(passwordEncoder.encode("NewPassword!")).thenReturn("encoded-new");
+        when(passwordEncoder.encode("Password@2")).thenReturn("encoded-new");
 
         userService.changePassword(new UUID(0, 1L), request);
 

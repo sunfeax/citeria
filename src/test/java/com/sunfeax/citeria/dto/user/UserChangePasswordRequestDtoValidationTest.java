@@ -16,7 +16,7 @@ class UserChangePasswordRequestDtoValidationTest {
 
     @Test
     void validRequestShouldPassValidation() {
-        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "NewPassword!");
+        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "Password@2");
 
         Set<ConstraintViolation<UserChangePasswordRequestDto>> violations = validator.validate(request);
 
@@ -32,16 +32,23 @@ class UserChangePasswordRequestDtoValidationTest {
 
     @Test
     void passwordWithoutUppercaseShouldFailValidation() {
-        Set<ConstraintViolation<UserChangePasswordRequestDto>> violations = validateNewPassword("newpassword!");
+        Set<ConstraintViolation<UserChangePasswordRequestDto>> violations = validateNewPassword("newpassword1!");
 
         assertTrue(hasNewPasswordMessage(violations, "Password must contain at least one uppercase letter"));
     }
 
     @Test
     void passwordWithSpacesShouldFailValidation() {
-        Set<ConstraintViolation<UserChangePasswordRequestDto>> violations = validateNewPassword("New Password!");
+        Set<ConstraintViolation<UserChangePasswordRequestDto>> violations = validateNewPassword("New Password1!");
 
         assertTrue(hasNewPasswordMessage(violations, "Password must not contain spaces"));
+    }
+
+    @Test
+    void passwordWithoutDigitShouldFailValidation() {
+        Set<ConstraintViolation<UserChangePasswordRequestDto>> violations = validateNewPassword("NewPassword!");
+
+        assertTrue(hasNewPasswordMessage(violations, "Password must contain at least one digit"));
     }
 
     private Set<ConstraintViolation<UserChangePasswordRequestDto>> validateNewPassword(String newPassword) {

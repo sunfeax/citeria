@@ -12,6 +12,8 @@ import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.repository.UserRepository;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -21,6 +23,7 @@ public class UserValidator {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final Validator beanValidator;
 
     public void validateRegister(RegisterRequestDto request) {
         collectRegisterErrors(request).throwIfHasErrors();
@@ -62,17 +65,38 @@ public class UserValidator {
     }
 
     public void validatePasswordChange(UserChangePasswordRequestDto request, UserEntity user) {
+        collectPropertyErrors(request, "currentPassword").throwIfHasErrors();
+
         new ValidationResult()
             .addErrorIf(
                 !passwordEncoder.matches(request.currentPassword(), user.getPassword()),
                 "currentPassword",
                 "Current password is incorrect."
             )
+            .throwIfHasErrors();
+
+        collectPropertyErrors(request, "newPassword")
             .addErrorIf(
                 request.currentPassword().equals(request.newPassword()),
                 "newPassword",
                 "The new password must be different."
             )
             .throwIfHasErrors();
+    }
+
+    private ValidationResult collectPropertyErrors(Object request, String property) {
+        ValidationResult result = new ValidationResult();
+
+        beanValidator.validateProperty(request, property).forEach(violation ->
+            result.addError(resolveConstraintField(violation), violation.getMessage())
+        );
+
+        return result;
+    }
+
+    private String resolveConstraintField(ConstraintViolation<?> violation) {
+        String propertyPath = violation.getPropertyPath().toString();
+        int lastDot = propertyPath.lastIndexOf('.');
+        return lastDot >= 0 ? propertyPath.substring(lastDot + 1) : propertyPath;
     }
 }

@@ -4,6 +4,7 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -123,7 +124,7 @@ class UserControllerWebMvcTest {
 
     @Test
     void changePasswordShouldReturnNoContent() throws Exception {
-        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "NewPassword!");
+        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto("OldPassword!", "Password@2");
         doNothing().when(userService).changePassword(eq(new UUID(0, 1L)), any(UserChangePasswordRequestDto.class));
 
         mockMvc.perform(patch("/api/users/" + ID + "/password")
@@ -133,13 +134,18 @@ class UserControllerWebMvcTest {
     }
 
     @Test
-    void changePasswordShouldReturnBadRequestForInvalidBody() throws Exception {
+    void changePasswordShouldReturnBadRequestForServiceValidationError() throws Exception {
         String invalidBody = """
             {
               "currentPassword": "OldPassword!",
               "newPassword": "short"
             }
             """;
+
+        doThrow(new RequestValidationException(Map.of(
+            "newPassword",
+            "Password must be at least 8 characters"
+        ))).when(userService).changePassword(eq(ID), any(UserChangePasswordRequestDto.class));
 
         mockMvc.perform(patch("/api/users/" + ID + "/password")
                 .contentType(MediaType.APPLICATION_JSON)

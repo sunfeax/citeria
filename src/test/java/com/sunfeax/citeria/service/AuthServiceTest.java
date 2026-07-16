@@ -70,7 +70,7 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        userValidator = new UserValidator(userRepository, userMapper, passwordEncoder);
+        userValidator = new UserValidator(userRepository, userMapper, passwordEncoder, beanValidator);
         authService = new AuthService(
             userRepository,
             userAvatarRepository,

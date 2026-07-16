@@ -57,7 +57,7 @@ class UserPostRequestDtoValidationTest {
 
         assertTrue(hasPasswordMessage(
             violations,
-            "Password must contain only Latin letters and allowed special characters (@#$%^&+=!)"
+            "Password must contain only Latin letters, digits, and allowed special characters (@#$%^&+=!)"
         ));
     }
 
