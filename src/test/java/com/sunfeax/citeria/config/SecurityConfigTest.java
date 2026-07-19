@@ -17,7 +17,8 @@ class SecurityConfigTest {
         SecurityConfig securityConfig = new SecurityConfig(
             mock(JwtAuthenticationFilter.class),
             mock(RateLimitFilter.class),
-            mock(AuthenticationProvider.class)
+            mock(AuthenticationProvider.class),
+            mock(JwtAuthenticationEntryPoint.class)
         );
         ReflectionTestUtils.setField(securityConfig, "allowedOrigin", "http://localhost:4200");
 

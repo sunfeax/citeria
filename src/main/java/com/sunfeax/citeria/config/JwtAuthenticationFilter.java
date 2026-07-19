@@ -12,6 +12,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.sunfeax.citeria.util.JwtProvider;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    public static final String JWT_ERROR_ATTRIBUTE = "jwt_error_code";
 
     private final JwtProvider jwtProvider;
     private final UserDetailsService userDetailsService;
@@ -46,7 +50,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             userEmail = jwtProvider.extractUsername(jwt);
-        } catch (RuntimeException ex) {
+        } catch (ExpiredJwtException ex) {
+            request.setAttribute(JWT_ERROR_ATTRIBUTE, "EXPIRED");
+            filterChain.doFilter(request, response);
+            return;
+        } catch (JwtException | IllegalArgumentException ex) {
+            request.setAttribute(JWT_ERROR_ATTRIBUTE, "INVALID");
             filterChain.doFilter(request, response);
             return;
         }
