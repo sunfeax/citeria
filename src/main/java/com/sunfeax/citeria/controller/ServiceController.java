@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -42,7 +43,7 @@ public class ServiceController {
     public PageResponseDto<ServiceResponseDto> list(
         @RequestParam(required = false) String search,
         @RequestParam(required = false) UUID specialistId,
-        @RequestParam(required = false) Boolean active,
+        @RequestParam(defaultValue = "true") Boolean active,
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice,
         @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable

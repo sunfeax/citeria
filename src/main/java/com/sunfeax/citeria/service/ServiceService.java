@@ -11,6 +11,7 @@ import com.sunfeax.citeria.dto.service.ServicePostRequestDto;
 import com.sunfeax.citeria.dto.service.ServiceResponseDto;
 import com.sunfeax.citeria.entity.ServiceEntity;
 import com.sunfeax.citeria.entity.UserEntity;
+import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.repository.ServiceRepository;
 import com.sunfeax.citeria.mapper.ServiceMapper;
@@ -54,13 +55,13 @@ public class ServiceService {
         BigDecimal maxPrice,
         Pageable pageable
     ) {
+        boolean effectiveActive = resolveActiveFilter(active, specialistId);
+
         List<Specification<ServiceEntity>> specs = new ArrayList<>();
         if (specialistId != null) {
             specs.add((root, query, cb) -> cb.equal(root.get("specialist").get("id"), specialistId));
         }
-        if (active != null) {
-            specs.add((root, query, cb) -> cb.equal(root.get("isActive"), active));
-        }
+        specs.add((root, query, cb) -> cb.equal(root.get("isActive"), effectiveActive));
         if (minPrice != null) {
             specs.add((root, query, cb) -> cb.greaterThanOrEqualTo(root.<BigDecimal>get("priceAmount"), minPrice));
         }
@@ -144,6 +145,18 @@ public class ServiceService {
         ServiceEntity saved = serviceRepository.save(service);
 
         return serviceMapper.toResponseDto(saved);
+    }
+
+    private boolean resolveActiveFilter(Boolean requestedActive, UUID specialistId) {
+        if (!Boolean.FALSE.equals(requestedActive)) {
+            return true;
+        }
+
+        UserEntity current = currentUserProvider.getCurrentUser();
+        boolean canViewInactive = currentUserProvider.isAdmin(current)
+            || (current.getType() == UserType.SPECIALIST && current.getId().equals(specialistId));
+
+        return !canViewInactive;
     }
 
     private ServiceEntity findServiceOrThrow(UUID id) {
