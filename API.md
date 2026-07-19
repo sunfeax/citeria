@@ -27,16 +27,6 @@ All endpoints require a valid access token **except** `POST /api/auth/register`,
 ## Conventions
 
 - **Dates:** appointment times are `Instant` (ISO-8601 UTC, e.g. `2026-09-01T10:00:00Z`); slot `from`/`to` are `LocalDate` (`2026-09-01`); working hours `startTime`/`endTime` are `LocalTime` (`09:00`).
-- **Pagination** (list endpoints): query params `page` (0-based), `size`, `sort` (e.g. `sort=startTime,asc`). Response is wrapped:
-
-```json
-{
-  "content": [ ... ],
-  "page": 0, "size": 20, "totalElements": 42,
-  "totalPages": 3, "first": true, "last": false
-}
-```
-
 - **Errors** use RFC-7807 `ProblemDetail`:
 
 ```json
@@ -54,6 +44,59 @@ Common codes: `VALIDATION_ERROR` (400), `INVALID_REQUEST_BODY` (400), `AUTHENTIC
 
 ### Seed accounts (dev profile)
 Password for all: **`Password1!`** — `admin@citeria.test` (ADMIN), `anna@citeria.test` / `boris@citeria.test` (SPECIALIST), `clara@citeria.test` / `dan@citeria.test` (CLIENT).
+
+---
+
+## Pagination & sorting
+
+Every list endpoint (`GET /api/users`, `/api/services`, `/api/working-hours`, `/api/appointments`) is paginated and accepts the same query parameters.
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `page` | int | `0` | Page index, **0-based** |
+| `size` | int | `20` | Items per page |
+| `sort` | string | per endpoint | `property,direction` — e.g. `sort=startTime,desc`. Repeat the param for multi-field sorting (`?sort=status,asc&sort=startTime,desc`); `direction` is optional and defaults to `asc`. |
+
+**Sort fields are whitelisted.** Any property not in the allowed list below is silently ignored (it is *not* an error); if nothing valid remains, the endpoint's default sort is applied. This prevents sorting by arbitrary/internal columns.
+
+| Endpoint | Allowed `sort` fields | Default sort |
+|---|---|---|
+| `GET /api/users` | `createdAt`, `lastName`, `email` | `createdAt,desc` |
+| `GET /api/services` | `name`, `priceAmount`, `createdAt` | `name,asc` |
+| `GET /api/working-hours` | `createdAt` | `createdAt,desc` |
+| `GET /api/appointments` | `startTime`, `status`, `createdAt` | `startTime,asc` |
+
+Filters (documented per endpoint) combine with pagination — all filters are AND-ed, and omitted filters are ignored.
+
+**Request**
+```http
+GET /api/appointments?status=PENDING&page=0&size=10&sort=startTime,desc
+Authorization: Bearer <token>
+```
+
+**Response envelope** — the payload is always wrapped:
+```json
+{
+  "content": [ { "id": "…" } ],
+  "page": 0,
+  "size": 10,
+  "totalElements": 42,
+  "totalPages": 5,
+  "first": true,
+  "last": false
+}
+```
+
+| Field | Description |
+|---|---|
+| `content` | Array of items for the current page |
+| `page` | Current page index (0-based, echoes the request) |
+| `size` | Page size used |
+| `totalElements` | Total matching items across all pages |
+| `totalPages` | Total number of pages |
+| `first` / `last` | Whether this is the first / last page |
+
+Requesting a page beyond the end returns `200` with an empty `content` array (not a 404).
 
 ---
 
@@ -85,7 +128,7 @@ Response `201`:
 {
   "accessToken": "eyJhbGciOi...",
   "tokenType": "Bearer",
-  "user": { "id": "…", "firstName": "Clara", "email": "clara@example.com", "role": "USER", "type": "CLIENT", "isActive": true, "createdAt": "…" }
+  "user": { "id": "…", "firstName": "Clara", "email": "clara@example.com", "role": "USER", "type": "CLIENT", "isActive": true, "createdAt": "…", "hasAvatar": false }
 }
 ```
 
@@ -129,6 +172,72 @@ Authorization: Bearer <token>
 
 { "currentPassword": "Password1!", "newPassword": "NewPass2@" }
 ```
+
+Every `UserResponseDto` includes a **`hasAvatar`** boolean so the UI knows whether to request the avatar image (see below).
+
+---
+
+## Avatars — `/api/users/{id}/avatar`
+
+One avatar per user, stored as binary in the database. The image is served as **raw bytes**, not JSON.
+
+| Method | Path | Description | Access |
+|---|---|---|---|
+| POST | `/api/users/{id}/avatar` | Upload / replace avatar (`multipart/form-data`) | self or ADMIN |
+| GET | `/api/users/{id}/avatar` | Download avatar image | any authenticated |
+| DELETE | `/api/users/{id}/avatar` | Remove avatar | self or ADMIN |
+
+**Constraints**
+- Allowed types: `image/png`, `image/jpeg` (`app.avatar.allowedContentTypes`).
+- Max size: **5 MB** (`app.avatar.maxSizeBytes`; servlet limits `max-file-size=5MB`, `max-request-size=6MB`).
+- Uploading again **replaces** the existing avatar.
+
+**Upload** — form field name must be `file`:
+```http
+POST /api/users/44444444-4444-4444-4444-444444444444/avatar
+Authorization: Bearer <token>
+Content-Type: multipart/form-data; boundary=----X
+
+------X
+Content-Disposition: form-data; name="file"; filename="me.png"
+Content-Type: image/png
+
+<binary png bytes>
+------X--
+```
+Response `204 No Content`.
+
+```bash
+curl -X POST http://localhost:8082/api/users/{id}/avatar \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@me.png;type=image/png"
+```
+
+**Download**
+```http
+GET /api/users/44444444-4444-4444-4444-444444444444/avatar
+Authorization: Bearer <token>
+```
+Response `200` — image bytes with:
+- `Content-Type: image/png` (or `image/jpeg`)
+- `Cache-Control: max-age=3600, private`
+- `Last-Modified: <upload time>`
+
+**Delete** — `DELETE /api/users/{id}/avatar` → `204 No Content`.
+
+**Errors**
+| Status | When |
+|---|---|
+| `400` `VALIDATION_ERROR` | Empty file, larger than 5 MB, or unsupported content type (`errors.file`) |
+| `403` `FORBIDDEN` | Uploading/deleting someone else's avatar without ADMIN |
+| `404` `RESOURCE_NOT_FOUND` | User does not exist, or the user has no avatar |
+
+> **Frontend note:** the endpoint requires the `Authorization` header, so a plain `<img src="/api/users/{id}/avatar">` will **not** work (the browser won't attach the token). Fetch it with the header and render via an object URL:
+> ```js
+> const res  = await fetch(`/api/users/${id}/avatar`, { headers: { Authorization: `Bearer ${token}` } });
+> const url  = URL.createObjectURL(await res.blob());   // -> <img src={url}>
+> ```
+> Check `user.hasAvatar` first to skip the request (and the expected `404`) for users without one.
 
 ---
 
