@@ -1,23 +1,19 @@
 # Citeria Frontend
 
-Citeria Frontend is an Angular 21 single-page application for the Citeria booking platform. It integrates with a Spring Boot backend API and uses JWT authentication with short-lived access tokens plus an HttpOnly refresh-token cookie.
+Citeria is a booking platform: specialists publish services and working hours, clients search and book appointments. This repository is the Angular single-page application; it talks to a Spring Boot backend and uses JWT authentication with short-lived access tokens plus an HttpOnly refresh-token cookie.
 
 ## Tech Stack
 
-- Angular 21 (standalone APIs)
-- TypeScript
-- SCSS
-- RxJS
-- Tailwind CSS
+- Angular 22 (standalone, zoneless, signals)
+- TypeScript, RxJS
+- ng-primitives (headless, accessible UI) with custom SCSS design tokens
+- Vitest
 
-## Backend Integration
+## Backend
 
-- Local backend base URL: `http://localhost:8082`
-- Auth endpoints:
-  - `POST /api/auth/register`
-  - `POST /api/auth/login`
-  - `POST /api/auth/refresh`
-  - `POST /api/auth/logout`
+- Local API: `http://localhost:8082/api`
+- Swagger UI: `http://localhost:8082/swagger-ui.html`
+- Endpoints and seed accounts: [docs/API.md](docs/API.md)
 
 ## Development
 
