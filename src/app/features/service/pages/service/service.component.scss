@@ -150,14 +150,14 @@ mat-progress-bar {
   border: var(--border-width-sm) solid var(--color-border-soft);
   border-radius: 21.6px;
   background: var(--color-surface);
-  box-shadow: 0 12px 32px rgb(15 23 42 / 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .specialist-card__media {
   position: relative;
   min-height: 180px;
   overflow: hidden;
-  background: var(--color-slate-100);
+  background: var(--color-surface-muted);
 }
 
 .specialist-card__tag {

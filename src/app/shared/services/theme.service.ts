@@ -3,34 +3,38 @@ import { effect, inject, Service, signal } from '@angular/core';
 
 export type Theme = 'dark' | 'light';
 
+const STORAGE_KEY = 'theme';
+
 @Service()
 export class ThemeService {
-  document = inject(DOCUMENT);
-  theme = signal<Theme>(this.getInitialTheme());
+  // DEPENDENCIES
+  private readonly document = inject(DOCUMENT);
+
+  // STATE
+  private readonly themeState = signal<Theme>(this.readInitialTheme());
+  readonly theme = this.themeState.asReadonly();
 
   constructor() {
     effect(() => {
-      const theme = this.theme();
+      const theme = this.themeState();
       const root = this.document.documentElement;
       root.dataset['theme'] = theme;
       root.style.colorScheme = theme;
-      localStorage.setItem('theme', this.theme());
     });
   }
 
+  // ACTIONS
   toggle(): void {
-    this.theme.update(currentTheme => (currentTheme === 'dark' ? 'light' : 'dark'));
+    const next: Theme = this.themeState() === 'dark' ? 'light' : 'dark';
+    this.themeState.set(next);
+
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {}
   }
 
-  getInitialTheme(): Theme {
-    const savedTheme = localStorage.getItem('theme');
-
-    if (savedTheme === 'dark') {
-      return 'dark';
-    } else if (savedTheme === 'light') {
-      return 'light';
-    } else {
-      return 'dark';
-    }
+  // HELPERS
+  private readInitialTheme(): Theme {
+    return this.document.documentElement.dataset['theme'] === 'light' ? 'light' : 'dark';
   }
 }

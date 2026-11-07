@@ -26,13 +26,14 @@
 
 - **Angular 22**, standalone, **zoneless** (zone.js нет ни в зависимостях, ни в polyfills).
 - TypeScript `~6.0`, RxJS `~7.8`, тесты — Vitest.
-- **UI — ng-primitives** (headless): поведение и доступность берём из него, внешний вид — свои
-  стили на CSS-токенах. Angular Material удаляется в ходе миграции; новый код на Material не писать.
-  Свой виджет — только если в ng-primitives нет примитива.
+- **UI — Angular Material** (`@angular/material`, версия в линию с ядром `^22.2.x`): компоненты,
+  диалоги (`MatDialog`), уведомления (`MatSnackBar`), пагинация (`MatPaginator`). Свой виджет —
+  только если в Material нет аналога. Цвета Material задаются через `--mat-sys-*`, привязанные к
+  нашим `--color-*` в `src/styles.scss`.
 - **Дизайн**: монохром в духе ChatGPT. Тёмная тема — нейтральный графит, светлая — белая. Основные
   кнопки почти белые на тёмной теме и почти чёрные на светлой; цвет только у статусов (success, error,
   warning). Обе темы — через одни и те же токены в `src/styles.scss`.
-- **Иконки** — Lucide через `@ng-icons/lucide`.
+- **Иконки** — Material Symbols через `mat-icon`.
 - **Вход через Google** — Claude пишет и бэкенд-часть в `../citeria`; OAuth client ID в Google Cloud
   Console создаёт пользователь.
 - Запуск: `npm start`. Сборка: `npm run build`. Тесты: `npm test`.

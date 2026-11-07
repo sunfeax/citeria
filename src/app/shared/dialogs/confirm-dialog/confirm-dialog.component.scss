@@ -5,11 +5,11 @@
 }
 
 .confirm__accept--danger {
-  --mat-button-filled-container-color: var(--color-danger);
-  --mat-button-filled-label-text-color: var(--color-white);
+  --mat-button-filled-container-color: var(--color-danger-solid);
+  --mat-button-filled-label-text-color: var(--color-on-solid);
 }
 
 .confirm__accept--warning {
-  --mat-button-filled-container-color: var(--color-amber-600);
-  --mat-button-filled-label-text-color: var(--color-white);
+  --mat-button-filled-container-color: var(--color-warning-solid);
+  --mat-button-filled-label-text-color: var(--color-on-solid);
 }

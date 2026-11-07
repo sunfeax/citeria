@@ -6,7 +6,7 @@ Citeria is a booking platform: specialists publish services and working hours, c
 
 - Angular 22 (standalone, zoneless, signals)
 - TypeScript, RxJS
-- ng-primitives (headless, accessible UI) with custom SCSS design tokens
+- Angular Material with custom SCSS design tokens (light and dark themes)
 - Vitest
 
 ## Backend
