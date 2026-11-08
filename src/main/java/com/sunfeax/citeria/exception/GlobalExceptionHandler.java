@@ -186,6 +186,17 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(FeatureUnavailableException.class)
+    public ProblemDetail handleFeatureUnavailable(FeatureUnavailableException ex) {
+        return createDetail(
+            HttpStatus.SERVICE_UNAVAILABLE,
+            "FEATURE_UNAVAILABLE",
+            "Service Unavailable",
+            ex.getMessage(),
+            EMPTY_ERRORS
+        );
+    }
+
     @ExceptionHandler({ForbiddenException.class, AccessDeniedException.class})
     public ProblemDetail handleForbidden(Exception ex) {
         log.debug("Access denied: {}", ex.getMessage());

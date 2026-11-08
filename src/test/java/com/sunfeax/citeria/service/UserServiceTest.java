@@ -259,6 +259,22 @@ class UserServiceTest {
     }
 
     @Test
+    void changePasswordShouldSetPasswordWithoutCurrentWhenUserHasNone() {
+        when(currentUserProvider.getCurrentUser()).thenReturn(userEntity(new UUID(0, 1L)));
+        UserEntity entity = userEntity(new UUID(0, 1L));
+        entity.setPassword(null);
+        UserChangePasswordRequestDto request = new UserChangePasswordRequestDto(null, "Password@2");
+
+        when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
+        when(passwordEncoder.encode("Password@2")).thenReturn("encoded-new");
+
+        userService.changePassword(new UUID(0, 1L), request);
+
+        assertEquals("encoded-new", entity.getPassword());
+        verify(passwordEncoder, never()).matches(any(String.class), any(String.class));
+    }
+
+    @Test
     void deactivateShouldSetInactiveAndSave() {
         UserEntity entity = userEntity(new UUID(0, 1L));
         UserResponseDto dto = userResponseDto(new UUID(0, 1L));
@@ -348,7 +364,8 @@ class UserServiceTest {
             UserType.CLIENT,
             true,
             Instant.now(),
-            false
+            false,
+            true
         );
     }
 }

@@ -48,8 +48,11 @@ public class UserEntity {
     @Column(name = "phone", length = 20, unique = true)
     private String phone;
 
-    @Column(name = "password", nullable = false)
+    @Column(name = "password")
     private String password;
+
+    @Column(name = "google_id", unique = true)
+    private String googleId;
 
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)

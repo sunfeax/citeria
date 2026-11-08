@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.sunfeax.citeria.config.JwtAuthenticationFilter;
 import com.sunfeax.citeria.dto.auth.AuthSessionDto;
+import com.sunfeax.citeria.dto.auth.GoogleLoginRequestDto;
 import com.sunfeax.citeria.dto.auth.LoginRequestDto;
 import com.sunfeax.citeria.dto.auth.AuthResponseDto;
 import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
@@ -138,6 +139,31 @@ class AuthControllerWebMvcTest {
     }
 
     @Test
+    void googleLoginShouldReturnOkAndSetRefreshCookie() throws Exception {
+        GoogleLoginRequestDto request = new GoogleLoginRequestDto("google-credential", UserType.CLIENT);
+
+        when(authService.loginWithGoogle(any(GoogleLoginRequestDto.class))).thenReturn(new AuthSessionDto(
+            authResponseDto(),
+            "refresh-token"
+        ));
+
+        mockMvc.perform(post("/api/auth/google")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accessToken").value("jwt-token"))
+            .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("refresh_token=refresh-token")));
+    }
+
+    @Test
+    void googleLoginShouldReturnBadRequestWhenCredentialMissing() throws Exception {
+        mockMvc.perform(post("/api/auth/google")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void loginShouldReturnUnauthorizedWhenCredentialsInvalid() throws Exception {
         LoginRequestDto request = new LoginRequestDto("john@example.com", "WrongPassword!");
         when(authService.login(any(LoginRequestDto.class)))
@@ -221,7 +247,8 @@ class AuthControllerWebMvcTest {
             UserType.CLIENT,
             true,
             Instant.parse("2026-01-01T12:00:00Z"),
-            false
+            false,
+            true
         );
     }
 

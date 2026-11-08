@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record UserChangePasswordRequestDto(
-    @NotBlank(message = "Current password is required")
     String currentPassword,
 
     @NotBlank(message = "New password is required")

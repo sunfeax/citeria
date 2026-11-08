@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.sunfeax.citeria.dto.auth.AuthSessionDto;
 import com.sunfeax.citeria.dto.auth.LoginRequestDto;
 import com.sunfeax.citeria.dto.auth.AuthResponseDto;
+import com.sunfeax.citeria.dto.auth.GoogleLoginRequestDto;
 import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
 import com.sunfeax.citeria.dto.auth.TokenResponseDto;
 import com.sunfeax.citeria.exception.UnauthorizedException;
@@ -58,6 +59,16 @@ public class AuthController {
         HttpServletResponse response
     ) {
         AuthSessionDto session = authService.login(request);
+        addRefreshCookie(response, session.refreshToken());
+        return ResponseEntity.ok(session.response());
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponseDto> loginWithGoogle(
+        @Valid @RequestBody GoogleLoginRequestDto request,
+        HttpServletResponse response
+    ) {
+        AuthSessionDto session = authService.loginWithGoogle(request);
         addRefreshCookie(response, session.refreshToken());
         return ResponseEntity.ok(session.response());
     }

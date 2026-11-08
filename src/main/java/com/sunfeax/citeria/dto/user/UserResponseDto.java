@@ -16,5 +16,6 @@ public record UserResponseDto(
     UserType type,
     Boolean isActive,
     Instant createdAt,
-    boolean hasAvatar
+    boolean hasAvatar,
+    boolean hasPassword
 ) {}

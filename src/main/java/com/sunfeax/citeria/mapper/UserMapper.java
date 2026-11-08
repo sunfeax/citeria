@@ -22,7 +22,8 @@ public class UserMapper {
             userEntity.getType(),
             userEntity.isActive(),
             userEntity.getCreatedAt(),
-            hasAvatar
+            hasAvatar,
+            userEntity.getPassword() != null
         );
     }
 

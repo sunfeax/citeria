@@ -24,7 +24,7 @@ public class ApplicationConfig {
         return email -> userRepository.findByEmail(email)
             .map(user -> org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
-                .password(user.getPassword())
+                .password(user.getPassword() == null ? "" : user.getPassword())
                 .roles(user.getRole().name())
                 .disabled(!user.isActive())
                 .build())

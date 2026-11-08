@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -25,6 +26,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.sunfeax.citeria.dto.auth.AuthSessionDto;
+import com.sunfeax.citeria.dto.auth.GoogleLoginRequestDto;
 import com.sunfeax.citeria.dto.auth.LoginRequestDto;
 import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
@@ -38,6 +40,8 @@ import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
 import com.sunfeax.citeria.repository.UserAvatarRepository;
 import com.sunfeax.citeria.repository.UserRepository;
+import com.sunfeax.citeria.security.GoogleIdTokenVerifier;
+import com.sunfeax.citeria.security.GoogleProfile;
 import com.sunfeax.citeria.util.JwtProvider;
 import com.sunfeax.citeria.validation.UserValidator;
 
@@ -64,6 +68,8 @@ class AuthServiceTest {
     private RefreshTokenService refreshTokenService;
     @Mock
     private Validator beanValidator;
+    @Mock
+    private GoogleIdTokenVerifier googleIdTokenVerifier;
 
     private UserValidator userValidator;
     private AuthService authService;
@@ -81,7 +87,8 @@ class AuthServiceTest {
             jwtProvider,
             authenticationManager,
             refreshTokenService,
-            beanValidator
+            beanValidator,
+            googleIdTokenVerifier
         );
     }
 
@@ -220,6 +227,98 @@ class AuthServiceTest {
         return user;
     }
 
+    @Test
+    void loginWithGoogleShouldCreateUserWithRequestedTypeWhenNoneExists() {
+        GoogleLoginRequestDto request = new GoogleLoginRequestDto("credential", UserType.SPECIALIST);
+        GoogleProfile profile = new GoogleProfile("google-1", "Jane@Example.com", true, "jane", "DOE");
+
+        when(googleIdTokenVerifier.verify("credential")).thenReturn(profile);
+        when(userRepository.findByGoogleId("google-1")).thenReturn(Optional.empty());
+        when(userFieldNormalizer.normalizeEmail("Jane@Example.com")).thenReturn("jane@example.com");
+        when(userFieldNormalizer.normalizeName("jane")).thenReturn("Jane");
+        when(userFieldNormalizer.normalizeName("DOE")).thenReturn("Doe");
+        when(userRepository.findByEmail("jane@example.com")).thenReturn(Optional.empty());
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(jwtProvider.generateToken(any(UserEntity.class))).thenReturn("access-token");
+        when(refreshTokenService.createRefreshToken(any())).thenReturn("refresh-token");
+        when(userMapper.toResponseDto(any(UserEntity.class), anyBoolean())).thenReturn(userResponseDto(new UUID(0, 2L)));
+
+        AuthSessionDto session = authService.loginWithGoogle(request);
+
+        ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(userRepository).save(captor.capture());
+        UserEntity saved = captor.getValue();
+        assertEquals("jane@example.com", saved.getEmail());
+        assertEquals("Jane", saved.getFirstName());
+        assertEquals("Doe", saved.getLastName());
+        assertEquals("google-1", saved.getGoogleId());
+        assertEquals(UserType.SPECIALIST, saved.getType());
+        assertNull(saved.getPassword());
+        assertEquals("refresh-token", session.refreshToken());
+    }
+
+    @Test
+    void loginWithGoogleShouldLinkExistingUserByEmail() {
+        GoogleLoginRequestDto request = new GoogleLoginRequestDto("credential", null);
+        GoogleProfile profile = new GoogleProfile("google-1", "john@example.com", true, "John", "Snow");
+        UserEntity existing = userEntity(new UUID(0, 1L));
+
+        when(googleIdTokenVerifier.verify("credential")).thenReturn(profile);
+        when(userRepository.findByGoogleId("google-1")).thenReturn(Optional.empty());
+        when(userFieldNormalizer.normalizeEmail("john@example.com")).thenReturn("john@example.com");
+        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(existing));
+        when(jwtProvider.generateToken(existing)).thenReturn("access-token");
+        when(refreshTokenService.createRefreshToken(new UUID(0, 1L))).thenReturn("refresh-token");
+        when(userMapper.toResponseDto(eq(existing), anyBoolean())).thenReturn(userResponseDto(new UUID(0, 1L)));
+
+        authService.loginWithGoogle(request);
+
+        assertEquals("google-1", existing.getGoogleId());
+        assertEquals("encoded-pass", existing.getPassword());
+        verify(userRepository, never()).save(any(UserEntity.class));
+    }
+
+    @Test
+    void loginWithGoogleShouldRejectUnverifiedEmail() {
+        GoogleLoginRequestDto request = new GoogleLoginRequestDto("credential", null);
+        GoogleProfile profile = new GoogleProfile("google-1", "john@example.com", false, "John", "Snow");
+
+        when(googleIdTokenVerifier.verify("credential")).thenReturn(profile);
+
+        assertThrows(UnauthorizedException.class, () -> authService.loginWithGoogle(request));
+        verify(userRepository, never()).save(any(UserEntity.class));
+    }
+
+    @Test
+    void loginWithGoogleShouldRejectAccountLinkedToAnotherGoogleId() {
+        GoogleLoginRequestDto request = new GoogleLoginRequestDto("credential", null);
+        GoogleProfile profile = new GoogleProfile("google-2", "john@example.com", true, "John", "Snow");
+        UserEntity existing = userEntity(new UUID(0, 1L));
+        existing.setGoogleId("google-1");
+
+        when(googleIdTokenVerifier.verify("credential")).thenReturn(profile);
+        when(userRepository.findByGoogleId("google-2")).thenReturn(Optional.empty());
+        when(userFieldNormalizer.normalizeEmail("john@example.com")).thenReturn("john@example.com");
+        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(existing));
+
+        assertThrows(UnauthorizedException.class, () -> authService.loginWithGoogle(request));
+    }
+
+    @Test
+    void loginWithGoogleShouldRejectDeactivatedUser() {
+        GoogleLoginRequestDto request = new GoogleLoginRequestDto("credential", null);
+        GoogleProfile profile = new GoogleProfile("google-1", "john@example.com", true, "John", "Snow");
+        UserEntity existing = userEntity(new UUID(0, 1L));
+        existing.setGoogleId("google-1");
+        existing.setActive(false);
+
+        when(googleIdTokenVerifier.verify("credential")).thenReturn(profile);
+        when(userRepository.findByGoogleId("google-1")).thenReturn(Optional.of(existing));
+
+        assertThrows(UnauthorizedException.class, () -> authService.loginWithGoogle(request));
+        verify(refreshTokenService, never()).createRefreshToken(any());
+    }
+
     private UserResponseDto userResponseDto(UUID id) {
         return new UserResponseDto(
             id,
@@ -231,7 +330,8 @@ class AuthServiceTest {
             UserType.CLIENT,
             true,
             Instant.parse("2026-01-01T12:00:00Z"),
-            false
+            false,
+            true
         );
     }
 }

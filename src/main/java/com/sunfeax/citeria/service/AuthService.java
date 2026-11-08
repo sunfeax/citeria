@@ -9,15 +9,19 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sunfeax.citeria.dto.auth.AuthSessionDto;
 import com.sunfeax.citeria.dto.auth.LoginRequestDto;
 import com.sunfeax.citeria.dto.auth.AuthResponseDto;
+import com.sunfeax.citeria.dto.auth.GoogleLoginRequestDto;
 import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
 import com.sunfeax.citeria.dto.user.UserResponseDto;
 import com.sunfeax.citeria.entity.RefreshTokenEntity;
 import com.sunfeax.citeria.entity.UserEntity;
+import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.UnauthorizedException;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
 import com.sunfeax.citeria.repository.UserAvatarRepository;
 import com.sunfeax.citeria.repository.UserRepository;
+import com.sunfeax.citeria.security.GoogleIdTokenVerifier;
+import com.sunfeax.citeria.security.GoogleProfile;
 import com.sunfeax.citeria.util.JwtProvider;
 import com.sunfeax.citeria.validation.UserValidator;
 import com.sunfeax.citeria.validation.ValidationResult;
@@ -40,6 +44,9 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
     private final Validator beanValidator;
+    private final GoogleIdTokenVerifier googleIdTokenVerifier;
+
+    private static final int NAME_MAX_LENGTH = 50;
 
     @Transactional
     public AuthSessionDto login(LoginRequestDto request) {
@@ -52,11 +59,26 @@ public class AuthService {
         UserEntity user = userRepository.findByEmail(normalizedEmail)
             .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
-        String accessToken = jwtProvider.generateToken(user);
-        String refreshToken = refreshTokenService.createRefreshToken(user.getId());
-        AuthResponseDto response = buildLoginResponse(user, accessToken);
+        return createSession(user);
+    }
 
-        return new AuthSessionDto(response, refreshToken);
+    @Transactional
+    public AuthSessionDto loginWithGoogle(GoogleLoginRequestDto request) {
+        GoogleProfile profile = googleIdTokenVerifier.verify(request.credential());
+        if (!profile.emailVerified() || profile.email() == null) {
+            throw new UnauthorizedException("Google account email is not verified.");
+        }
+
+        UserEntity user = userRepository.findByGoogleId(profile.subject())
+            .or(() -> userRepository.findByEmail(userFieldNormalizer.normalizeEmail(profile.email()))
+                .map(existing -> linkGoogleAccount(existing, profile.subject())))
+            .orElseGet(() -> userRepository.save(createGoogleUser(profile, request.type())));
+
+        if (!user.isActive()) {
+            throw new UnauthorizedException("User is deactivated");
+        }
+
+        return createSession(user);
     }
 
     @Transactional
@@ -68,11 +90,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(normalizedRequest.password()));
         UserEntity savedUser = userRepository.save(user);
 
-        String accessToken = jwtProvider.generateToken(savedUser);
-        String refreshToken = refreshTokenService.createRefreshToken(savedUser.getId());
-        AuthResponseDto response = buildLoginResponse(savedUser, accessToken);
-
-        return new AuthSessionDto(response, refreshToken);
+        return createSession(savedUser);
     }
 
     @Transactional
@@ -98,6 +116,44 @@ public class AuthService {
     @Transactional
     public void logout(String refreshToken) {
         refreshTokenService.deleteByToken(refreshToken);
+    }
+
+    private AuthSessionDto createSession(UserEntity user) {
+        String accessToken = jwtProvider.generateToken(user);
+        String refreshToken = refreshTokenService.createRefreshToken(user.getId());
+        AuthResponseDto response = buildLoginResponse(user, accessToken);
+
+        return new AuthSessionDto(response, refreshToken);
+    }
+
+    private UserEntity linkGoogleAccount(UserEntity user, String googleId) {
+        if (user.getGoogleId() != null && !user.getGoogleId().equals(googleId)) {
+            throw new UnauthorizedException("This email is linked to another Google account.");
+        }
+
+        user.setGoogleId(googleId);
+        return user;
+    }
+
+    private UserEntity createGoogleUser(GoogleProfile profile, UserType type) {
+        String email = userFieldNormalizer.normalizeEmail(profile.email());
+        String firstName = profile.givenName() == null || profile.givenName().isBlank()
+            ? email.substring(0, email.indexOf('@'))
+            : profile.givenName();
+        String lastName = profile.familyName() == null ? "" : profile.familyName();
+
+        UserEntity user = new UserEntity();
+        user.setEmail(email);
+        user.setFirstName(truncate(userFieldNormalizer.normalizeName(firstName)));
+        user.setLastName(truncate(userFieldNormalizer.normalizeName(lastName)));
+        user.setGoogleId(profile.subject());
+        user.setType(type == null ? UserType.CLIENT : type);
+
+        return user;
+    }
+
+    private String truncate(String value) {
+        return value.length() > NAME_MAX_LENGTH ? value.substring(0, NAME_MAX_LENGTH) : value;
     }
 
     private ValidationResult validateRegister(RegisterRequestDto request) {

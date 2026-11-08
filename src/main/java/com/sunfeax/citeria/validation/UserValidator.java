@@ -65,19 +65,26 @@ public class UserValidator {
     }
 
     public void validatePasswordChange(UserChangePasswordRequestDto request, UserEntity user) {
-        collectPropertyErrors(request, "currentPassword").throwIfHasErrors();
+        boolean hasPassword = user.getPassword() != null;
+        boolean currentPasswordBlank = request.currentPassword() == null || request.currentPassword().isBlank();
 
-        new ValidationResult()
-            .addErrorIf(
-                !passwordEncoder.matches(request.currentPassword(), user.getPassword()),
-                "currentPassword",
-                "Current password is incorrect."
-            )
-            .throwIfHasErrors();
+        if (hasPassword) {
+            new ValidationResult()
+                .addErrorIf(currentPasswordBlank, "currentPassword", "Current password is required")
+                .throwIfHasErrors();
+
+            new ValidationResult()
+                .addErrorIf(
+                    !passwordEncoder.matches(request.currentPassword(), user.getPassword()),
+                    "currentPassword",
+                    "Current password is incorrect."
+                )
+                .throwIfHasErrors();
+        }
 
         collectPropertyErrors(request, "newPassword")
             .addErrorIf(
-                request.currentPassword().equals(request.newPassword()),
+                hasPassword && request.newPassword() != null && request.newPassword().equals(request.currentPassword()),
                 "newPassword",
                 "The new password must be different."
             )
