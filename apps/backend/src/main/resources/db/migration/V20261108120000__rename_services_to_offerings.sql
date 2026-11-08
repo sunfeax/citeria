@@ -1,0 +1,11 @@
+ALTER TABLE services RENAME TO offerings;
+ALTER TABLE offerings RENAME CONSTRAINT services_pkey TO offerings_pkey;
+ALTER TABLE offerings RENAME CONSTRAINT fk_services_specialist TO fk_offerings_specialist;
+ALTER TABLE offerings RENAME CONSTRAINT services_duration_chk TO offerings_duration_chk;
+ALTER TABLE offerings RENAME CONSTRAINT services_id_specialist_uq TO offerings_id_specialist_uq;
+ALTER TABLE offerings RENAME CONSTRAINT services_price_non_negative_chk TO offerings_price_non_negative_chk;
+ALTER INDEX idx_services_specialist_id RENAME TO idx_offerings_specialist_id;
+
+ALTER TABLE appointments RENAME COLUMN service_id TO offering_id;
+ALTER TABLE appointments RENAME CONSTRAINT fk_appointments_service_specialist TO fk_appointments_offering_specialist;
+ALTER INDEX idx_appointments_service_start_time RENAME TO idx_appointments_offering_start_time;

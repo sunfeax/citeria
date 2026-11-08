@@ -38,10 +38,10 @@ public class AppointmentController {
         @RequestParam(required = false) AppointmentStatus status,
         @RequestParam(required = false) Instant from,
         @RequestParam(required = false) Instant to,
-        @RequestParam(required = false) UUID serviceId,
+        @RequestParam(required = false) UUID offeringId,
         @PageableDefault(size = 20, sort = "startTime", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return appointmentService.list(status, from, to, serviceId, pageable);
+        return appointmentService.list(status, from, to, offeringId, pageable);
     }
 
     @GetMapping("/{id}")

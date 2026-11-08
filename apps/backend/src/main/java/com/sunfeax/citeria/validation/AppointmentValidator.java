@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.dto.slot.SlotResponseDto;
-import com.sunfeax.citeria.entity.ServiceEntity;
+import com.sunfeax.citeria.entity.OfferingEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.enums.UserType;
@@ -32,22 +32,22 @@ public class AppointmentValidator {
     @Value("${app.booking.maxPendingPerClient:10}")
     private long maxPendingPerClient;
 
-    public void validateCreate(AppointmentPostRequestDto request, UserEntity client, ServiceEntity service) {
+    public void validateCreate(AppointmentPostRequestDto request, UserEntity client, OfferingEntity offering) {
         Instant start = request.startTime();
-        Instant end = start.plus(Duration.ofMinutes(service.getDurationMinutes()));
+        Instant end = start.plus(Duration.ofMinutes(offering.getDurationMinutes()));
 
         new ValidationResult()
             .addErrorIf(client.getType() != UserType.CLIENT, "clientId", "User with id " + client.getId() + " is not a client")
             .addErrorIf(!client.isActive(), "clientId", "Client with id " + client.getId() + " is inactive")
             .addErrorIf(
-                !service.isActive(),
-                "serviceId",
-                "Service with id " + service.getId() + " is inactive"
+                !offering.isActive(),
+                "offeringId",
+                "Service with id " + offering.getId() + " is inactive"
             )
             .addErrorIf(
-                !service.getSpecialist().isActive(),
-                "serviceId",
-                "Specialist for service with id " + service.getId() + " is inactive"
+                !offering.getSpecialist().isActive(),
+                "offeringId",
+                "Specialist for service with id " + offering.getId() + " is inactive"
             )
             .addErrorIf(
                 appointmentRepository.countByClientIdAndStatus(client.getId(), AppointmentStatus.PENDING)
@@ -63,16 +63,16 @@ public class AppointmentValidator {
                 "You already have a booking that overlaps this time"
             )
             .addErrorIf(
-                !isAvailableSlot(request, service),
+                !isAvailableSlot(request, offering),
                 "startTime",
                 "Selected time is not an available slot"
             )
             .throwIfHasErrors();
     }
 
-    private boolean isAvailableSlot(AppointmentPostRequestDto request, ServiceEntity service) {
+    private boolean isAvailableSlot(AppointmentPostRequestDto request, OfferingEntity offering) {
         LocalDate date = request.startTime().atZone(ZoneId.of(bookingZone)).toLocalDate();
-        return slotService.getAvailableSlots(service.getId(), date, date).stream()
+        return slotService.getAvailableSlots(offering.getId(), date, date).stream()
             .map(SlotResponseDto::startTime)
             .anyMatch(request.startTime()::equals);
     }

@@ -4,14 +4,14 @@ import java.util.Locale;
 
 import org.springframework.stereotype.Component;
 
-import com.sunfeax.citeria.dto.service.ServicePatchRequestDto;
-import com.sunfeax.citeria.dto.service.ServicePostRequestDto;
+import com.sunfeax.citeria.dto.offering.OfferingPatchRequestDto;
+import com.sunfeax.citeria.dto.offering.OfferingPostRequestDto;
 
 @Component
-public class ServiceFieldNormalizer {
+public class OfferingFieldNormalizer {
 
-    public ServicePostRequestDto normalizePostRequest(ServicePostRequestDto request) {
-        return new ServicePostRequestDto(
+    public OfferingPostRequestDto normalizePostRequest(OfferingPostRequestDto request) {
+        return new OfferingPostRequestDto(
             normalizeText(request.name()),
             normalizeText(request.description()),
             request.durationMinutes(),
@@ -20,8 +20,8 @@ public class ServiceFieldNormalizer {
         );
     }
 
-    public ServicePatchRequestDto normalizePatchRequest(ServicePatchRequestDto request) {
-        return new ServicePatchRequestDto(
+    public OfferingPatchRequestDto normalizePatchRequest(OfferingPatchRequestDto request) {
+        return new OfferingPatchRequestDto(
             normalizeText(request.name()),
             normalizeText(request.description()),
             request.durationMinutes(),

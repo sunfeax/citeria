@@ -3,10 +3,10 @@ import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { PageableContent } from '../../../shared/models/pageable';
-import { ServiceFilters, ServiceList } from '../models/service-list';
+import { OfferingFilters, OfferingList } from '../models/offering-list';
 
 @Service()
-export class ServiceService {
+export class OfferingService {
   /** INJECTORS */
   private readonly http = inject(HttpClient);
 
@@ -14,8 +14,8 @@ export class ServiceService {
   getList(
     page: number,
     size: number,
-    filters: ServiceFilters,
-  ): Observable<PageableContent<ServiceList>> {
+    filters: OfferingFilters,
+  ): Observable<PageableContent<OfferingList>> {
     let params = new HttpParams().set('page', page).set('size', size);
 
     for (const [key, value] of Object.entries(filters)) {
@@ -24,8 +24,8 @@ export class ServiceService {
       }
     }
 
-    return this.http.get<PageableContent<ServiceList>>(
-      `${environment.baseUrl}/services`,
+    return this.http.get<PageableContent<OfferingList>>(
+      `${environment.baseUrl}/offerings`,
       {
         params,
         withCredentials: true,

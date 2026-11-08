@@ -73,7 +73,7 @@ UI остаётся на Angular Material, меняется только вне�
 ## 4 — Специалист и бронирование ⬜
 
 - ⬜ Страница специалиста: профиль, активные услуги, часы работы. `GET /specialist-detail/{id}`.
-- ⬜ Выбор слота по диапазону дат. `GET /services/{id}/slots?from&to`.
+- ⬜ Выбор слота по диапазону дат. `GET /offerings/{id}/slots?from&to`.
 - ⬜ Запись → `PENDING`. `POST /appointments`.
 - ⬜ Mock-оплата записи в `AWAITING_PAYMENT`. `POST /appointments/{id}/pay`.
 
@@ -89,7 +89,7 @@ UI остаётся на Angular Material, меняется только вне�
 Только для типа `SPECIALIST`.
 
 - ⬜ Мои услуги: список (включая неактивные), создание, редактирование, деактивация, восстановление.
-  `GET /services?specialistId`, `POST/PATCH/DELETE /services/{id}`, `PATCH /services/{id}/restore`.
+  `GET /offerings?specialistId`, `POST/PATCH/DELETE /offerings/{id}`, `PATCH /offerings/{id}/restore`.
 - ⬜ Часы работы по дням недели. `GET/POST/PATCH/DELETE /working-hours`.
 
 ## 7 — Админка пользователей ⬜ (решить, входит ли в объём)

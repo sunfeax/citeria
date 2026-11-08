@@ -18,13 +18,13 @@ import { MatSlider, MatSliderRangeThumb } from '@angular/material/slider';
 import { PageableContent } from '../../../../shared/models/pageable';
 import { avatarUrl } from '../../../../shared/util/avatar-url';
 import { debouncedSignal } from '../../../../shared/util/rxjs-helpers';
-import { ServiceList, ServiceFilters } from '../../models/service-list';
-import { ServiceService } from '../../services/service.service';
+import { OfferingList, OfferingFilters } from '../../models/offering-list';
+import { OfferingService } from '../../services/offering.service';
 
-type ServicePage = PageableContent<ServiceList>;
+type OfferingPage = PageableContent<OfferingList>;
 
 @Component({
-  selector: 'app-service',
+  selector: 'app-offering',
   imports: [
     MatButton,
     MatIconButton,
@@ -42,11 +42,11 @@ type ServicePage = PageableContent<ServiceList>;
     MatProgressBar,
     FormsModule,
   ],
-  templateUrl: './service.component.html',
-  styleUrl: './service.component.scss',
+  templateUrl: './offering.component.html',
+  styleUrl: './offering.component.scss',
 })
-export class ServiceComponent {
-  private readonly serviceService = inject(ServiceService);
+export class OfferingComponent {
+  private readonly offeringService = inject(OfferingService);
 
   protected readonly avatarUrl = avatarUrl;
 
@@ -63,7 +63,7 @@ export class ServiceComponent {
   private readonly debouncedMinPrice = debouncedSignal(this.minPrice, 300);
   private readonly debouncedMaxPrice = debouncedSignal(this.maxPrice, 300);
 
-  private readonly filters = computed<ServiceFilters>(() => {
+  private readonly filters = computed<OfferingFilters>(() => {
     const min = this.debouncedMinPrice();
     const max = this.debouncedMaxPrice();
     return {
@@ -86,12 +86,12 @@ export class ServiceComponent {
   private readonly servicesRes = rxResource({
     params: () => ({ page: this.page(), size: this.size(), filters: this.filters() }),
     stream: ({ params }) =>
-      this.serviceService.getList(params.page, params.size, params.filters),
+      this.offeringService.getList(params.page, params.size, params.filters),
   });
 
   private readonly lastPage = linkedSignal<
-    ServicePage | undefined,
-    ServicePage | undefined
+    OfferingPage | undefined,
+    OfferingPage | undefined
   >({
     source: () => (this.servicesRes.hasValue() ? this.servicesRes.value() : undefined),
     computation: (value, previous) => value ?? previous?.value,
@@ -100,7 +100,7 @@ export class ServiceComponent {
   readonly isLoading = computed(() => this.servicesRes.isLoading());
   readonly loadFailed = computed(() => this.servicesRes.status() === 'error');
   readonly hasLoaded = computed(() => this.lastPage() !== undefined);
-  readonly services = computed(() => this.lastPage()?.content ?? []);
+  readonly offerings = computed(() => this.lastPage()?.content ?? []);
   readonly totalElements = computed(() => this.lastPage()?.totalElements ?? 0);
   readonly filtersExpanded = signal(false);
 

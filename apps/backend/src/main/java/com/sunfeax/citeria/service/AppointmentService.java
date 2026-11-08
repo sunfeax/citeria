@@ -21,7 +21,7 @@ import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
 import com.sunfeax.citeria.dto.common.PageResponseDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
-import com.sunfeax.citeria.entity.ServiceEntity;
+import com.sunfeax.citeria.entity.OfferingEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.exception.ForbiddenException;
@@ -30,7 +30,7 @@ import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.mapper.AppointmentMapper;
 import com.sunfeax.citeria.normalizer.AppointmentFieldNormalizer;
 import com.sunfeax.citeria.repository.AppointmentRepository;
-import com.sunfeax.citeria.repository.ServiceRepository;
+import com.sunfeax.citeria.repository.OfferingRepository;
 import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.util.PageableUtil;
 import com.sunfeax.citeria.validation.AppointmentValidator;
@@ -45,7 +45,7 @@ public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final AppointmentMapper appointmentMapper;
-    private final ServiceRepository serviceRepository;
+    private final OfferingRepository offeringRepository;
     private final AppointmentFieldNormalizer appointmentFieldNormalizer;
     private final AppointmentValidator appointmentValidator;
     private final CurrentUserProvider currentUserProvider;
@@ -64,7 +64,7 @@ public class AppointmentService {
         AppointmentStatus status,
         Instant from,
         Instant to,
-        UUID serviceId,
+        UUID offeringId,
         Pageable pageable
     ) {
         UserEntity current = currentUserProvider.getCurrentUser();
@@ -86,8 +86,8 @@ public class AppointmentService {
         if (to != null) {
             specs.add((root, query, cb) -> cb.lessThanOrEqualTo(root.<Instant>get("startTime"), to));
         }
-        if (serviceId != null) {
-            specs.add((root, query, cb) -> cb.equal(root.get("service").get("id"), serviceId));
+        if (offeringId != null) {
+            specs.add((root, query, cb) -> cb.equal(root.get("offering").get("id"), offeringId));
         }
 
         Pageable sanitized = PageableUtil.sanitizeSort(pageable, SORTABLE, DEFAULT_SORT);
@@ -109,11 +109,11 @@ public class AppointmentService {
         AppointmentPostRequestDto normalizedRequest = appointmentFieldNormalizer.normalizePostRequest(request);
 
         UserEntity client = currentUserProvider.getCurrentUser();
-        ServiceEntity service = findServiceOrThrow(normalizedRequest.serviceId());
+        OfferingEntity offering = findOfferingOrThrow(normalizedRequest.offeringId());
 
-        appointmentValidator.validateCreate(normalizedRequest, client, service);
+        appointmentValidator.validateCreate(normalizedRequest, client, offering);
 
-        AppointmentEntity entity = appointmentMapper.createEntity(normalizedRequest, client, service);
+        AppointmentEntity entity = appointmentMapper.createEntity(normalizedRequest, client, offering);
         AppointmentEntity saved = appointmentRepository.save(entity);
 
         return appointmentMapper.toResponseDto(saved);
@@ -307,10 +307,10 @@ public class AppointmentService {
             .orElseThrow(() -> new ResourceNotFoundException("Appointment with id " + id + " not found"));
     }
 
-    private ServiceEntity findServiceOrThrow(UUID serviceId) {
-        return serviceRepository.findById(serviceId)
+    private OfferingEntity findOfferingOrThrow(UUID offeringId) {
+        return offeringRepository.findById(offeringId)
             .orElseThrow(
-                () -> new ResourceNotFoundException("Service with id " + serviceId + " not found")
+                () -> new ResourceNotFoundException("Service with id " + offeringId + " not found")
             );
     }
 }

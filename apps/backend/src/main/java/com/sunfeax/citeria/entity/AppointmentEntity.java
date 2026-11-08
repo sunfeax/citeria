@@ -49,8 +49,8 @@ public class AppointmentEntity {
     private UserEntity specialist;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_id", nullable = false)
-    private ServiceEntity service;
+    @JoinColumn(name = "offering_id", nullable = false)
+    private OfferingEntity offering;
 
     @Column(name = "start_time", nullable = false)
     private Instant startTime;

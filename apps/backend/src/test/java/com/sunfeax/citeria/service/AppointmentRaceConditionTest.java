@@ -27,14 +27,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
-import com.sunfeax.citeria.entity.ServiceEntity;
+import com.sunfeax.citeria.entity.OfferingEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.entity.WorkingHoursEntity;
 import com.sunfeax.citeria.enums.UserRole;
 import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.repository.AppointmentRepository;
-import com.sunfeax.citeria.repository.ServiceRepository;
+import com.sunfeax.citeria.repository.OfferingRepository;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.repository.WorkingHoursRepository;
 
@@ -48,7 +48,7 @@ class AppointmentRaceConditionTest {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private ServiceRepository serviceRepository;
+    private OfferingRepository offeringRepository;
     @Autowired
     private WorkingHoursRepository workingHoursRepository;
 
@@ -57,8 +57,8 @@ class AppointmentRaceConditionTest {
         TestFixture fixture = createFixture();
         Instant start = slotStart(5);
 
-        UUID firstId = book(fixture.clientOneEmail(), fixture.serviceId(), start);
-        UUID secondId = book(fixture.clientTwoEmail(), fixture.serviceId(), start);
+        UUID firstId = book(fixture.clientOneEmail(), fixture.offeringId(), start);
+        UUID secondId = book(fixture.clientTwoEmail(), fixture.offeringId(), start);
 
         AttemptResult[] results = runConcurrentAttempts(
             acceptTask(fixture.specialistEmail(), firstId),
@@ -83,8 +83,8 @@ class AppointmentRaceConditionTest {
         Instant firstStart = slotStart(6);
         Instant secondStart = firstStart.plus(Duration.ofMinutes(60));
 
-        UUID firstId = book(fixture.clientOneEmail(), fixture.serviceId(), firstStart);
-        UUID secondId = book(fixture.clientTwoEmail(), fixture.serviceId(), secondStart);
+        UUID firstId = book(fixture.clientOneEmail(), fixture.offeringId(), firstStart);
+        UUID secondId = book(fixture.clientTwoEmail(), fixture.offeringId(), secondStart);
 
         AttemptResult[] results = runConcurrentAttempts(
             acceptTask(fixture.specialistEmail(), firstId),
@@ -99,12 +99,12 @@ class AppointmentRaceConditionTest {
         return LocalDate.now(ZoneOffset.UTC).plusDays(daysAhead).atTime(10, 0).toInstant(ZoneOffset.UTC);
     }
 
-    private UUID book(String clientEmail, UUID serviceId, Instant start) {
+    private UUID book(String clientEmail, UUID offeringId, Instant start) {
         SecurityContextHolder.getContext().setAuthentication(
             new UsernamePasswordAuthenticationToken(clientEmail, null, List.of())
         );
         try {
-            return appointmentService.create(new AppointmentPostRequestDto(serviceId, start)).id();
+            return appointmentService.create(new AppointmentPostRequestDto(offeringId, start)).id();
         } finally {
             SecurityContextHolder.clearContext();
         }
@@ -214,15 +214,15 @@ class AppointmentRaceConditionTest {
         UserEntity clientOne = userRepository.save(createUser("ClientOne", token + "c1", UserType.CLIENT));
         UserEntity clientTwo = userRepository.save(createUser("ClientTwo", token + "c2", UserType.CLIENT));
 
-        ServiceEntity service = new ServiceEntity();
-        service.setSpecialist(specialist);
-        service.setName("RaceService-" + token);
-        service.setDescription("Race condition test service");
-        service.setDurationMinutes(60);
-        service.setPriceAmount(BigDecimal.valueOf(99.00));
-        service.setCurrency("EUR");
-        service.setActive(true);
-        service = serviceRepository.save(service);
+        OfferingEntity offering = new OfferingEntity();
+        offering.setSpecialist(specialist);
+        offering.setName("RaceService-" + token);
+        offering.setDescription("Race condition test service");
+        offering.setDurationMinutes(60);
+        offering.setPriceAmount(BigDecimal.valueOf(99.00));
+        offering.setCurrency("EUR");
+        offering.setActive(true);
+        offering = offeringRepository.save(offering);
 
         for (DayOfWeek day : DayOfWeek.values()) {
             WorkingHoursEntity hours = new WorkingHoursEntity();
@@ -237,7 +237,7 @@ class AppointmentRaceConditionTest {
         return new TestFixture(
             specialist.getId(),
             specialist.getEmail(),
-            service.getId(),
+            offering.getId(),
             clientOne.getEmail(),
             clientTwo.getEmail()
         );
@@ -259,7 +259,7 @@ class AppointmentRaceConditionTest {
     private record TestFixture(
         UUID specialistId,
         String specialistEmail,
-        UUID serviceId,
+        UUID offeringId,
         String clientOneEmail,
         String clientTwoEmail
     ) {}

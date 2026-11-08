@@ -1,4 +1,4 @@
-package com.sunfeax.citeria.dto.service;
+package com.sunfeax.citeria.dto.offering;
 
 import java.math.BigDecimal;
 
@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record ServicePatchRequestDto(
+public record OfferingPatchRequestDto(
     @Nullable
     @Pattern(regexp = ".*\\S.*", message = "Service name must not be empty")
     @Size(min = 3, max = 120)

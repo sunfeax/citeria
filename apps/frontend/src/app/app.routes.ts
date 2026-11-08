@@ -23,10 +23,10 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'services',
+        path: 'offerings',
         loadComponent: () =>
-          import('./features/service/pages/service/service.component').then(
-            m => m.ServiceComponent,
+          import('./features/offering/pages/offering/offering.component').then(
+            m => m.OfferingComponent,
           ),
       },
     ],

@@ -2,33 +2,33 @@ package com.sunfeax.citeria.mapper;
 
 import org.springframework.stereotype.Component;
 
-import com.sunfeax.citeria.dto.service.ServicePatchRequestDto;
-import com.sunfeax.citeria.dto.service.ServicePostRequestDto;
-import com.sunfeax.citeria.dto.service.ServiceResponseDto;
-import com.sunfeax.citeria.entity.ServiceEntity;
+import com.sunfeax.citeria.dto.offering.OfferingPatchRequestDto;
+import com.sunfeax.citeria.dto.offering.OfferingPostRequestDto;
+import com.sunfeax.citeria.dto.offering.OfferingResponseDto;
+import com.sunfeax.citeria.entity.OfferingEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 
 @Component
-public class ServiceMapper {
+public class OfferingMapper {
 
-    public ServiceResponseDto toResponseDto(ServiceEntity serviceEntity) {
-        return new ServiceResponseDto(
-            serviceEntity.getId(),
-            serviceEntity.getSpecialist().getId(),
-            serviceEntity.getSpecialist().getFirstName() + " " + serviceEntity.getSpecialist().getLastName(),
-            serviceEntity.getSpecialist().getAvatarVersion(),
-            serviceEntity.getName(),
-            serviceEntity.getDescription(),
-            serviceEntity.getPriceAmount(),
-            serviceEntity.getDurationMinutes(),
-            serviceEntity.getCurrency(),
-            serviceEntity.isActive(),
-            serviceEntity.getCreatedAt()
+    public OfferingResponseDto toResponseDto(OfferingEntity offeringEntity) {
+        return new OfferingResponseDto(
+            offeringEntity.getId(),
+            offeringEntity.getSpecialist().getId(),
+            offeringEntity.getSpecialist().getFirstName() + " " + offeringEntity.getSpecialist().getLastName(),
+            offeringEntity.getSpecialist().getAvatarVersion(),
+            offeringEntity.getName(),
+            offeringEntity.getDescription(),
+            offeringEntity.getPriceAmount(),
+            offeringEntity.getDurationMinutes(),
+            offeringEntity.getCurrency(),
+            offeringEntity.isActive(),
+            offeringEntity.getCreatedAt()
         );
     }
 
-    public ServiceEntity createEntity(ServicePostRequestDto request, UserEntity specialist) {
-        ServiceEntity entity = new ServiceEntity();
+    public OfferingEntity createEntity(OfferingPostRequestDto request, UserEntity specialist) {
+        OfferingEntity entity = new OfferingEntity();
 
         entity.setSpecialist(specialist);
         entity.setName(request.name());
@@ -40,7 +40,7 @@ public class ServiceMapper {
         return entity;
     }
 
-    public ServiceEntity applyPatch(ServiceEntity entity, ServicePatchRequestDto request) {
+    public OfferingEntity applyPatch(OfferingEntity entity, OfferingPatchRequestDto request) {
         if (request.name() != null) {
             entity.setName(request.name());
         }
@@ -60,7 +60,7 @@ public class ServiceMapper {
         return entity;
     }
 
-    public boolean hasAnyPatchField(ServicePatchRequestDto request) {
+    public boolean hasAnyPatchField(OfferingPatchRequestDto request) {
         return request.name() != null
             || request.description() != null
             || request.durationMinutes() != null

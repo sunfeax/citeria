@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record AppointmentPostRequestDto(
     @NotNull(message = "Service id is required")
-    UUID serviceId,
+    UUID offeringId,
 
     @NotNull(message = "Start time is required")
     Instant startTime

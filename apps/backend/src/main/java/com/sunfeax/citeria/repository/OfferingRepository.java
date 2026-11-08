@@ -6,11 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
-import com.sunfeax.citeria.entity.ServiceEntity;
+import com.sunfeax.citeria.entity.OfferingEntity;
 
 @Repository
-public interface ServiceRepository extends JpaRepository<ServiceEntity, UUID>, JpaSpecificationExecutor<ServiceEntity> {
+public interface OfferingRepository extends JpaRepository<OfferingEntity, UUID>, JpaSpecificationExecutor<OfferingEntity> {
     boolean existsBySpecialistIdAndNameIgnoreCase(UUID specialistId, String name);
     boolean existsBySpecialistIdAndNameIgnoreCaseAndIdNot(UUID specialistId, String name, UUID id);
-    List<ServiceEntity> findBySpecialistIdAndIsActiveTrue(UUID specialistId);
+    List<OfferingEntity> findBySpecialistIdAndIsActiveTrue(UUID specialistId);
 }

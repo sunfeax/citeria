@@ -12,7 +12,7 @@ public class AppointmentFieldNormalizer {
 
     public AppointmentPostRequestDto normalizePostRequest(AppointmentPostRequestDto request) {
         return new AppointmentPostRequestDto(
-            request.serviceId(),
+            request.offeringId(),
             normalizeDateTime(request.startTime())
         );
     }

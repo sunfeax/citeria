@@ -6,15 +6,15 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sunfeax.citeria.dto.service.ServiceResponseDto;
+import com.sunfeax.citeria.dto.offering.OfferingResponseDto;
 import com.sunfeax.citeria.dto.specialist.SpecialistDetailResponseDto;
 import com.sunfeax.citeria.dto.workinghours.WorkingHoursResponseDto;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
-import com.sunfeax.citeria.mapper.ServiceMapper;
+import com.sunfeax.citeria.mapper.OfferingMapper;
 import com.sunfeax.citeria.mapper.WorkingHoursMapper;
-import com.sunfeax.citeria.repository.ServiceRepository;
+import com.sunfeax.citeria.repository.OfferingRepository;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.repository.WorkingHoursRepository;
 
@@ -25,9 +25,9 @@ import lombok.RequiredArgsConstructor;
 public class SpecialistDetailService {
 
     private final UserRepository userRepository;
-    private final ServiceRepository serviceRepository;
+    private final OfferingRepository offeringRepository;
     private final WorkingHoursRepository workingHoursRepository;
-    private final ServiceMapper serviceMapper;
+    private final OfferingMapper offeringMapper;
     private final WorkingHoursMapper workingHoursMapper;
 
     @Transactional(readOnly = true)
@@ -36,8 +36,8 @@ public class SpecialistDetailService {
             .filter(user -> user.getType() == UserType.SPECIALIST)
             .orElseThrow(() -> new ResourceNotFoundException("Specialist with id " + specialistId + " not found"));
 
-        List<ServiceResponseDto> services = serviceRepository.findBySpecialistIdAndIsActiveTrue(specialistId).stream()
-            .map(serviceMapper::toResponseDto)
+        List<OfferingResponseDto> offerings = offeringRepository.findBySpecialistIdAndIsActiveTrue(specialistId).stream()
+            .map(offeringMapper::toResponseDto)
             .toList();
 
         List<WorkingHoursResponseDto> workingHours =
@@ -50,7 +50,7 @@ public class SpecialistDetailService {
             specialist.getFirstName(),
             specialist.getLastName(),
             specialist.isActive(),
-            services,
+            offerings,
             workingHours
         );
     }

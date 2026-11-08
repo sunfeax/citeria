@@ -21,26 +21,26 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sunfeax.citeria.dto.common.PageResponseDto;
-import com.sunfeax.citeria.dto.service.ServicePatchRequestDto;
-import com.sunfeax.citeria.dto.service.ServicePostRequestDto;
-import com.sunfeax.citeria.dto.service.ServiceResponseDto;
+import com.sunfeax.citeria.dto.offering.OfferingPatchRequestDto;
+import com.sunfeax.citeria.dto.offering.OfferingPostRequestDto;
+import com.sunfeax.citeria.dto.offering.OfferingResponseDto;
 import com.sunfeax.citeria.dto.slot.SlotResponseDto;
-import com.sunfeax.citeria.service.ServiceService;
+import com.sunfeax.citeria.service.OfferingService;
 import com.sunfeax.citeria.service.SlotService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/services")
+@RequestMapping("/api/offerings")
 @RequiredArgsConstructor
-public class ServiceController {
+public class OfferingController {
 
-    private final ServiceService serviceService;
+    private final OfferingService offeringService;
     private final SlotService slotService;
 
     @GetMapping
-    public PageResponseDto<ServiceResponseDto> list(
+    public PageResponseDto<OfferingResponseDto> list(
         @RequestParam(required = false) String search,
         @RequestParam(required = false) UUID specialistId,
         @RequestParam(defaultValue = "true") Boolean active,
@@ -48,12 +48,12 @@ public class ServiceController {
         @RequestParam(required = false) BigDecimal maxPrice,
         @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return serviceService.list(search, specialistId, active, minPrice, maxPrice, pageable);
+        return offeringService.list(search, specialistId, active, minPrice, maxPrice, pageable);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ServiceResponseDto> getServiceById(@PathVariable UUID id) {
-        return ResponseEntity.ok(serviceService.getById(id));
+    public ResponseEntity<OfferingResponseDto> getOfferingById(@PathVariable UUID id) {
+        return ResponseEntity.ok(offeringService.getById(id));
     }
 
     @GetMapping("/{id}/slots")
@@ -66,31 +66,31 @@ public class ServiceController {
     }
 
     @PostMapping
-    public ResponseEntity<ServiceResponseDto> create(@Valid @RequestBody ServicePostRequestDto request) {
-        ServiceResponseDto response = serviceService.create(request);
+    public ResponseEntity<OfferingResponseDto> create(@Valid @RequestBody OfferingPostRequestDto request) {
+        OfferingResponseDto response = offeringService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<ServiceResponseDto> update(
+    public ResponseEntity<OfferingResponseDto> update(
         @PathVariable UUID id,
-        @Valid @RequestBody ServicePatchRequestDto request
+        @Valid @RequestBody OfferingPatchRequestDto request
     ) {
-        return ResponseEntity.ok(serviceService.update(id, request));
+        return ResponseEntity.ok(offeringService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ServiceResponseDto> deactivateById(@PathVariable UUID id) {
-        return ResponseEntity.ok(serviceService.deactivateById(id));
+    public ResponseEntity<OfferingResponseDto> deactivateById(@PathVariable UUID id) {
+        return ResponseEntity.ok(offeringService.deactivateById(id));
     }
 
     @DeleteMapping("/{id}/hard")
-    public ResponseEntity<ServiceResponseDto> hardDeleteById(@PathVariable UUID id) {
-        return ResponseEntity.ok(serviceService.hardDeleteById(id));
+    public ResponseEntity<OfferingResponseDto> hardDeleteById(@PathVariable UUID id) {
+        return ResponseEntity.ok(offeringService.hardDeleteById(id));
     }
 
     @PatchMapping("/{id}/restore")
-    public ResponseEntity<ServiceResponseDto> restoreById(@PathVariable UUID id) {
-        return ResponseEntity.ok(serviceService.restoreById(id));
+    public ResponseEntity<OfferingResponseDto> restoreById(@PathVariable UUID id) {
+        return ResponseEntity.ok(offeringService.restoreById(id));
     }
 }

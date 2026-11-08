@@ -1,4 +1,4 @@
-package com.sunfeax.citeria.dto.service;
+package com.sunfeax.citeria.dto.offering;
 
 import java.math.BigDecimal;
 
@@ -11,7 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record ServicePostRequestDto(
+public record OfferingPostRequestDto(
     @NotBlank(message = "Service name is required")
     @Size(min = 3, max = 120)
     String name,

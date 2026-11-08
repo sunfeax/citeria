@@ -6,18 +6,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sunfeax.citeria.dto.service.ServicePatchRequestDto;
-import com.sunfeax.citeria.dto.service.ServicePostRequestDto;
-import com.sunfeax.citeria.dto.service.ServiceResponseDto;
-import com.sunfeax.citeria.entity.ServiceEntity;
+import com.sunfeax.citeria.dto.offering.OfferingPatchRequestDto;
+import com.sunfeax.citeria.dto.offering.OfferingPostRequestDto;
+import com.sunfeax.citeria.dto.offering.OfferingResponseDto;
+import com.sunfeax.citeria.entity.OfferingEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
-import com.sunfeax.citeria.repository.ServiceRepository;
-import com.sunfeax.citeria.mapper.ServiceMapper;
-import com.sunfeax.citeria.normalizer.ServiceFieldNormalizer;
+import com.sunfeax.citeria.repository.OfferingRepository;
+import com.sunfeax.citeria.mapper.OfferingMapper;
+import com.sunfeax.citeria.normalizer.OfferingFieldNormalizer;
 import com.sunfeax.citeria.security.CurrentUserProvider;
-import com.sunfeax.citeria.validation.ServiceValidator;
+import com.sunfeax.citeria.validation.OfferingValidator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -35,19 +35,19 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ServiceService {
+public class OfferingService {
 
-    private final ServiceRepository serviceRepository;
-    private final ServiceMapper serviceMapper;
-    private final ServiceFieldNormalizer serviceFieldNormalizer;
-    private final ServiceValidator serviceValidator;
+    private final OfferingRepository offeringRepository;
+    private final OfferingMapper offeringMapper;
+    private final OfferingFieldNormalizer offeringFieldNormalizer;
+    private final OfferingValidator offeringValidator;
     private final CurrentUserProvider currentUserProvider;
 
     private static final Set<String> SORTABLE = Set.of("name", "priceAmount", "createdAt");
     private static final Sort DEFAULT_SORT = Sort.by("name");
 
     @Transactional(readOnly = true)
-    public PageResponseDto<ServiceResponseDto> list(
+    public PageResponseDto<OfferingResponseDto> list(
         String search,
         UUID specialistId,
         Boolean active,
@@ -57,7 +57,7 @@ public class ServiceService {
     ) {
         boolean effectiveActive = resolveActiveFilter(active, specialistId);
 
-        List<Specification<ServiceEntity>> specs = new ArrayList<>();
+        List<Specification<OfferingEntity>> specs = new ArrayList<>();
         if (specialistId != null) {
             specs.add((root, query, cb) -> cb.equal(root.get("specialist").get("id"), specialistId));
         }
@@ -74,77 +74,77 @@ public class ServiceService {
         }
 
         Pageable sanitized = PageableUtil.sanitizeSort(pageable, SORTABLE, DEFAULT_SORT);
-        Page<ServiceResponseDto> page = serviceRepository.findAll(Specification.allOf(specs), sanitized)
-            .map(serviceMapper::toResponseDto);
+        Page<OfferingResponseDto> page = offeringRepository.findAll(Specification.allOf(specs), sanitized)
+            .map(offeringMapper::toResponseDto);
 
         return PageResponseDto.from(page);
     }
 
     @Transactional(readOnly = true)
-    public ServiceResponseDto getById(UUID id) {
-        return serviceRepository.findById(id)
-            .map(serviceMapper::toResponseDto)
+    public OfferingResponseDto getById(UUID id) {
+        return offeringRepository.findById(id)
+            .map(offeringMapper::toResponseDto)
             .orElseThrow(() -> new ResourceNotFoundException("Service with id " + id + " not found"));
     }
 
     @Transactional
-    public ServiceResponseDto create(ServicePostRequestDto request) {
-        ServicePostRequestDto normalizedRequest = serviceFieldNormalizer.normalizePostRequest(request);
+    public OfferingResponseDto create(OfferingPostRequestDto request) {
+        OfferingPostRequestDto normalizedRequest = offeringFieldNormalizer.normalizePostRequest(request);
 
         UserEntity specialist = currentUserProvider.getCurrentUser();
-        serviceValidator.validateCreate(normalizedRequest, specialist);
+        offeringValidator.validateCreate(normalizedRequest, specialist);
 
-        ServiceEntity entity = serviceMapper.createEntity(normalizedRequest, specialist);
-        ServiceEntity saved = serviceRepository.save(entity);
+        OfferingEntity entity = offeringMapper.createEntity(normalizedRequest, specialist);
+        OfferingEntity saved = offeringRepository.save(entity);
 
-        return serviceMapper.toResponseDto(saved);
+        return offeringMapper.toResponseDto(saved);
     }
 
     @Transactional
-    public ServiceResponseDto update(UUID id, ServicePatchRequestDto request) {
-        ServiceEntity entity = findServiceOrThrow(id);
+    public OfferingResponseDto update(UUID id, OfferingPatchRequestDto request) {
+        OfferingEntity entity = findOfferingOrThrow(id);
         currentUserProvider.requireSelfOrAdmin(entity.getSpecialist().getId());
 
-        ServicePatchRequestDto normalizedRequest = serviceFieldNormalizer.normalizePatchRequest(request);
-        serviceValidator.validateUpdate(id, entity, normalizedRequest);
+        OfferingPatchRequestDto normalizedRequest = offeringFieldNormalizer.normalizePatchRequest(request);
+        offeringValidator.validateUpdate(id, entity, normalizedRequest);
 
-        serviceMapper.applyPatch(entity, normalizedRequest);
-        ServiceEntity saved = serviceRepository.save(entity);
+        offeringMapper.applyPatch(entity, normalizedRequest);
+        OfferingEntity saved = offeringRepository.save(entity);
 
-        return serviceMapper.toResponseDto(saved);
+        return offeringMapper.toResponseDto(saved);
     }
 
     @Transactional
-    public ServiceResponseDto deactivateById(UUID id) {
-        ServiceEntity service = findServiceOrThrow(id);
-        currentUserProvider.requireSelfOrAdmin(service.getSpecialist().getId());
+    public OfferingResponseDto deactivateById(UUID id) {
+        OfferingEntity offering = findOfferingOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(offering.getSpecialist().getId());
 
-        service.setActive(false);
-        ServiceEntity saved = serviceRepository.save(service);
+        offering.setActive(false);
+        OfferingEntity saved = offeringRepository.save(offering);
 
-        return serviceMapper.toResponseDto(saved);
+        return offeringMapper.toResponseDto(saved);
     }
 
     @Transactional
-    public ServiceResponseDto hardDeleteById(UUID id) {
-        ServiceEntity service = findServiceOrThrow(id);
-        currentUserProvider.requireSelfOrAdmin(service.getSpecialist().getId());
+    public OfferingResponseDto hardDeleteById(UUID id) {
+        OfferingEntity offering = findOfferingOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(offering.getSpecialist().getId());
 
-        ServiceResponseDto deletedService = serviceMapper.toResponseDto(service);
-        serviceRepository.delete(service);
+        OfferingResponseDto deletedOffering = offeringMapper.toResponseDto(offering);
+        offeringRepository.delete(offering);
 
-        return deletedService;
+        return deletedOffering;
     }
 
     @Transactional
-    public ServiceResponseDto restoreById(UUID id) {
-        ServiceEntity service = findServiceOrThrow(id);
-        currentUserProvider.requireSelfOrAdmin(service.getSpecialist().getId());
+    public OfferingResponseDto restoreById(UUID id) {
+        OfferingEntity offering = findOfferingOrThrow(id);
+        currentUserProvider.requireSelfOrAdmin(offering.getSpecialist().getId());
 
-        service.setActive(true);
-        ServiceEntity saved = serviceRepository.save(service);
+        offering.setActive(true);
+        OfferingEntity saved = offeringRepository.save(offering);
 
-        return serviceMapper.toResponseDto(saved);
+        return offeringMapper.toResponseDto(saved);
     }
 
     private boolean resolveActiveFilter(Boolean requestedActive, UUID specialistId) {
@@ -159,8 +159,8 @@ public class ServiceService {
         return !canViewInactive;
     }
 
-    private ServiceEntity findServiceOrThrow(UUID id) {
-        return serviceRepository.findById(id)
+    private OfferingEntity findOfferingOrThrow(UUID id) {
+        return offeringRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Service with id " + id + " not found"));
     }
 }

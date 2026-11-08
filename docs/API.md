@@ -49,7 +49,7 @@ Password for all: **`Password1!`** — `admin@citeria.test` (ADMIN), `anna@citer
 
 ## Pagination & sorting
 
-Every list endpoint (`GET /api/users`, `/api/services`, `/api/working-hours`, `/api/appointments`) is paginated and accepts the same query parameters.
+Every list endpoint (`GET /api/users`, `/api/offerings`, `/api/working-hours`, `/api/appointments`) is paginated and accepts the same query parameters.
 
 | Param | Type | Default | Description |
 |---|---|---|---|
@@ -62,7 +62,7 @@ Every list endpoint (`GET /api/users`, `/api/services`, `/api/working-hours`, `/
 | Endpoint | Allowed `sort` fields | Default sort |
 |---|---|---|
 | `GET /api/users` | `createdAt`, `lastName`, `email` | `createdAt,desc` |
-| `GET /api/services` | `name`, `priceAmount`, `createdAt` | `name,asc` |
+| `GET /api/offerings` | `name`, `priceAmount`, `createdAt` | `name,asc` |
 | `GET /api/working-hours` | `createdAt` | `createdAt,desc` |
 | `GET /api/appointments` | `startTime`, `status`, `createdAt` | `startTime,asc` |
 
@@ -249,7 +249,7 @@ Response `200` — image bytes with:
 | `403` `FORBIDDEN` | Uploading/deleting someone else's avatar without ADMIN |
 | `404` `RESOURCE_NOT_FOUND` | User does not exist, or the user has no avatar |
 
-> **Frontend note:** the endpoint is public, so a plain `<img src="…/users/{id}/avatar?v={avatarVersion}">` works. Skip the image when `avatarVersion` is `null`. Service responses expose the same value as `specialistAvatarVersion`.
+> **Frontend note:** the endpoint is public, so a plain `<img src="…/users/{id}/avatar?v={avatarVersion}">` works. Skip the image when `avatarVersion` is `null`. Offering responses expose the same value as `specialistAvatarVersion`.
 
 ---
 
@@ -267,31 +267,31 @@ Response `200`:
 ```json
 {
   "id": "2222...", "firstName": "Anna", "lastName": "Specialist", "isActive": true,
-  "services": [ { "id": "aaaa...1", "name": "Consultation", "durationMinutes": 60, "priceAmount": 60.00, "currency": "EUR", "isActive": true } ],
+  "offerings": [ { "id": "aaaa...1", "name": "Consultation", "durationMinutes": 60, "priceAmount": 60.00, "currency": "EUR", "isActive": true } ],
   "workingHours": [ { "id": "…", "dayOfWeek": "MONDAY", "startTime": "09:00", "endTime": "17:00", "isActive": true } ]
 }
 ```
 
 ---
 
-## Services — `/api/services`
+## Offerings — `/api/offerings`
 
-A service belongs to a specialist (the creator). Reading is open to any authenticated user; writing is specialist-owned.
+An offering belongs to a specialist (the creator). Reading is open to any authenticated user; writing is specialist-owned.
 
 | Method | Path | Description | Access |
 |---|---|---|---|
-| GET | `/` | List/search services (filters: `search`, `specialistId`, `active`, `minPrice`, `maxPrice`) | any |
-| GET | `/{id}` | Get service by id | any |
+| GET | `/` | List/search offerings (filters: `search`, `specialistId`, `active`, `minPrice`, `maxPrice`) | any |
+| GET | `/{id}` | Get offering by id | any |
 | GET | `/{id}/slots` | Available booking slots (`from`, `to` dates) | any |
-| POST | `/` | Create a service | SPECIALIST |
-| PATCH | `/{id}` | Update a service | owner or ADMIN |
+| POST | `/` | Create an offering | SPECIALIST |
+| PATCH | `/{id}` | Update an offering | owner or ADMIN |
 | DELETE | `/{id}` | Deactivate (soft) | owner or ADMIN |
 | DELETE | `/{id}/hard` | Hard delete | owner or ADMIN |
 | PATCH | `/{id}/restore` | Reactivate | owner or ADMIN |
 
 **Create** (specialist taken from the token):
 ```http
-POST /api/services
+POST /api/offerings
 Authorization: Bearer <specialist token>
 
 {
@@ -306,7 +306,7 @@ Authorization: Bearer <specialist token>
 
 **Available slots** — computed on the fly from the specialist's working hours minus taken slots; only from the **next day** onward.
 ```http
-GET /api/services/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1/slots?from=2026-09-01&to=2026-09-03
+GET /api/offerings/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1/slots?from=2026-09-01&to=2026-09-03
 Authorization: Bearer <token>
 ```
 Response `200`:
@@ -355,7 +355,7 @@ A request **does not hold the slot** until the specialist accepts it — several
 
 | Method | Path | Description | Access |
 |---|---|---|---|
-| GET | `/` | List own appointments (filters: `status`, `from`, `to`, `serviceId`) | participant; ADMIN sees all |
+| GET | `/` | List own appointments (filters: `status`, `from`, `to`, `offeringId`) | participant; ADMIN sees all |
 | GET | `/{id}` | Get appointment | participant or ADMIN |
 | POST | `/` | Book a slot → `PENDING` | CLIENT |
 | POST | `/{id}/accept` | Accept request → `AWAITING_PAYMENT` | specialist |
@@ -365,13 +365,13 @@ A request **does not hold the slot** until the specialist accepts it — several
 | POST | `/{id}/complete` | Mark done → `COMPLETED` | specialist |
 | DELETE | `/{id}` | Hard delete | ADMIN |
 
-**Book** — client sends only `serviceId` + `startTime` (must match an available slot); `endTime` is derived from the service duration.
+**Book** — client sends only `offeringId` + `startTime` (must match an available slot); `endTime` is derived from the service duration.
 ```http
 POST /api/appointments
 Authorization: Bearer <client token>
 
 {
-  "serviceId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+  "offeringId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
   "startTime": "2026-09-01T10:00:00Z"
 }
 ```
@@ -380,7 +380,7 @@ Response `201`:
 {
   "id": "…",
   "clientId": "…", "clientName": "Clara Client", "clientEmail": "clara@citeria.test",
-  "serviceId": "aaaa...1", "serviceName": "Consultation",
+  "offeringId": "aaaa...1", "offeringName": "Consultation",
   "specialistId": "2222...", "specialistName": "Anna Specialist",
   "startTime": "2026-09-01T10:00:00Z", "endTime": "2026-09-01T11:00:00Z",
   "status": "PENDING", "priceAmount": 60.00, "paymentDeadline": null

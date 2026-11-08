@@ -86,7 +86,7 @@
       </div>
     } @else {
       <div class="specialists__grid" [class.specialists__grid--stale]="isLoading()">
-        @for (specialist of services(); track specialist.id) {
+        @for (specialist of offerings(); track specialist.id) {
           <article class="specialist-card">
             <div class="specialist-card__media" aria-hidden="true">
               @let avatar = avatarUrl(specialist.specialistId, specialist.specialistAvatarVersion);

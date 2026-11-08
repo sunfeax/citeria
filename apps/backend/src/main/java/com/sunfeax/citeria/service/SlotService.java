@@ -15,13 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.sunfeax.citeria.dto.slot.SlotResponseDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
-import com.sunfeax.citeria.entity.ServiceEntity;
+import com.sunfeax.citeria.entity.OfferingEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.entity.WorkingHoursEntity;
 import com.sunfeax.citeria.enums.AppointmentStatus;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.repository.AppointmentRepository;
-import com.sunfeax.citeria.repository.ServiceRepository;
+import com.sunfeax.citeria.repository.OfferingRepository;
 import com.sunfeax.citeria.repository.WorkingHoursRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SlotService {
 
-    private final ServiceRepository serviceRepository;
+    private final OfferingRepository offeringRepository;
     private final WorkingHoursRepository workingHoursRepository;
     private final AppointmentRepository appointmentRepository;
 
@@ -44,9 +44,9 @@ public class SlotService {
     private int maxHorizonDays;
 
     @Transactional(readOnly = true)
-    public List<SlotResponseDto> getAvailableSlots(UUID serviceId, LocalDate from, LocalDate to) {
-        ServiceEntity service = serviceRepository.findById(serviceId)
-            .orElseThrow(() -> new ResourceNotFoundException("Service with id " + serviceId + " not found"));
+    public List<SlotResponseDto> getAvailableSlots(UUID offeringId, LocalDate from, LocalDate to) {
+        OfferingEntity offering = offeringRepository.findById(offeringId)
+            .orElseThrow(() -> new ResourceNotFoundException("Service with id " + offeringId + " not found"));
 
         ZoneId zone = ZoneId.of(bookingZone);
 
@@ -59,12 +59,12 @@ public class SlotService {
             lastDay = maxDay;
         }
 
-        UserEntity specialist = service.getSpecialist();
-        if (lastDay.isBefore(firstDay) || !service.isActive() || !specialist.isActive()) {
+        UserEntity specialist = offering.getSpecialist();
+        if (lastDay.isBefore(firstDay) || !offering.isActive() || !specialist.isActive()) {
             return List.of();
         }
 
-        Duration duration = Duration.ofMinutes(service.getDurationMinutes());
+        Duration duration = Duration.ofMinutes(offering.getDurationMinutes());
 
         List<WorkingHoursEntity> workingHours =
             workingHoursRepository.findBySpecialistIdAndIsActiveTrue(specialist.getId());

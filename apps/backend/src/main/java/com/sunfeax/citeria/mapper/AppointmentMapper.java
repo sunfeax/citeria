@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import com.sunfeax.citeria.dto.appointment.AppointmentPostRequestDto;
 import com.sunfeax.citeria.dto.appointment.AppointmentResponseDto;
 import com.sunfeax.citeria.entity.AppointmentEntity;
-import com.sunfeax.citeria.entity.ServiceEntity;
+import com.sunfeax.citeria.entity.OfferingEntity;
 import com.sunfeax.citeria.entity.UserEntity;
 import com.sunfeax.citeria.enums.AppointmentStatus;
 
@@ -15,7 +15,7 @@ import com.sunfeax.citeria.enums.AppointmentStatus;
 public class AppointmentMapper {
 
     public AppointmentResponseDto toResponseDto(AppointmentEntity appointmentEntity) {
-        ServiceEntity service = appointmentEntity.getService();
+        OfferingEntity offering = appointmentEntity.getOffering();
         UserEntity client = appointmentEntity.getClient();
         UserEntity specialist = appointmentEntity.getSpecialist();
 
@@ -24,8 +24,8 @@ public class AppointmentMapper {
             client.getId(),
             client.getFirstName() + " " + client.getLastName(),
             client.getEmail(),
-            service.getId(),
-            service.getName(),
+            offering.getId(),
+            offering.getName(),
             specialist.getId(),
             specialist.getFirstName() + " " + specialist.getLastName(),
             appointmentEntity.getStartTime(),
@@ -39,18 +39,18 @@ public class AppointmentMapper {
     public AppointmentEntity createEntity(
         AppointmentPostRequestDto request,
         UserEntity client,
-        ServiceEntity service
+        OfferingEntity offering
     ) {
         AppointmentEntity entity = new AppointmentEntity();
 
         entity.setClient(client);
-        entity.setSpecialist(service.getSpecialist());
-        entity.setService(service);
+        entity.setSpecialist(offering.getSpecialist());
+        entity.setOffering(offering);
         entity.setStartTime(request.startTime());
-        entity.setEndTime(request.startTime().plus(Duration.ofMinutes(service.getDurationMinutes())));
+        entity.setEndTime(request.startTime().plus(Duration.ofMinutes(offering.getDurationMinutes())));
         entity.setStatus(AppointmentStatus.PENDING);
-        entity.setPriceAmount(service.getPriceAmount());
-        entity.setCurrency(service.getCurrency());
+        entity.setPriceAmount(offering.getPriceAmount());
+        entity.setCurrency(offering.getCurrency());
 
         return entity;
     }

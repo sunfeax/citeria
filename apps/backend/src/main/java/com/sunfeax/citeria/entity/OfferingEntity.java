@@ -21,12 +21,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "services")
+@Table(name = "offerings")
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ServiceEntity {
+public class OfferingEntity {
 
     @Column(name = "id")
     @Id

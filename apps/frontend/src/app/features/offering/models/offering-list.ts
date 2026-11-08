@@ -1,4 +1,4 @@
-export interface ServiceList {
+export interface OfferingList {
   id: string;
   specialistId: string;
   specialistName: string;
@@ -12,7 +12,7 @@ export interface ServiceList {
   createdAt: string;
 }
 
-export interface ServiceFilters {
+export interface OfferingFilters {
   search: string;
   minPrice: number | null;
   maxPrice: number | null;
