@@ -3,6 +3,7 @@ import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { IS_PUBLIC_ENDPOINT, SKIP_REFRESH } from '../../../core/config/http-context';
+import { GoogleLoginRequest } from '../models/google-login';
 import { LoginRequest, LoginResponse } from '../models/login';
 import { RefreshResponse } from '../models/refresh';
 import { RegisterRequest, RegisterResponse } from '../models/register';
@@ -16,6 +17,13 @@ export class AuthHttpService {
   /** ACTIONS */
   login(payload: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${environment.baseUrl}/auth/login`, payload, {
+      withCredentials: true,
+      context: new HttpContext().set(IS_PUBLIC_ENDPOINT, true).set(SKIP_REFRESH, true),
+    });
+  }
+
+  loginWithGoogle(payload: GoogleLoginRequest): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${environment.baseUrl}/auth/google`, payload, {
       withCredentials: true,
       context: new HttpContext().set(IS_PUBLIC_ENDPOINT, true).set(SKIP_REFRESH, true),
     });

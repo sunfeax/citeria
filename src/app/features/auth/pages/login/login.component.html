@@ -71,16 +71,15 @@
         <a [routerLink]="routePaths.register" class="auth-link">Sign up</a>
       </p>
 
-      <div class="auth-divider">
-        <div class="auth-divider__line"></div>
-        <span class="auth-divider__text">OR CONTINUE WITH</span>
-        <div class="auth-divider__line"></div>
-      </div>
+      @if (isGoogleEnabled) {
+        <div class="auth-divider">
+          <div class="auth-divider__line"></div>
+          <span class="auth-divider__text">OR CONTINUE WITH</span>
+          <div class="auth-divider__line"></div>
+        </div>
 
-      <button matButton="outlined" type="button" class="btn-block">
-        <img class="btn-brand-icon" src="assets/logos/google-logo.svg" alt="" />
-        Google
-      </button>
+        <app-google-sign-in large />
+      }
     </form>
   </div>
 </div>

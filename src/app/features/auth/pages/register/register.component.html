@@ -194,18 +194,17 @@
             </button>
           </div>
 
-          <div class="auth-divider auth-divider--compact auth-form__full">
-            <div class="auth-divider__line"></div>
-            <span class="auth-divider__text">OR CONTINUE WITH</span>
-            <div class="auth-divider__line"></div>
-          </div>
+          @if (isGoogleEnabled) {
+            <div class="auth-divider auth-divider--compact auth-form__full">
+              <div class="auth-divider__line"></div>
+              <span class="auth-divider__text">OR CONTINUE WITH</span>
+              <div class="auth-divider__line"></div>
+            </div>
 
-          <div class="auth-form__full">
-            <button matButton="outlined" type="button" class="btn-block">
-              <img class="btn-brand-icon" src="assets/logos/google-logo.svg" alt="" />
-              Google
-            </button>
-          </div>
+            <div class="auth-form__full">
+              <app-google-sign-in [type]="registerForm.controls.type.value" />
+            </div>
+          }
 
           <p class="auth-switch auth-form__full">
             Already have an account?

@@ -14,6 +14,7 @@ import {
 } from 'rxjs';
 import { TabSyncService } from '../../../core/services/tab-sync.service';
 import { routePaths } from '../../../shared/util/route-paths';
+import { GoogleLoginRequest } from '../models/google-login';
 import { LoginRequest, LoginResponse } from '../models/login';
 import { RefreshResponse } from '../models/refresh';
 import { RegisterRequest, RegisterResponse } from '../models/register';
@@ -51,13 +52,15 @@ export class AuthService {
 
   /** ACTIONS */
   login(payload: LoginRequest): Observable<LoginResponse> {
-    return this.authHttpService.login(payload).pipe(
-      tap(response => {
-        this.sessionStore.setAccessToken(response.accessToken);
-        this.sessionStore.setUser(response.user);
-        this.tabSyncService.send('login');
-      }),
-    );
+    return this.authHttpService
+      .login(payload)
+      .pipe(tap(response => this.startSession(response)));
+  }
+
+  loginWithGoogle(payload: GoogleLoginRequest): Observable<LoginResponse> {
+    return this.authHttpService
+      .loginWithGoogle(payload)
+      .pipe(tap(response => this.startSession(response)));
   }
 
   register(payload: RegisterRequest): Observable<RegisterResponse> {
@@ -104,6 +107,12 @@ export class AuthService {
 
   softDeleteAccount(): Observable<User> {
     return this.authHttpService.softDeleteAccount(this.sessionStore.requireUser().id);
+  }
+
+  private startSession(response: LoginResponse): void {
+    this.sessionStore.setAccessToken(response.accessToken);
+    this.sessionStore.setUser(response.user);
+    this.tabSyncService.send('login');
   }
 
   private endSession(): void {

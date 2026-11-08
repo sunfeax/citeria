@@ -26,11 +26,20 @@ UI остаётся на Angular Material, меняется только вне�
 - ✅ Чистка: старые имена токенов заменены на новые, алиасы удалены. Заглушка аватара в каталоге
   в тёмной теме приглушается фильтром (класс `--placeholder`, на настоящие аватары не влияет).
 
-## 2 — Вход через Google ⬜
+## 2 — Вход через Google 🔄
 
-- ⬜ Бэкенд: OAuth2-логин через Google, выдача тех же access/refresh-токенов (репозиторий
-  `../citeria`).
-- ⬜ Фронтенд: кнопка «Continue with Google» на логине и регистрации, обработка колбэка, сессия.
+Схема: Google Identity Services на фронте отдаёт ID-токен → `POST /api/auth/google` на бэкенде проверяет
+его (подпись по JWKS Google, issuer, audience = `GOOGLE_CLIENT_ID`, подтверждённый email) и выдаёт наши
+обычные access/refresh-токены. Без `googleClientId` кнопка не показывается, бэкенд отвечает `503`.
+
+- ✅ Бэкенд (`../citeria`): эндпоинт, миграция (`password` nullable, `google_id`), привязка к
+  существующему пользователю по email, новый пользователь — с типом из формы регистрации (по
+  умолчанию `CLIENT`), `hasPassword` в `UserResponseDto`, установка первого пароля без текущего.
+  Тесты на сервис и контроллер.
+- ✅ Фронтенд: `GoogleIdentityService` (ленивая загрузка скрипта), `GoogleSignInComponent` на логине и
+  регистрации (своя Material-кнопка, поверх неё невидимый iframe Google), «Set password» в профиле для аккаунтов без пароля.
+- ⬜ Проверка end-to-end с настоящим Client ID: `googleClientId` в `src/environments/environment.ts`,
+  `GOOGLE_CLIENT_ID` в `../citeria/.env`.
 
 ## 3 — Доделать начатое ⬜
 

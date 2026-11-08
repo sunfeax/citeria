@@ -296,14 +296,7 @@ button.mat-mdc-button {
 
 .btn-lg {
   --mat-button-filled-container-height: 48px;
-}
-
-.btn-brand-icon {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  margin-right: var(--space-2);
-  vertical-align: text-bottom;
+  --mat-button-outlined-container-height: 48px;
 }
 
 button mat-progress-spinner {

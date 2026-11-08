@@ -34,7 +34,9 @@ import {
   getFieldError,
 } from '../../../../shared/util/form-errors';
 import { UserType } from '../../models/user-type';
+import { GoogleSignInComponent } from '../../components/google-sign-in/google-sign-in.component';
 import { AuthService } from '../../services/auth.service';
+import { GoogleIdentityService } from '../../services/google-identity.service';
 import { routePaths } from '../../../../shared/util/route-paths';
 import { getRegisterPayload } from './../../../../shared/util/payload-handler';
 
@@ -42,6 +44,7 @@ import { getRegisterPayload } from './../../../../shared/util/payload-handler';
   selector: 'app-register',
   imports: [
     ReactiveFormsModule,
+    GoogleSignInComponent,
     RouterLink,
     MatButton,
     MatIconButton,
@@ -64,6 +67,9 @@ export class RegisterComponent {
   private authService = inject(AuthService);
   private snackbarService = inject(SnackbarService);
   private router = inject(Router);
+
+  /** GOOGLE */
+  readonly isGoogleEnabled = inject(GoogleIdentityService).isEnabled;
 
   readonly UserType = UserType;
   readonly routePaths = routePaths;

@@ -22,12 +22,15 @@ import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { getFieldError } from '../../../../shared/util/form-errors';
 import { routePaths } from '../../../../shared/util/route-paths';
 import { LoginRequest } from '../../models/login';
+import { GoogleSignInComponent } from '../../components/google-sign-in/google-sign-in.component';
 import { AuthService } from '../../services/auth.service';
+import { GoogleIdentityService } from '../../services/google-identity.service';
 
 @Component({
   selector: 'app-login',
   imports: [
     ReactiveFormsModule,
+    GoogleSignInComponent,
     RouterLink,
     MatButton,
     MatIconButton,
@@ -47,6 +50,9 @@ export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private snackbarService = inject(SnackbarService);
+
+  /** GOOGLE */
+  readonly isGoogleEnabled = inject(GoogleIdentityService).isEnabled;
 
   /** ROUTES */
   readonly routePaths = routePaths;

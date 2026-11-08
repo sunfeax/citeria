@@ -106,6 +106,7 @@ Requesting a page beyond the end returns `200` with an empty `content` array (no
 |---|---|---|
 | POST | `/register` | Create an account; returns token + sets refresh cookie |
 | POST | `/login` | Authenticate; returns token + sets refresh cookie |
+| POST | `/google` | Sign in with a Google ID token; returns token + sets refresh cookie |
 | POST | `/refresh` | Issue a new access token from the refresh cookie |
 | POST | `/logout` | Revoke the refresh token and clear the cookie |
 
@@ -128,7 +129,7 @@ Response `201`:
 {
   "accessToken": "eyJhbGciOi...",
   "tokenType": "Bearer",
-  "user": { "id": "…", "firstName": "Clara", "email": "clara@example.com", "role": "USER", "type": "CLIENT", "isActive": true, "createdAt": "…", "hasAvatar": false }
+  "user": { "id": "…", "firstName": "Clara", "email": "clara@example.com", "role": "USER", "type": "CLIENT", "isActive": true, "createdAt": "…", "hasAvatar": false, "hasPassword": true }
 }
 ```
 
@@ -139,6 +140,20 @@ Content-Type: application/json
 
 { "email": "anna@citeria.test", "password": "Password1!" }
 ```
+
+**Google sign-in**
+```http
+POST /api/auth/google
+Content-Type: application/json
+
+{ "credential": "<Google ID token>", "type": "SPECIALIST" }
+```
+`credential` is the ID token from Google Identity Services. The backend verifies its signature, issuer,
+audience (`GOOGLE_CLIENT_ID`) and that the email is verified. The user is matched by Google account
+first, then by email (the Google account gets linked to the existing user); otherwise a new user is
+created with `type` from the request (`CLIENT` by default) and no password. Response is the same as
+login. Errors: `401` for an invalid token, an unverified email, a deactivated user or an email already
+linked to another Google account; `503 FEATURE_UNAVAILABLE` when `GOOGLE_CLIENT_ID` is not set.
 
 **Refresh** — `POST /api/auth/refresh` (no body; refresh cookie sent automatically). Returns `{ "accessToken": "…", "tokenType": "Bearer" }`.
 
@@ -172,8 +187,10 @@ Authorization: Bearer <token>
 
 { "currentPassword": "Password1!", "newPassword": "NewPass2@" }
 ```
+For a user without a password (signed up with Google, `hasPassword: false`) `currentPassword` may be
+omitted: the request sets the first password.
 
-Every `UserResponseDto` includes a **`hasAvatar`** boolean so the UI knows whether to request the avatar image (see below).
+Every `UserResponseDto` includes a **`hasAvatar`** boolean so the UI knows whether to request the avatar image (see below), and a **`hasPassword`** boolean (`false` for users who signed up with Google and have not set a password yet).
 
 ---
 
