@@ -1,6 +1,6 @@
 .specialists {
   min-height: 100%;
-  padding: 40px 20px;
+  padding: var(--space-6) var(--space-5) var(--space-10);
   background: var(--color-background);
 }
 
@@ -11,17 +11,7 @@
 
 .specialists__header {
   max-width: 640px;
-  margin-bottom: 32px;
-}
-
-.specialists__eyebrow {
-  display: inline-block;
-  margin-bottom: var(--space-3);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 1.12px;
-  text-transform: uppercase;
+  margin-bottom: var(--space-5);
 }
 
 .specialists__header h1 {
@@ -158,25 +148,6 @@ mat-progress-bar {
   background: var(--color-surface-muted);
 }
 
-.specialist-card__tag {
-  position: absolute;
-  z-index: 2;
-  top: 10.4px;
-  left: 10.4px;
-  max-width: calc(100% - 20.8px);
-  overflow: hidden;
-  padding: 4px 8.8px;
-  border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
-  color: var(--color-text);
-  font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0.45px;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
 .specialist-card__avatar {
   width: 100%;
   height: 180px;
@@ -208,6 +179,15 @@ mat-progress-bar {
   font-size: 19.2px;
   line-height: var(--line-height-tight);
   letter-spacing: -0.48px;
+}
+
+.specialist-card__category {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
 }
 
 .specialist-card__description {
@@ -289,11 +269,7 @@ mat-progress-bar {
 
 @media (min-width: 768px) {
   .specialists {
-    padding-block: 48px;
-  }
-
-  .specialists__header {
-    margin-bottom: 40px;
+    padding-bottom: 48px;
   }
 
   .specialists__header h1 {
@@ -307,7 +283,8 @@ mat-progress-bar {
 
 @media (min-width: 1024px) {
   .specialists {
-    padding-block: 64px;
+    padding-top: var(--space-8);
+    padding-bottom: 64px;
   }
 
   .specialists__header h1 {
@@ -318,11 +295,7 @@ mat-progress-bar {
 
 @media (min-width: 1200px) {
   .specialists {
-    padding-block: 80px;
-  }
-
-  .specialists__header {
-    margin-bottom: 48px;
+    padding-bottom: 80px;
   }
 
   .specialists__grid {

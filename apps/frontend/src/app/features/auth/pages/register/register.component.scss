@@ -1,26 +1,225 @@
-:host {
-  mat-form-field {
-    width: 100%;
-  }
+.register-page {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100svh;
+  background: var(--color-surface);
 
-  .form-label {
-    display: block;
-    margin-bottom: var(--space-2);
-    color: var(--color-text-soft);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
+  @media (min-width: 960px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
-  .type-toggle {
-    width: 100%;
+.register-panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: var(--space-6);
+
+  @media (min-width: 600px) {
+    padding: var(--space-8) var(--space-10);
   }
+}
 
-  .type-toggle mat-button-toggle {
+.register-brand {
+  display: inline-flex;
+  width: fit-content;
+  align-self: center;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.5px;
+}
+
+.register-brand:focus-visible {
+  border-radius: var(--radius-sm);
+  outline: var(--border-width-md) solid var(--color-primary);
+  outline-offset: var(--space-1);
+}
+
+.register-panel__inner {
+  width: min(100%, 440px);
+  margin: auto;
+  padding-block: var(--space-6);
+}
+
+.register-panel__header {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-8);
+  text-align: center;
+}
+
+.register-panel__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -1px;
+  line-height: var(--line-height-tight);
+}
+
+.register-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-4);
+
+  @media (min-width: 360px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.auth-divider {
+  margin-block: 0;
+}
+
+.auth-divider__text {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: normal;
+}
+
+.auth-switch {
+  margin-top: 0;
+}
+
+.auth-link {
+  color: var(--color-primary);
+  text-underline-offset: var(--space-1);
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.register-form__wide,
+.register-form__contact {
+  grid-column: 1 / -1;
+}
+
+.register-form__contact {
+  @media (min-width: 600px) {
+    grid-column: auto;
+  }
+}
+
+.register-form__account-type {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+
+  .form-error {
+    grid-column: 1 / -1;
+  }
+}
+
+.form-label {
+  display: block;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.type-toggle {
+  width: 100%;
+  gap: var(--space-2);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  --mat-button-toggle-height: 44px;
+  --mat-button-toggle-divider-color: transparent;
+  --mat-button-toggle-shape: var(--radius-xl);
+  --mat-button-toggle-label-text-size: var(--font-size-sm);
+  --mat-button-toggle-label-text-weight: var(--font-weight-semibold);
+  --mat-button-toggle-label-text-tracking: normal;
+  --mat-button-toggle-text-color: var(--color-text-soft);
+  --mat-button-toggle-selected-state-background-color: color-mix(
+    in srgb,
+    var(--color-primary) 8%,
+    var(--color-surface)
+  );
+  --mat-button-toggle-selected-state-text-color: var(--color-primary);
+
+  mat-button-toggle {
     flex: 1;
+    border: 0;
+    border-radius: var(--radius-xl);
+    box-shadow: inset 0 0 0 var(--border-width-sm) var(--color-border);
+
+    &.mat-button-toggle-checked {
+      box-shadow: inset 0 0 0 var(--border-width-sm) var(--color-primary);
+    }
+  }
+}
+
+.suffix-actions {
+  display: inline-flex;
+  align-items: center;
+}
+
+.register-hero {
+  position: sticky;
+  top: 0;
+  display: none;
+  height: 100vh;
+  height: 100svh;
+  align-items: flex-end;
+  padding: clamp(var(--space-10), 5vw, 80px);
+  background-color: var(--color-black);
+  background-image:
+    linear-gradient(
+      180deg,
+      transparent 35%,
+      color-mix(in srgb, var(--color-black) 78%, transparent) 100%
+    ),
+    url('/assets/images/register-studio.webp');
+  background-position: center;
+  background-size: cover;
+  color: var(--color-on-hero);
+
+  @media (min-width: 960px) {
+    display: flex;
+  }
+}
+
+.register-hero__content {
+  max-width: 480px;
+}
+
+.register-hero__title {
+  margin: 0;
+  font-size: clamp(44px, 4.5vw, 72px);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -2px;
+  line-height: 1.08;
+}
+
+.register-hero__text {
+  margin: var(--space-6) 0 0;
+  color: color-mix(in srgb, var(--color-on-hero) 85%, transparent);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+}
+
+@media (max-height: 850px) {
+  .register-panel {
+    padding-block: var(--space-2);
   }
 
-  .suffix-actions {
-    display: inline-flex;
-    align-items: center;
+  .register-panel__inner {
+    padding-block: 0;
+  }
+
+  .register-panel__header {
+    gap: var(--space-1);
+    margin-bottom: var(--space-4);
   }
 }

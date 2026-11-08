@@ -43,6 +43,7 @@ html {
   --font-size-base: 16px;
   --font-size-lg: 18px;
   --font-size-3xl: 30px;
+  --icon-size-input: 20px;
 
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
@@ -120,8 +121,6 @@ html {
   --color-warning-solid: #b45309;
   --color-on-solid: #ffffff;
 
-  --color-hero-start: #171717;
-  --color-hero-end: #0d0d0d;
   --color-on-hero: var(--color-white);
 
   --mat-sys-primary: var(--color-primary);
@@ -160,7 +159,6 @@ html {
 
   --container-sm: 448px;
   --container-5xl: 1024px;
-  --container-register: 1056px;
   --z-snackbar: 1000;
 }
 
@@ -199,9 +197,6 @@ html {
   --color-warning-soft: rgb(251 191 36 / 0.12);
   --color-info: #60a5fa;
   --color-info-soft: rgb(96 165 250 / 0.12);
-
-  --color-hero-start: #2a2a2a;
-  --color-hero-end: #171717;
 
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
   --shadow-md: 0 4px 16px rgb(0 0 0 / 0.35);
@@ -264,12 +259,32 @@ input {
 @include auth.styles;
 
 mat-form-field {
+  min-width: 0;
+  align-self: start;
   --mat-form-field-container-height: 48px;
   --mat-form-field-container-vertical-padding: 12px;
+  --mat-form-field-container-text-size: var(--font-size-sm);
+  --mat-form-field-container-text-tracking: normal;
+  --mat-form-field-outlined-label-text-size: var(--font-size-sm);
+  --mat-form-field-outlined-label-text-tracking: normal;
+  --mat-form-field-subscript-text-line-height: var(--space-4);
+  --mat-form-field-subscript-text-tracking: normal;
+  --mat-select-trigger-text-size: var(--font-size-sm);
+  --mat-select-trigger-text-tracking: normal;
   --mat-form-field-outlined-container-shape: var(--radius-xl);
   --mat-form-field-outlined-outline-color: var(--color-border);
   --mat-form-field-outlined-hover-outline-color: var(--color-border-strong);
   --mat-form-field-outlined-focus-outline-color: var(--color-primary);
+
+  .mat-mdc-icon-button {
+    --mat-icon-button-icon-size: var(--icon-size-input);
+  }
+
+  .mat-icon {
+    width: var(--icon-size-input);
+    height: var(--icon-size-input);
+    font-size: var(--icon-size-input);
+  }
 }
 
 mat-paginator {

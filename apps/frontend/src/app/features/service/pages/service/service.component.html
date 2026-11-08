@@ -1,7 +1,6 @@
 <section class="specialists" aria-labelledby="specialists-title">
   <div class="specialists__container">
     <header class="specialists__header">
-      <span class="specialists__eyebrow">Professional services</span>
       <h1 id="specialists-title">Find your specialist</h1>
       <p>Choose an expert and book a service that fits your needs.</p>
     </header>
@@ -90,7 +89,6 @@
         @for (specialist of services(); track specialist.id) {
           <article class="specialist-card">
             <div class="specialist-card__media" aria-hidden="true">
-              <span class="specialist-card__tag">{{ specialist.name }}</span>
               @let avatar = avatarUrl(specialist.specialistId, specialist.specialistAvatarVersion);
               <img
                 class="specialist-card__avatar"
@@ -105,6 +103,7 @@
                 <h2>{{ specialist.specialistName }}</h2>
               </div>
 
+              <p class="specialist-card__category">{{ specialist.name }}</p>
               <p class="specialist-card__description">{{ specialist.description }}</p>
 
               <div class="specialist-card__footer">
