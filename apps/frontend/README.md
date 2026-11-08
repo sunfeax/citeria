@@ -13,7 +13,7 @@ Citeria is a booking platform: specialists publish services and working hours, c
 
 - Local API: `http://localhost:8082/api`
 - Swagger UI: `http://localhost:8082/swagger-ui.html`
-- Endpoints and seed accounts: [docs/API.md](docs/API.md)
+- Endpoints and seed accounts: [docs/API.md](../../docs/API.md)
 
 ## Development
 

@@ -1,8 +1,9 @@
-# Citeria Frontend
+# Citeria
 
-Фронтенд букинг-платформы **Citeria**: специалисты публикуют услуги и часы работы, клиенты ищут и
-бронируют. Цель — довести проект до деплоя и выложить в портфолио. Бэкенд (Spring Boot) лежит в
-соседнем репозитории `../citeria`, контракт API — в `docs/API.md`.
+Монорепозиторий букинг-платформы **Citeria**: специалисты публикуют услуги и часы работы, клиенты ищут
+и бронируют. Цель — довести проект до деплоя и выложить в портфолио. Фронтенд (Angular) — в
+`apps/frontend`, бэкенд (Spring Boot) — в `apps/backend`, контракт API — в `docs/API.md`. Бэкенд
+остаётся на Java: это осознанное решение, на Nest не переписываем.
 
 План по фичам со статусами — в `docs/angular-roadmap.md`, Claude обновляет его после каждой задачи.
 
@@ -29,30 +30,31 @@
 - **UI — Angular Material** (`@angular/material`, версия в линию с ядром `^22.2.x`): компоненты,
   диалоги (`MatDialog`), уведомления (`MatSnackBar`), пагинация (`MatPaginator`). Свой виджет —
   только если в Material нет аналога. Цвета Material задаются через `--mat-sys-*`, привязанные к
-  нашим `--color-*` в `src/styles.scss`.
+  нашим `--color-*` в `apps/frontend/src/styles.scss`.
 - **Дизайн**: нейтральная гамма в духе ChatGPT. Тёмная тема — графит, светлая — белая. Акцент —
   зелёный из логотипа (`#1a6c29`, `#42cd5a`): `--color-primary` и `--color-secondary` (кнопки, слайдеры, фокус полей); остальное
   монохромное, плюс цвета статусов (success, error, warning, info). Обе темы — через одни и те же
-  токены в `src/styles.scss`.
+  токены в `apps/frontend/src/styles.scss`.
 - **Иконки** — Material Symbols через `mat-icon`.
-- **Вход через Google** — Claude пишет и бэкенд-часть в `../citeria`; OAuth client ID в Google Cloud
+- **Вход через Google** — Claude пишет и бэкенд-часть в `apps/backend`; OAuth client ID в Google Cloud
   Console создаёт пользователь.
-- Запуск: `npm start`. Сборка: `npm run build`. Тесты: `npm test`.
+- Фронтенд, из `apps/frontend`: запуск `npm start`, сборка `npm run build`, тесты `npm test`.
+- База и API, из корня: `docker compose up -d --build` (Postgres на `127.0.0.1:5433`), `.env` лежит в корне.
 - Бэкенд: `http://localhost:8082`, поднимает пользователь. Swagger —
   `http://localhost:8082/swagger-ui.html`. Тестовые аккаунты и эндпоинты — в `docs/API.md`.
 
 ### Структура (feature-based)
 
-- `src/app/core/` — сквозное: `config/`, `guards/`, `interceptors/`, `services/`
-- `src/app/features/<feature>/` — фича: `pages/`, `services/`, `models/`
-- `src/app/shared/` — переиспользуемое: `layout/`, `ui/`, `dialogs/`, `services/`, `models/`, `util/`
+- `apps/frontend/src/app/core/` — сквозное: `config/`, `guards/`, `interceptors/`, `services/`
+- `apps/frontend/src/app/features/<feature>/` — фича: `pages/`, `services/`, `models/`
+- `apps/frontend/src/app/shared/` — переиспользуемое: `layout/`, `ui/`, `dialogs/`, `services/`, `models/`, `util/`
 
 ### Конвенции кода
 
 - Типы, интерфейсы и enum'ы — без префиксов, в PascalCase (`User`, `UserRole`, `RegisterResponse`).
 - Инжектируемые сервисы — поле с суффиксом `Service` (`authService`, `dialogService`).
 - Утилиты — функции-модули, не классы-неймспейсы.
-- Стили — только через CSS-токены из `src/styles.scss` (`--color-*`, `--space-*` и т. д.), без
+- Стили — только через CSS-токены из `apps/frontend/src/styles.scss` (`--color-*`, `--space-*` и т. д.), без
   захардкоженных цветов в компонентах.
 - Шаблоны — self-closing теги, новый control flow.
 - **Состояние — на signals** (приватные `WritableSignal` + публичный read-only доступ, производное —
