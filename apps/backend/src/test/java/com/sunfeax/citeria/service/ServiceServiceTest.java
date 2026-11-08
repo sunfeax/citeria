@@ -318,6 +318,7 @@ class ServiceServiceTest {
             id,
             SPECIALIST_ID,
             "Spec Ialist",
+            null,
             name,
             "desc",
             BigDecimal.valueOf(95),

@@ -18,7 +18,6 @@ import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.UnauthorizedException;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
-import com.sunfeax.citeria.repository.UserAvatarRepository;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.security.GoogleIdTokenVerifier;
 import com.sunfeax.citeria.security.GoogleProfile;
@@ -35,7 +34,6 @@ import lombok.RequiredArgsConstructor;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final UserAvatarRepository userAvatarRepository;
     private final UserMapper userMapper;
     private final UserFieldNormalizer userFieldNormalizer;
     private final UserValidator userValidator;
@@ -173,8 +171,7 @@ public class AuthService {
     }
 
     private AuthResponseDto buildLoginResponse(UserEntity user, String accessToken) {
-        boolean hasAvatar = userAvatarRepository.existsById(user.getId());
-        UserResponseDto userResponse = userMapper.toResponseDto(user, hasAvatar);
+        UserResponseDto userResponse = userMapper.toResponseDto(user);
         return new AuthResponseDto(accessToken, "Bearer", userResponse);
     }
 }

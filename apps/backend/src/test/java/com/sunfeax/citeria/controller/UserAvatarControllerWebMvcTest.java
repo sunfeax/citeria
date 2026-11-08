@@ -67,6 +67,27 @@ class UserAvatarControllerWebMvcTest {
     }
 
     @Test
+    void getShouldCacheForeverWhenVersionMatches() throws Exception {
+        Instant updatedAt = Instant.parse("2026-01-01T12:00:00Z");
+        when(userAvatarService.get(ID)).thenReturn(new UserAvatarDto("image/jpeg", new byte[] {1}, updatedAt));
+
+        mockMvc.perform(get("/api/users/" + ID + "/avatar").param("v", String.valueOf(updatedAt.toEpochMilli())))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Cache-Control", "max-age=31536000, public, immutable"));
+    }
+
+    @Test
+    void getShouldRevalidateWhenVersionIsStaleOrMissing() throws Exception {
+        Instant updatedAt = Instant.parse("2026-01-01T12:00:00Z");
+        when(userAvatarService.get(ID)).thenReturn(new UserAvatarDto("image/jpeg", new byte[] {1}, updatedAt));
+
+        mockMvc.perform(get("/api/users/" + ID + "/avatar").param("v", "1"))
+            .andExpect(header().string("Cache-Control", "no-cache"));
+        mockMvc.perform(get("/api/users/" + ID + "/avatar"))
+            .andExpect(header().string("Cache-Control", "no-cache"));
+    }
+
+    @Test
     void getShouldReturnNotFoundWhenMissing() throws Exception {
         when(userAvatarService.get(ID)).thenThrow(new ResourceNotFoundException("Avatar for user " + ID + " not found"));
 

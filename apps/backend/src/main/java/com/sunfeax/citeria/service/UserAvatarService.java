@@ -1,9 +1,19 @@
 package com.sunfeax.citeria.service;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,10 +29,16 @@ import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.security.CurrentUserProvider;
 
 import lombok.RequiredArgsConstructor;
+import net.coobird.thumbnailator.Thumbnails;
+import net.coobird.thumbnailator.geometry.Positions;
 
 @Service
 @RequiredArgsConstructor
 public class UserAvatarService {
+
+    private static final int AVATAR_SIZE_PX = 512;
+    private static final double JPEG_QUALITY = 0.85;
+    private static final String STORED_CONTENT_TYPE = "image/jpeg";
 
     private final UserRepository userRepository;
     private final UserAvatarRepository userAvatarRepository;
@@ -31,22 +47,18 @@ public class UserAvatarService {
     @Value("${app.avatar.maxSizeBytes:5242880}")
     private long maxSizeBytes;
 
+    @Value("${app.avatar.maxSourcePixels:40000000}")
+    private long maxSourcePixels;
+
     @Value("${app.avatar.allowedContentTypes:image/png,image/jpeg}")
     private Set<String> allowedContentTypes;
 
-    @Transactional
     public void upload(UUID userId, MultipartFile file) {
         currentUserProvider.requireSelfOrAdmin(userId);
         requireUserExists(userId);
+        requireAcceptableSize(file);
 
-        String contentType = validate(file);
-
-        byte[] data;
-        try {
-            data = file.getBytes();
-        } catch (IOException e) {
-            throw new RequestValidationException(Map.of("file", "Could not read the uploaded file"));
-        }
+        byte[] data = toStoredImage(file);
 
         UserAvatarEntity avatar = userAvatarRepository.findById(userId)
             .orElseGet(() -> {
@@ -55,7 +67,7 @@ public class UserAvatarService {
                 return created;
             });
         avatar.setData(data);
-        avatar.setContentType(contentType);
+        avatar.setContentType(STORED_CONTENT_TYPE);
 
         userAvatarRepository.save(avatar);
     }
@@ -85,24 +97,75 @@ public class UserAvatarService {
         }
     }
 
-    /**
-     * Validates the uploaded file and returns the normalized (lower-cased) content type.
-     */
-    private String validate(MultipartFile file) {
+    private void requireAcceptableSize(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new RequestValidationException(Map.of("file", "Avatar file must not be empty"));
+            throw invalidFile("Avatar file must not be empty");
         }
         if (file.getSize() > maxSizeBytes) {
-            throw new RequestValidationException(Map.of("file",
-                "Avatar must not exceed " + (maxSizeBytes / (1024 * 1024)) + " MB"));
+            throw invalidFile("Avatar must not exceed " + (maxSizeBytes / (1024 * 1024)) + " MB");
         }
+    }
 
-        String contentType = file.getContentType();
-        if (contentType == null || !allowedContentTypes.contains(contentType.toLowerCase())) {
-            throw new RequestValidationException(Map.of("file",
-                "Avatar must be one of: " + String.join(", ", allowedContentTypes)));
+    private byte[] toStoredImage(MultipartFile file) {
+        try {
+            byte[] source = file.getBytes();
+            requireSupportedImage(source);
+            return renderJpeg(source);
+        } catch (RequestValidationException e) {
+            throw e;
+        } catch (IOException | RuntimeException e) {
+            throw invalidFile("Avatar is not a valid image");
         }
+    }
 
-        return contentType.toLowerCase();
+    private void requireSupportedImage(byte[] source) throws IOException {
+        try (ImageInputStream stream = ImageIO.createImageInputStream(new ByteArrayInputStream(source))) {
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(stream);
+            if (!readers.hasNext()) {
+                throw unsupportedType();
+            }
+
+            ImageReader reader = readers.next();
+            try {
+                if (!allowedContentTypes.contains(reader.getOriginatingProvider().getMIMETypes()[0])) {
+                    throw unsupportedType();
+                }
+
+                reader.setInput(stream, true, true);
+                if ((long) reader.getWidth(0) * reader.getHeight(0) > maxSourcePixels) {
+                    throw invalidFile("Avatar dimensions are too large");
+                }
+            } finally {
+                reader.dispose();
+            }
+        }
+    }
+
+    private byte[] renderJpeg(byte[] source) throws IOException {
+        BufferedImage cropped = Thumbnails.of(new ByteArrayInputStream(source))
+            .size(AVATAR_SIZE_PX, AVATAR_SIZE_PX)
+            .crop(Positions.CENTER)
+            .asBufferedImage();
+
+        BufferedImage opaque = new BufferedImage(cropped.getWidth(), cropped.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = opaque.createGraphics();
+        graphics.drawImage(cropped, 0, 0, Color.WHITE, null);
+        graphics.dispose();
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        Thumbnails.of(opaque)
+            .scale(1)
+            .outputFormat("jpg")
+            .outputQuality(JPEG_QUALITY)
+            .toOutputStream(output);
+        return output.toByteArray();
+    }
+
+    private RequestValidationException unsupportedType() {
+        return invalidFile("Avatar must be one of: " + String.join(", ", allowedContentTypes));
+    }
+
+    private RequestValidationException invalidFile(String message) {
+        return new RequestValidationException(Map.of("file", message));
     }
 }

@@ -44,7 +44,11 @@
   <footer>
     <div class="user">
       <span class="user-avatar" aria-hidden="true">
-        <mat-icon>person</mat-icon>
+        @if (avatarSrc(); as src) {
+          <img [src]="src" alt="" />
+        } @else {
+          <mat-icon>person</mat-icon>
+        }
       </span>
       <span class="user-name">{{ displayName() }}</span>
     </div>

@@ -203,6 +203,7 @@ class ServiceControllerWebMvcTest {
             id,
             specialistId,
             "Specialist Name",
+            null,
             name,
             "desc",
             BigDecimal.valueOf(95),

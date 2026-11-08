@@ -16,6 +16,7 @@ public class ServiceMapper {
             serviceEntity.getId(),
             serviceEntity.getSpecialist().getId(),
             serviceEntity.getSpecialist().getFirstName() + " " + serviceEntity.getSpecialist().getLastName(),
+            serviceEntity.getSpecialist().getAvatarVersion(),
             serviceEntity.getName(),
             serviceEntity.getDescription(),
             serviceEntity.getPriceAmount(),

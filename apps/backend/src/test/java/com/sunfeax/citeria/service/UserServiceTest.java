@@ -6,8 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,7 +35,6 @@ import com.sunfeax.citeria.enums.UserRole;
 import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.exception.RequestValidationException;
 import com.sunfeax.citeria.exception.ResourceNotFoundException;
-import com.sunfeax.citeria.repository.UserAvatarRepository;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
@@ -55,8 +52,6 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
     @Mock
-    private UserAvatarRepository userAvatarRepository;
-    @Mock
     private UserMapper userMapper;
     @Mock
     private UserFieldNormalizer userFieldNormalizer;
@@ -72,7 +67,7 @@ class UserServiceTest {
     @BeforeEach
     void setUp() {
         userValidator = new UserValidator(userRepository, userMapper, passwordEncoder, BEAN_VALIDATOR);
-        userService = new UserService(userRepository, userAvatarRepository, userMapper, userFieldNormalizer, passwordEncoder, userValidator, currentUserProvider);
+        userService = new UserService(userRepository, userMapper, userFieldNormalizer, passwordEncoder, userValidator, currentUserProvider);
     }
 
     @Test
@@ -82,7 +77,7 @@ class UserServiceTest {
         UserResponseDto dto = userResponseDto(new UUID(0, 1L));
 
         when(userRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(entity)));
-        when(userMapper.toResponseDto(eq(entity), anyBoolean())).thenReturn(dto);
+        when(userMapper.toResponseDto(entity)).thenReturn(dto);
 
         PageResponseDto<UserResponseDto> result = userService.list(null, null, null, null, pageable);
 
@@ -96,7 +91,7 @@ class UserServiceTest {
         UserResponseDto dto = userResponseDto(new UUID(0, 1L));
 
         when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
-        when(userMapper.toResponseDto(eq(entity), anyBoolean())).thenReturn(dto);
+        when(userMapper.toResponseDto(entity)).thenReturn(dto);
 
         UserResponseDto result = userService.getById(new UUID(0, 1L));
 
@@ -172,7 +167,7 @@ class UserServiceTest {
         when(userRepository.existsByPhoneAndIdNot("99887766", new UUID(0, 1L))).thenReturn(false);
         when(userMapper.applyPatch(entity, request)).thenReturn(entity);
         when(userRepository.save(entity)).thenReturn(entity);
-        when(userMapper.toResponseDto(eq(entity), anyBoolean())).thenReturn(dto);
+        when(userMapper.toResponseDto(entity)).thenReturn(dto);
 
         UserResponseDto result = userService.update(new UUID(0, 1L), request);
 
@@ -281,7 +276,7 @@ class UserServiceTest {
 
         when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(userRepository.save(entity)).thenReturn(entity);
-        when(userMapper.toResponseDto(eq(entity), anyBoolean())).thenReturn(dto);
+        when(userMapper.toResponseDto(entity)).thenReturn(dto);
 
         UserResponseDto result = userService.deactivateById(new UUID(0, 1L));
 
@@ -302,7 +297,7 @@ class UserServiceTest {
         UserResponseDto dto = userResponseDto(new UUID(0, 1L));
 
         when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
-        when(userMapper.toResponseDto(eq(entity), anyBoolean())).thenReturn(dto);
+        when(userMapper.toResponseDto(entity)).thenReturn(dto);
 
         UserResponseDto result = userService.hardDeleteById(new UUID(0, 1L));
 
@@ -325,7 +320,7 @@ class UserServiceTest {
 
         when(userRepository.findById(new UUID(0, 1L))).thenReturn(Optional.of(entity));
         when(userRepository.save(entity)).thenReturn(entity);
-        when(userMapper.toResponseDto(eq(entity), anyBoolean())).thenReturn(dto);
+        when(userMapper.toResponseDto(entity)).thenReturn(dto);
 
         UserResponseDto result = userService.restoreById(new UUID(0, 1L));
 
@@ -364,7 +359,7 @@ class UserServiceTest {
             UserType.CLIENT,
             true,
             Instant.now(),
-            false,
+            null,
             true
         );
     }

@@ -129,7 +129,7 @@ Response `201`:
 {
   "accessToken": "eyJhbGciOi...",
   "tokenType": "Bearer",
-  "user": { "id": "…", "firstName": "Clara", "email": "clara@example.com", "role": "USER", "type": "CLIENT", "isActive": true, "createdAt": "…", "hasAvatar": false, "hasPassword": true }
+  "user": { "id": "…", "firstName": "Clara", "email": "clara@example.com", "role": "USER", "type": "CLIENT", "isActive": true, "createdAt": "…", "avatarVersion": null, "hasPassword": true }
 }
 ```
 
@@ -190,22 +190,23 @@ Authorization: Bearer <token>
 For a user without a password (signed up with Google, `hasPassword: false`) `currentPassword` may be
 omitted: the request sets the first password.
 
-Every `UserResponseDto` includes a **`hasAvatar`** boolean so the UI knows whether to request the avatar image (see below), and a **`hasPassword`** boolean (`false` for users who signed up with Google and have not set a password yet).
+Every `UserResponseDto` includes an **`avatarVersion`** number (`null` when the user has no avatar) used to build the avatar URL (see below), and a **`hasPassword`** boolean (`false` for users who signed up with Google and have not set a password yet).
 
 ---
 
 ## Avatars — `/api/users/{id}/avatar`
 
-One avatar per user, stored as binary in the database. The image is served as **raw bytes**, not JSON.
+One avatar per user, stored as binary in the database. Uploads are center-cropped to 512×512 and re-encoded as JPEG (EXIF metadata is dropped, transparency becomes white). The image is served as **raw bytes**, not JSON.
 
 | Method | Path | Description | Access |
 |---|---|---|---|
 | POST | `/api/users/{id}/avatar` | Upload / replace avatar (`multipart/form-data`) | self or ADMIN |
-| GET | `/api/users/{id}/avatar` | Download avatar image | any authenticated |
+| GET | `/api/users/{id}/avatar` | Download avatar image | public |
 | DELETE | `/api/users/{id}/avatar` | Remove avatar | self or ADMIN |
 
 **Constraints**
-- Allowed types: `image/png`, `image/jpeg` (`app.avatar.allowedContentTypes`).
+- Allowed types: `image/png`, `image/jpeg` (`app.avatar.allowedContentTypes`), detected from the file content; the `Content-Type` of the part is ignored.
+- Max source dimensions: **40 megapixels** (`app.avatar.maxSourcePixels`).
 - Max size: **5 MB** (`app.avatar.maxSizeBytes`; servlet limits `max-file-size=5MB`, `max-request-size=6MB`).
 - Uploading again **replaces** the existing avatar.
 
@@ -232,12 +233,11 @@ curl -X POST http://localhost:8082/api/users/{id}/avatar \
 
 **Download**
 ```http
-GET /api/users/44444444-4444-4444-4444-444444444444/avatar
-Authorization: Bearer <token>
+GET /api/users/44444444-4444-4444-4444-444444444444/avatar?v=<avatarVersion>
 ```
 Response `200` — image bytes with:
-- `Content-Type: image/png` (or `image/jpeg`)
-- `Cache-Control: max-age=3600, private`
+- `Content-Type: image/jpeg` (avatars uploaded before re-encoding may be `image/png`)
+- `Cache-Control: max-age=31536000, public, immutable` when `v` equals the current `avatarVersion`, otherwise `no-cache`
 - `Last-Modified: <upload time>`
 
 **Delete** — `DELETE /api/users/{id}/avatar` → `204 No Content`.
@@ -245,16 +245,11 @@ Response `200` — image bytes with:
 **Errors**
 | Status | When |
 |---|---|
-| `400` `VALIDATION_ERROR` | Empty file, larger than 5 MB, or unsupported content type (`errors.file`) |
+| `400` `VALIDATION_ERROR` | Empty file, larger than 5 MB, not a valid PNG/JPEG, or too many pixels (`errors.file`) |
 | `403` `FORBIDDEN` | Uploading/deleting someone else's avatar without ADMIN |
 | `404` `RESOURCE_NOT_FOUND` | User does not exist, or the user has no avatar |
 
-> **Frontend note:** the endpoint requires the `Authorization` header, so a plain `<img src="/api/users/{id}/avatar">` will **not** work (the browser won't attach the token). Fetch it with the header and render via an object URL:
-> ```js
-> const res  = await fetch(`/api/users/${id}/avatar`, { headers: { Authorization: `Bearer ${token}` } });
-> const url  = URL.createObjectURL(await res.blob());   // -> <img src={url}>
-> ```
-> Check `user.hasAvatar` first to skip the request (and the expected `404`) for users without one.
+> **Frontend note:** the endpoint is public, so a plain `<img src="…/users/{id}/avatar?v={avatarVersion}">` works. Skip the image when `avatarVersion` is `null`. Service responses expose the same value as `specialistAvatarVersion`.
 
 ---
 

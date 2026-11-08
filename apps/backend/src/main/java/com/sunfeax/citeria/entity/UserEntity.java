@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Formula;
 
 import com.sunfeax.citeria.enums.UserRole;
 import com.sunfeax.citeria.enums.UserType;
@@ -69,6 +70,13 @@ public class UserEntity {
     @CreationTimestamp
     private Instant createdAt;
 
+    @Formula("(SELECT a.updated_at FROM user_avatars a WHERE a.user_id = id)")
+    private Instant avatarUpdatedAt;
+
     @OneToMany(mappedBy = "client")
     private List<AppointmentEntity> clientAppointments;
+
+    public Long getAvatarVersion() {
+        return avatarUpdatedAt == null ? null : avatarUpdatedAt.toEpochMilli();
+    }
 }

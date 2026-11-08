@@ -16,6 +16,7 @@ import { MatProgressBar } from '@angular/material/progress-bar';
 import { MatSelect } from '@angular/material/select';
 import { MatSlider, MatSliderRangeThumb } from '@angular/material/slider';
 import { PageableContent } from '../../../../shared/models/pageable';
+import { avatarUrl } from '../../../../shared/util/avatar-url';
 import { debouncedSignal } from '../../../../shared/util/rxjs-helpers';
 import { ServiceList, ServiceFilters } from '../../models/service-list';
 import { ServiceService } from '../../services/service.service';
@@ -46,6 +47,8 @@ type ServicePage = PageableContent<ServiceList>;
 })
 export class ServiceComponent {
   private readonly serviceService = inject(ServiceService);
+
+  protected readonly avatarUrl = avatarUrl;
 
   readonly search = signal('');
   readonly priceSlider = { min: 0, max: 500, step: 10 } as const;

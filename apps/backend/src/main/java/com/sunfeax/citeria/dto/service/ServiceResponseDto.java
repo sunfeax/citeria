@@ -8,6 +8,7 @@ public record ServiceResponseDto(
     UUID id,
     UUID specialistId,
     String specialistName,
+    Long specialistAvatarVersion,
     String name,
     String description,
     BigDecimal priceAmount,

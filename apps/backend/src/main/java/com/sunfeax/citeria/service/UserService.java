@@ -16,7 +16,6 @@ import com.sunfeax.citeria.exception.ResourceNotFoundException;
 import com.sunfeax.citeria.exception.UnauthorizedException;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.normalizer.UserFieldNormalizer;
-import com.sunfeax.citeria.repository.UserAvatarRepository;
 import com.sunfeax.citeria.repository.UserRepository;
 import com.sunfeax.citeria.security.CurrentUserProvider;
 import com.sunfeax.citeria.validation.UserValidator;
@@ -41,7 +40,6 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final UserAvatarRepository userAvatarRepository;
     private final UserMapper userMapper;
     private final UserFieldNormalizer userFieldNormalizer;
     private final PasswordEncoder passwordEncoder;
@@ -83,21 +81,14 @@ public class UserService {
         Pageable sanitized = PageableUtil.sanitizeSort(pageable, SORTABLE, DEFAULT_SORT);
         Page<UserEntity> users = userRepository.findAll(Specification.allOf(specs), sanitized);
 
-        List<UUID> ids = users.getContent().stream().map(UserEntity::getId).toList();
-        Set<UUID> withAvatar = ids.isEmpty() ? Set.of() : userAvatarRepository.findUserIdsWithAvatar(ids);
-
-        Page<UserResponseDto> page = users.map(
-            user -> userMapper.toResponseDto(user, withAvatar.contains(user.getId()))
-        );
-
-        return PageResponseDto.from(page);
+        return PageResponseDto.from(users.map(userMapper::toResponseDto));
     }
 
     @Transactional(readOnly = true)
     public UserResponseDto getById(UUID id) {
         currentUserProvider.requireSelfOrAdmin(id);
         UserEntity user = findUserOrThrow(id);
-        return userMapper.toResponseDto(user, userAvatarRepository.existsById(id));
+        return userMapper.toResponseDto(user);
     }
 
     @Transactional(readOnly = true)
@@ -105,7 +96,7 @@ public class UserService {
         UserEntity user = userRepository.findByEmail(email)
             .orElseThrow(() -> new UnauthorizedException("User not found"));
 
-        return userMapper.toResponseDto(user, userAvatarRepository.existsById(user.getId()));
+        return userMapper.toResponseDto(user);
     }
 
     @Transactional
@@ -119,7 +110,7 @@ public class UserService {
         userMapper.applyPatch(entity, normalizedRequest);
         UserEntity saved = userRepository.save(entity);
 
-        return userMapper.toResponseDto(saved, userAvatarRepository.existsById(id));
+        return userMapper.toResponseDto(saved);
     }
 
     @Transactional
@@ -143,7 +134,7 @@ public class UserService {
         user.setActive(false);
         UserEntity saved = userRepository.save(user);
 
-        return userMapper.toResponseDto(saved, userAvatarRepository.existsById(id));
+        return userMapper.toResponseDto(saved);
     }
 
     @Transactional
@@ -151,7 +142,7 @@ public class UserService {
         currentUserProvider.requireAdmin();
         UserEntity user = findUserOrThrow(id);
 
-        UserResponseDto deletedUser = userMapper.toResponseDto(user, userAvatarRepository.existsById(id));
+        UserResponseDto deletedUser = userMapper.toResponseDto(user);
         userRepository.delete(user);
 
         return deletedUser;
@@ -165,7 +156,7 @@ public class UserService {
         user.setActive(true);
         UserEntity saved = userRepository.save(user);
 
-        return userMapper.toResponseDto(saved, userAvatarRepository.existsById(id));
+        return userMapper.toResponseDto(saved);
     }
 
     private UserEntity findUserOrThrow(UUID id) {

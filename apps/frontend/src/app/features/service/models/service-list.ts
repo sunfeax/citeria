@@ -2,6 +2,7 @@ export interface ServiceList {
   id: string;
   specialistId: string;
   specialistName: string;
+  specialistAvatarVersion: number | null;
   name: string;
   description: string;
   priceAmount: number;

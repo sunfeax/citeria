@@ -1,5 +1,13 @@
 package com.sunfeax.citeria.service;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -7,12 +15,15 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+
+import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,54 +61,67 @@ class UserAvatarServiceTest {
     void setUp() {
         userAvatarService = new UserAvatarService(userRepository, userAvatarRepository, currentUserProvider);
         ReflectionTestUtils.setField(userAvatarService, "maxSizeBytes", 5_242_880L);
+        ReflectionTestUtils.setField(userAvatarService, "maxSourcePixels", 40_000_000L);
         ReflectionTestUtils.setField(userAvatarService, "allowedContentTypes", Set.of("image/png", "image/jpeg"));
     }
 
     @Test
-    void uploadShouldSaveWhenValid() {
-        MultipartFile file = new MockMultipartFile("file", "avatar.png", "image/png", new byte[] {1, 2, 3});
+    void uploadShouldStoreCenterCroppedJpeg() throws Exception {
+        MultipartFile file = upload("image/png", image("png", 1600, 800, BufferedImage.TYPE_INT_RGB, Color.RED));
         when(userRepository.existsById(ID)).thenReturn(true);
         when(userAvatarRepository.findById(ID)).thenReturn(Optional.empty());
 
         userAvatarService.upload(ID, file);
 
-        ArgumentCaptor<UserAvatarEntity> captor = ArgumentCaptor.forClass(UserAvatarEntity.class);
-        verify(userAvatarRepository).save(captor.capture());
-        UserAvatarEntity saved = captor.getValue();
+        UserAvatarEntity saved = savedAvatar();
+        BufferedImage stored = ImageIO.read(new ByteArrayInputStream(saved.getData()));
         assertEquals(ID, saved.getUserId());
-        assertEquals("image/png", saved.getContentType());
-        assertArrayEquals(new byte[] {1, 2, 3}, saved.getData());
+        assertEquals("image/jpeg", saved.getContentType());
+        assertEquals(512, stored.getWidth());
+        assertEquals(512, stored.getHeight());
     }
 
     @Test
-    void uploadShouldNormalizeContentTypeToLowerCase() {
-        MultipartFile file = new MockMultipartFile("file", "avatar.jpg", "IMAGE/JPEG", new byte[] {9});
+    void uploadShouldFlattenTransparencyOntoWhite() throws Exception {
+        MultipartFile file = upload("image/png", image("png", 64, 64, BufferedImage.TYPE_INT_ARGB, new Color(0, 0, 0, 0)));
         when(userRepository.existsById(ID)).thenReturn(true);
         when(userAvatarRepository.findById(ID)).thenReturn(Optional.empty());
 
         userAvatarService.upload(ID, file);
 
-        ArgumentCaptor<UserAvatarEntity> captor = ArgumentCaptor.forClass(UserAvatarEntity.class);
-        verify(userAvatarRepository).save(captor.capture());
-        assertEquals("image/jpeg", captor.getValue().getContentType());
+        BufferedImage stored = ImageIO.read(new ByteArrayInputStream(savedAvatar().getData()));
+        assertTrue(new Color(stored.getRGB(256, 256)).getRed() > 250);
     }
 
     @Test
-    void uploadShouldReplaceExistingAvatar() {
+    void uploadShouldApplyExifOrientation() throws Exception {
+        MultipartFile file = upload("image/jpeg", withExifRotation(topRedBottomBlueJpeg()));
+        when(userRepository.existsById(ID)).thenReturn(true);
+        when(userAvatarRepository.findById(ID)).thenReturn(Optional.empty());
+
+        userAvatarService.upload(ID, file);
+
+        BufferedImage stored = ImageIO.read(new ByteArrayInputStream(savedAvatar().getData()));
+        Color right = new Color(stored.getRGB(450, 256));
+        assertTrue(right.getRed() > right.getBlue());
+    }
+
+    @Test
+    void uploadShouldReplaceExistingAvatar() throws Exception {
         UserAvatarEntity existing = new UserAvatarEntity(ID, new byte[] {0}, "image/png", Instant.now());
-        MultipartFile file = new MockMultipartFile("file", "new.png", "image/png", new byte[] {4, 5});
+        MultipartFile file = upload("image/png", image("png", 64, 64, BufferedImage.TYPE_INT_RGB, Color.RED));
         when(userRepository.existsById(ID)).thenReturn(true);
         when(userAvatarRepository.findById(ID)).thenReturn(Optional.of(existing));
 
         userAvatarService.upload(ID, file);
 
         verify(userAvatarRepository).save(existing);
-        assertArrayEquals(new byte[] {4, 5}, existing.getData());
+        assertEquals("image/jpeg", existing.getContentType());
     }
 
     @Test
     void uploadShouldThrowWhenUserNotFound() {
-        MultipartFile file = new MockMultipartFile("file", "avatar.png", "image/png", new byte[] {1});
+        MultipartFile file = upload("image/png", new byte[] {1});
         when(userRepository.existsById(ID)).thenReturn(false);
 
         assertThrows(ResourceNotFoundException.class, () -> userAvatarService.upload(ID, file));
@@ -106,30 +130,99 @@ class UserAvatarServiceTest {
 
     @Test
     void uploadShouldRejectEmptyFile() {
-        MultipartFile file = new MockMultipartFile("file", "avatar.png", "image/png", new byte[0]);
-        when(userRepository.existsById(ID)).thenReturn(true);
-
-        assertThrows(RequestValidationException.class, () -> userAvatarService.upload(ID, file));
-        verify(userAvatarRepository, never()).save(any());
+        assertRejected(upload("image/png", new byte[0]));
     }
 
     @Test
     void uploadShouldRejectTooLargeFile() {
         ReflectionTestUtils.setField(userAvatarService, "maxSizeBytes", 2L);
-        MultipartFile file = new MockMultipartFile("file", "avatar.png", "image/png", new byte[] {1, 2, 3});
+
+        assertRejected(upload("image/png", new byte[] {1, 2, 3}));
+    }
+
+    @Test
+    void uploadShouldRejectNonImageClaimingToBePng() {
+        assertRejected(upload("image/png", "<svg onload=alert(1)>".getBytes()));
+    }
+
+    @Test
+    void uploadShouldRejectUnsupportedFormatClaimingToBePng() throws Exception {
+        assertRejected(upload("image/png", image("gif", 8, 8, BufferedImage.TYPE_INT_RGB, Color.RED)));
+    }
+
+    @Test
+    void uploadShouldRejectTruncatedImage() throws Exception {
+        byte[] png = image("png", 64, 64, BufferedImage.TYPE_INT_RGB, Color.RED);
+
+        assertRejected(upload("image/png", Arrays.copyOf(png, 20)));
+    }
+
+    @Test
+    void uploadShouldRejectTooManyPixels() throws Exception {
+        ReflectionTestUtils.setField(userAvatarService, "maxSourcePixels", 100L);
+
+        assertRejected(upload("image/png", image("png", 11, 10, BufferedImage.TYPE_INT_RGB, Color.RED)));
+    }
+
+    private void assertRejected(MultipartFile file) {
         when(userRepository.existsById(ID)).thenReturn(true);
 
         assertThrows(RequestValidationException.class, () -> userAvatarService.upload(ID, file));
         verify(userAvatarRepository, never()).save(any());
     }
 
-    @Test
-    void uploadShouldRejectUnsupportedContentType() {
-        MultipartFile file = new MockMultipartFile("file", "avatar.gif", "image/gif", new byte[] {1, 2, 3});
-        when(userRepository.existsById(ID)).thenReturn(true);
+    private UserAvatarEntity savedAvatar() {
+        ArgumentCaptor<UserAvatarEntity> captor = ArgumentCaptor.forClass(UserAvatarEntity.class);
+        verify(userAvatarRepository).save(captor.capture());
+        return captor.getValue();
+    }
 
-        assertThrows(RequestValidationException.class, () -> userAvatarService.upload(ID, file));
-        verify(userAvatarRepository, never()).save(any());
+    private MultipartFile upload(String contentType, byte[] content) {
+        return new MockMultipartFile("file", "avatar", contentType, content);
+    }
+
+    private byte[] image(String format, int width, int height, int type, Color fill) throws IOException {
+        BufferedImage image = new BufferedImage(width, height, type);
+        Graphics2D graphics = image.createGraphics();
+        graphics.setComposite(AlphaComposite.Src);
+        graphics.setColor(fill);
+        graphics.fillRect(0, 0, width, height);
+        graphics.dispose();
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ImageIO.write(image, format, output);
+        return output.toByteArray();
+    }
+
+    private byte[] topRedBottomBlueJpeg() throws IOException {
+        BufferedImage image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = image.createGraphics();
+        graphics.setColor(Color.RED);
+        graphics.fillRect(0, 0, 100, 50);
+        graphics.setColor(Color.BLUE);
+        graphics.fillRect(0, 50, 100, 50);
+        graphics.dispose();
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ImageIO.write(image, "jpg", output);
+        return output.toByteArray();
+    }
+
+    private byte[] withExifRotation(byte[] jpeg) throws IOException {
+        byte[] exif = {
+            (byte) 0xFF, (byte) 0xE1, 0, 34,
+            'E', 'x', 'i', 'f', 0, 0,
+            'M', 'M', 0, 42, 0, 0, 0, 8,
+            0, 1,
+            0x01, 0x12, 0, 3, 0, 0, 0, 1, 0, 6, 0, 0,
+            0, 0, 0, 0
+        };
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        output.write(jpeg, 0, 2);
+        output.write(exif);
+        output.write(jpeg, 2, jpeg.length - 2);
+        return output.toByteArray();
     }
 
     @Test

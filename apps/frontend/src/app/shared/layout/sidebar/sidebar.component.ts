@@ -6,6 +6,7 @@ import { exhaustMap } from 'rxjs';
 import { SessionStore } from '../../../features/auth/session.store';
 import { DialogService } from '../../services/dialog.service';
 import { ThemeService } from '../../services/theme.service';
+import { avatarUrl } from '../../util/avatar-url';
 import { SIDEBAR_CONFIG } from '../../util/sidebar.config';
 import { AuthService } from './../../../features/auth/services/auth.service';
 
@@ -29,6 +30,10 @@ export class SidebarComponent {
     const user = this.sessionStore.user();
     if (!user) return 'Guest';
     return user.firstName?.trim() || user.email;
+  });
+  protected readonly avatarSrc = computed(() => {
+    const user = this.sessionStore.user();
+    return user ? avatarUrl(user.id, user.avatarVersion) : null;
   });
 
   toggleSidebar(): void {

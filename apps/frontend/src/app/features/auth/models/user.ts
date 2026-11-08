@@ -10,7 +10,7 @@ export interface User {
   role: UserRole;
   type: UserType;
   isActive: boolean;
-  hasAvatar: boolean;
+  avatarVersion: number | null;
   hasPassword: boolean;
   createdAt: string;
 }

@@ -37,12 +37,18 @@ public class UserAvatarController {
     }
 
     @GetMapping
-    public ResponseEntity<byte[]> get(@PathVariable UUID id) {
+    public ResponseEntity<byte[]> get(
+        @PathVariable UUID id,
+        @RequestParam(required = false) Long v
+    ) {
         UserAvatarDto avatar = userAvatarService.get(id);
+        boolean currentVersion = v != null && v == avatar.updatedAt().toEpochMilli();
 
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType(avatar.contentType()))
-            .cacheControl(CacheControl.maxAge(Duration.ofHours(1)).cachePrivate())
+            .cacheControl(currentVersion
+                ? CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable()
+                : CacheControl.noCache())
             .lastModified(avatar.updatedAt())
             .body(avatar.data());
     }
