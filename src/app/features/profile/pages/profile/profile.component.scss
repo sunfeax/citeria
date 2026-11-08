@@ -16,7 +16,7 @@
 
 .profile-page__eyebrow {
   margin: 0 0 var(--space-1);
-  color: var(--color-primary-text);
+  color: var(--color-text);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
   letter-spacing: 0.96px;
@@ -69,8 +69,8 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-xl);
-  background: var(--color-primary-soft);
-  color: var(--color-primary-text);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
 }
 
 .profile-card__icon--danger {

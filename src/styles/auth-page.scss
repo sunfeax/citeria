@@ -76,8 +76,8 @@
     justify-content: center;
     margin-bottom: var(--space-4);
     border-radius: var(--radius-2xl);
-    background: var(--color-primary-tint);
-    color: var(--color-primary-text);
+    background: var(--color-surface-hover);
+    color: var(--color-text);
   }
 
   .brand-block__icon-svg {
@@ -150,7 +150,7 @@
   }
 
   .auth-link {
-    color: var(--color-primary-text);
+    color: var(--color-text);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
     transition: color var(--transition-base);
@@ -158,7 +158,7 @@
 
   .auth-link:hover,
   .auth-link:focus-visible {
-    color: var(--color-primary-text-hover);
+    color: var(--color-text-soft);
   }
 
   .auth-link--small {
