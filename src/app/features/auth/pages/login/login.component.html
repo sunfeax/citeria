@@ -13,7 +13,13 @@
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
       <mat-form-field>
         <mat-label>Email</mat-label>
-        <input matInput type="email" placeholder="name@example.com" formControlName="email" autocomplete="email" />
+        <input
+          matInput
+          type="email"
+          placeholder="name@example.com"
+          formControlName="email"
+          autocomplete="email"
+        />
         <mat-error>{{ getFieldError(loginForm.controls.email) }}</mat-error>
       </mat-form-field>
 
@@ -35,16 +41,25 @@
             [attr.aria-pressed]="isPasswordVisible()"
             (click)="isPasswordVisible.update(visible => !visible)"
           >
-            <mat-icon>{{ isPasswordVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            <mat-icon>
+              {{ isPasswordVisible() ? 'visibility_off' : 'visibility' }}
+            </mat-icon>
           </button>
           <mat-error>{{ getFieldError(loginForm.controls.password) }}</mat-error>
         </mat-form-field>
         <div class="auth-actions auth-actions--end">
-          <a [routerLink]="routePaths.forgotPassword" class="auth-link auth-link--small">Forgot password?</a>
+          <a [routerLink]="routePaths.forgotPassword" class="auth-link auth-link--small">
+            Forgot password?
+          </a>
         </div>
       </div>
 
-      <button matButton="filled" type="submit" class="btn-block btn-lg" [disabled]="isLoading()">
+      <button
+        matButton="filled"
+        type="submit"
+        class="btn-block btn-lg"
+        [disabled]="isLoading()"
+      >
         @if (isLoading()) {
           <mat-progress-spinner mode="indeterminate" diameter="20" />
         }
