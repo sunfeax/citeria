@@ -63,6 +63,7 @@ export class ProfileComponent {
 
   /** DATA */
   readonly user = computed(() => this.sessionStore.requireUser());
+  readonly hasPassword = computed(() => this.user().hasPassword);
 
   /** STATE */
   isProfileLoading = signal<boolean>(false);
@@ -113,6 +114,12 @@ export class ProfileComponent {
       ],
     }),
   });
+
+  constructor() {
+    if (!this.hasPassword()) {
+      this.passwordForm.controls.currentPassword.disable();
+    }
+  }
 
   /** ACTIONS */
   submitProfileForm(): void {
@@ -169,7 +176,14 @@ export class ProfileComponent {
       )
       .subscribe({
         next: () => {
-          this.snackbarService.success('Your password has been updated.');
+          const wasSet = !this.hasPassword();
+          this.snackbarService.success(
+            wasSet ? 'Your password has been set.' : 'Your password has been updated.',
+          );
+          if (wasSet) {
+            this.sessionStore.setUser({ ...this.user(), hasPassword: true });
+            this.passwordForm.controls.currentPassword.enable();
+          }
           this.passwordForm.reset();
         },
         error: (err: HttpErrorResponse) => {

@@ -89,7 +89,13 @@
 
         <div>
           <h2 id="password-title" class="profile-card__title">Password</h2>
-          <p class="profile-card__description">Use a strong, unique password.</p>
+          <p class="profile-card__description">
+            @if (hasPassword()) {
+              Use a strong, unique password.
+            } @else {
+              You sign in with Google. Set a password to also sign in with your email.
+            }
+          </p>
         </div>
       </header>
 
@@ -98,34 +104,36 @@
         (ngSubmit)="submitPasswordForm()"
         class="profile-form"
       >
-        <mat-form-field>
-          <mat-label>Current password</mat-label>
-          <input
-            matInput
-            [type]="isCurrentPasswordVisible() ? 'text' : 'password'"
-            formControlName="currentPassword"
-            autocomplete="current-password"
-          />
-          <button
-            matIconButton
-            matSuffix
-            type="button"
-            [attr.aria-label]="
-              isCurrentPasswordVisible()
-                ? 'Hide current password'
-                : 'Show current password'
-            "
-            [attr.aria-pressed]="isCurrentPasswordVisible()"
-            (click)="isCurrentPasswordVisible.update(visible => !visible)"
-          >
-            <mat-icon>
-              {{ isCurrentPasswordVisible() ? 'visibility_off' : 'visibility' }}
-            </mat-icon>
-          </button>
-          <mat-error>
-            {{ getFieldError(passwordForm.controls.currentPassword) }}
-          </mat-error>
-        </mat-form-field>
+        @if (hasPassword()) {
+          <mat-form-field>
+            <mat-label>Current password</mat-label>
+            <input
+              matInput
+              [type]="isCurrentPasswordVisible() ? 'text' : 'password'"
+              formControlName="currentPassword"
+              autocomplete="current-password"
+            />
+            <button
+              matIconButton
+              matSuffix
+              type="button"
+              [attr.aria-label]="
+                isCurrentPasswordVisible()
+                  ? 'Hide current password'
+                  : 'Show current password'
+              "
+              [attr.aria-pressed]="isCurrentPasswordVisible()"
+              (click)="isCurrentPasswordVisible.update(visible => !visible)"
+            >
+              <mat-icon>
+                {{ isCurrentPasswordVisible() ? 'visibility_off' : 'visibility' }}
+              </mat-icon>
+            </button>
+            <mat-error>
+              {{ getFieldError(passwordForm.controls.currentPassword) }}
+            </mat-error>
+          </mat-form-field>
+        }
 
         <mat-form-field>
           <mat-label>New password</mat-label>
@@ -162,7 +170,7 @@
             @if (isPasswordLoading()) {
               <mat-progress-spinner mode="indeterminate" diameter="20" />
             }
-            Change password
+            {{ hasPassword() ? 'Change password' : 'Set password' }}
           </button>
         </div>
       </form>

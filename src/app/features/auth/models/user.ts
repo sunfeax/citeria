@@ -11,5 +11,6 @@ export interface User {
   type: UserType;
   isActive: boolean;
   hasAvatar: boolean;
+  hasPassword: boolean;
   createdAt: string;
 }

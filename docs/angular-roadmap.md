@@ -87,7 +87,12 @@ UI остаётся на Angular Material, меняется только вне�
 
 ## 8 — Деплой и портфолио ⬜
 
-- ⬜ Prod-окружение, CORS и refresh-cookie на проде.
+Домен фронтенда: `https://citeria.sunfeax.com`.
+
+- ⬜ Prod-окружение, CORS и refresh-cookie на проде: реальный `baseUrl` в `environment.prod.ts`,
+  `app.cors.allowed-origin`, `app.jwt.refreshCookieSecure=true`.
+- ⬜ Google: `GOOGLE_CLIENT_ID` в окружении бэкенда на хостинге, приложение в консоли Google
+  перевести из Testing в Production.
 - ⬜ Хостинг фронтенда и бэкенда (выбрать).
 - ⬜ README со скриншотами, стеком и демо-аккаунтами.
 
