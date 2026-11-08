@@ -1,0 +1,16 @@
+.sidebar-layout {
+  display: flex;
+  min-height: 100vh;
+
+  app-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    flex-shrink: 0;
+  }
+
+  main {
+    flex: 1;
+    min-width: 0;
+  }
+}

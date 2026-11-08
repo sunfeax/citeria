@@ -1,0 +1,23 @@
+@if (loadFailed()) {
+  <p class="google-sign-in__error">Google sign-in is unavailable right now.</p>
+} @else {
+  <div class="google-sign-in" [class.google-sign-in--busy]="isLoading()">
+    <button
+      matButton="outlined"
+      type="button"
+      class="google-sign-in__face btn-block"
+      [class.btn-lg]="large()"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      @if (isLoading()) {
+        <mat-progress-spinner mode="indeterminate" diameter="20" />
+      } @else {
+        <img class="google-sign-in__logo" src="assets/logos/google-logo.svg" alt="" />
+      }
+      Continue with Google
+    </button>
+
+    <div #container class="google-sign-in__overlay" [attr.aria-busy]="isLoading()"></div>
+  </div>
+}

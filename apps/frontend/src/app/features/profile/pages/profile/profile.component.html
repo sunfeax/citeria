@@ -1,0 +1,206 @@
+<section class="profile-page" aria-labelledby="profile-title">
+  <header class="profile-page__header">
+    <p class="profile-page__eyebrow">Account</p>
+    <h1 id="profile-title" class="profile-page__title">Profile settings</h1>
+    <p class="profile-page__subtitle">
+      Manage your personal details and keep your account secure.
+    </p>
+  </header>
+
+  <div class="profile-page__grid">
+    <section class="profile-card" aria-labelledby="general-information-title">
+      <header class="profile-card__header">
+        <span class="profile-card__icon" aria-hidden="true">
+          <mat-icon>person</mat-icon>
+        </span>
+
+        <div>
+          <h2 id="general-information-title" class="profile-card__title">
+            General information
+          </h2>
+          <p class="profile-card__description">
+            Update the details shown on your profile.
+          </p>
+        </div>
+      </header>
+
+      <form
+        [formGroup]="profileForm"
+        (ngSubmit)="submitProfileForm()"
+        class="profile-form"
+      >
+        <div class="profile-form__grid">
+          <mat-form-field>
+            <mat-label>First name</mat-label>
+            <input
+              matInput
+              type="text"
+              formControlName="firstName"
+              autocomplete="given-name"
+            />
+            <mat-error>{{ getFieldError(profileForm.controls.firstName) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Last name</mat-label>
+            <input
+              matInput
+              type="text"
+              formControlName="lastName"
+              autocomplete="family-name"
+            />
+            <mat-error>{{ getFieldError(profileForm.controls.lastName) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Email address</mat-label>
+            <input matInput type="email" formControlName="email" autocomplete="email" />
+            <mat-error>{{ getFieldError(profileForm.controls.email) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Phone number</mat-label>
+            <input matInput type="tel" formControlName="phone" autocomplete="tel" />
+            <mat-error>{{ getFieldError(profileForm.controls.phone) }}</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="profile-form__actions">
+          <button
+            matButton="filled"
+            type="submit"
+            class="profile-form__submit"
+            [disabled]="profileForm.pristine || isProfileLoading()"
+          >
+            @if (isProfileLoading()) {
+              <mat-progress-spinner mode="indeterminate" diameter="20" />
+            }
+            Save changes
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="profile-card profile-card--security" aria-labelledby="password-title">
+      <header class="profile-card__header">
+        <span class="profile-card__icon" aria-hidden="true">
+          <mat-icon>verified_user</mat-icon>
+        </span>
+
+        <div>
+          <h2 id="password-title" class="profile-card__title">Password</h2>
+          <p class="profile-card__description">
+            @if (hasPassword()) {
+              Use a strong, unique password.
+            } @else {
+              You sign in with Google. Set a password to also sign in with your email.
+            }
+          </p>
+        </div>
+      </header>
+
+      <form
+        [formGroup]="passwordForm"
+        (ngSubmit)="submitPasswordForm()"
+        class="profile-form"
+      >
+        @if (hasPassword()) {
+          <mat-form-field>
+            <mat-label>Current password</mat-label>
+            <input
+              matInput
+              [type]="isCurrentPasswordVisible() ? 'text' : 'password'"
+              formControlName="currentPassword"
+              autocomplete="current-password"
+            />
+            <button
+              matIconButton
+              matSuffix
+              type="button"
+              [attr.aria-label]="
+                isCurrentPasswordVisible()
+                  ? 'Hide current password'
+                  : 'Show current password'
+              "
+              [attr.aria-pressed]="isCurrentPasswordVisible()"
+              (click)="isCurrentPasswordVisible.update(visible => !visible)"
+            >
+              <mat-icon>
+                {{ isCurrentPasswordVisible() ? 'visibility_off' : 'visibility' }}
+              </mat-icon>
+            </button>
+            <mat-error>
+              {{ getFieldError(passwordForm.controls.currentPassword) }}
+            </mat-error>
+          </mat-form-field>
+        }
+
+        <mat-form-field>
+          <mat-label>New password</mat-label>
+          <input
+            matInput
+            [type]="isNewPasswordVisible() ? 'text' : 'password'"
+            formControlName="newPassword"
+            autocomplete="new-password"
+          />
+          <button
+            matIconButton
+            matSuffix
+            type="button"
+            [attr.aria-label]="
+              isNewPasswordVisible() ? 'Hide new password' : 'Show new password'
+            "
+            [attr.aria-pressed]="isNewPasswordVisible()"
+            (click)="isNewPasswordVisible.update(visible => !visible)"
+          >
+            <mat-icon>
+              {{ isNewPasswordVisible() ? 'visibility_off' : 'visibility' }}
+            </mat-icon>
+          </button>
+          <mat-error>{{ getFieldError(passwordForm.controls.newPassword) }}</mat-error>
+        </mat-form-field>
+
+        <div class="profile-form__actions">
+          <button
+            matButton="filled"
+            type="submit"
+            class="profile-form__submit"
+            [disabled]="passwordForm.pristine || isPasswordLoading()"
+          >
+            @if (isPasswordLoading()) {
+              <mat-progress-spinner mode="indeterminate" diameter="20" />
+            }
+            {{ hasPassword() ? 'Change password' : 'Set password' }}
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section
+      class="profile-card profile-card--danger"
+      aria-labelledby="danger-zone-title"
+    >
+      <header class="profile-card__header profile-card__header--compact">
+        <span class="profile-card__icon profile-card__icon--danger" aria-hidden="true">
+          <mat-icon>warning</mat-icon>
+        </span>
+
+        <div>
+          <h2 id="danger-zone-title" class="profile-card__title">Delete account</h2>
+          <p class="profile-card__description">
+            Your account will be deactivated and you will be signed out on all devices.
+          </p>
+        </div>
+      </header>
+
+      <button
+        matButton="outlined"
+        type="button"
+        class="profile-card__danger-action"
+        (click)="deleteAccount()"
+      >
+        Delete account
+      </button>
+    </section>
+  </div>
+</section>

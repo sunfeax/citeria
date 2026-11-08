@@ -1,0 +1,214 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--color-background);
+}
+
+.profile-page {
+  width: min(100%, 1088px);
+  margin-inline: auto;
+  padding: var(--space-6);
+}
+
+.profile-page__header {
+  margin-bottom: var(--space-8);
+}
+
+.profile-page__eyebrow {
+  margin: 0 0 var(--space-1);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.96px;
+  text-transform: uppercase;
+}
+
+.profile-page__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 26px;
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.profile-page__subtitle {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.profile-page__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(288px, 0.85fr);
+  gap: var(--space-6);
+  align-items: stretch;
+}
+
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  border: var(--border-width-sm) solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.profile-card__icon {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+.profile-card__icon--danger {
+  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  color: var(--color-danger);
+}
+
+.profile-card__icon mat-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+}
+
+.profile-card__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.profile-card__description {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+}
+
+.profile-card__header--compact {
+  margin-bottom: 0;
+}
+
+.profile-card--danger {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  border-color: color-mix(in srgb, var(--color-danger) 40%, var(--color-border));
+}
+
+.profile-card__danger-action {
+  flex: 0 0 auto;
+  --mat-button-outlined-label-text-color: var(--color-danger);
+  --mat-button-outlined-outline-color: var(--color-danger);
+}
+
+.profile-form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.profile-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5) var(--space-4);
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.profile-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: var(--space-5);
+  border-top: var(--border-width-sm) solid var(--color-border-soft);
+}
+
+.profile-form__submit {
+  min-width: 168px;
+  white-space: nowrap;
+}
+
+@media (max-width: 1024px) {
+  .profile-page__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-card--security {
+    max-width: 576px;
+  }
+
+  .profile-card--danger {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-page {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .profile-page__header {
+    margin-bottom: var(--space-6);
+  }
+
+  .profile-card {
+    padding: var(--space-5);
+  }
+
+  .profile-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-form__actions,
+  .profile-form__submit,
+  .profile-card__danger-action {
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  .profile-page {
+    padding: var(--space-8);
+  }
+
+  .profile-card {
+    padding: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .profile-page__title {
+    font-size: 30px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .profile-page {
+    padding: var(--space-10);
+  }
+
+  .profile-card {
+    padding: var(--space-8);
+  }
+}

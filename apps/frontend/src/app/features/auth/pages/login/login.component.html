@@ -1,0 +1,85 @@
+<div class="auth-page">
+  <div class="auth-card auth-card--login">
+    <div class="auth-card__header">
+      <div class="brand-block">
+        <div class="brand-block__icon">
+          <mat-icon class="brand-block__icon-svg">bolt</mat-icon>
+        </div>
+        <h1 class="brand-block__title">Citeria</h1>
+        <p class="brand-block__subtitle">Please enter your details to sign in</p>
+      </div>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <mat-form-field>
+        <mat-label>Email</mat-label>
+        <input
+          matInput
+          type="email"
+          placeholder="name@example.com"
+          formControlName="email"
+          autocomplete="email"
+        />
+        <mat-error>{{ getFieldError(loginForm.controls.email) }}</mat-error>
+      </mat-form-field>
+
+      <div class="password-block">
+        <mat-form-field>
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            [type]="isPasswordVisible() ? 'text' : 'password'"
+            placeholder="••••••••"
+            formControlName="password"
+            autocomplete="current-password"
+          />
+          <button
+            matIconButton
+            matSuffix
+            type="button"
+            [attr.aria-label]="isPasswordVisible() ? 'Hide password' : 'Show password'"
+            [attr.aria-pressed]="isPasswordVisible()"
+            (click)="isPasswordVisible.update(visible => !visible)"
+          >
+            <mat-icon>
+              {{ isPasswordVisible() ? 'visibility_off' : 'visibility' }}
+            </mat-icon>
+          </button>
+          <mat-error>{{ getFieldError(loginForm.controls.password) }}</mat-error>
+        </mat-form-field>
+        <div class="auth-actions auth-actions--end">
+          <a [routerLink]="routePaths.forgotPassword" class="auth-link auth-link--small">
+            Forgot password?
+          </a>
+        </div>
+      </div>
+
+      <button
+        matButton="filled"
+        type="submit"
+        class="btn-block btn-lg"
+        [disabled]="isLoading()"
+      >
+        @if (isLoading()) {
+          <mat-progress-spinner mode="indeterminate" diameter="20" />
+        }
+        Login
+      </button>
+
+      <p class="auth-switch">
+        Don't have an account?
+        <a [routerLink]="routePaths.register" class="auth-link">Sign up</a>
+      </p>
+
+      @if (isGoogleEnabled) {
+        <div class="auth-divider">
+          <div class="auth-divider__line"></div>
+          <span class="auth-divider__text">OR CONTINUE WITH</span>
+          <div class="auth-divider__line"></div>
+        </div>
+
+        <app-google-sign-in large />
+      }
+    </form>
+  </div>
+</div>

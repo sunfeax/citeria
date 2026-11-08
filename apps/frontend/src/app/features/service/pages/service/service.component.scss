@@ -1,0 +1,331 @@
+.specialists {
+  min-height: 100%;
+  padding: 40px 20px;
+  background: var(--color-background);
+}
+
+.specialists__container {
+  width: min(100%, 1200px);
+  margin-inline: auto;
+}
+
+.specialists__header {
+  max-width: 640px;
+  margin-bottom: 32px;
+}
+
+.specialists__eyebrow {
+  display: inline-block;
+  margin-bottom: var(--space-3);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 1.12px;
+  text-transform: uppercase;
+}
+
+.specialists__header h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 32px;
+  line-height: 1.08;
+  letter-spacing: -1.28px;
+}
+
+.specialists__header p {
+  margin: var(--space-4) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+}
+
+.specialists__filters {
+  display: grid;
+  gap: var(--gap-md);
+  margin-bottom: var(--space-4);
+}
+
+.specialists__filters-toggle {
+  color: var(--color-text-muted);
+  transition:
+    color 0.2s,
+    background-color 0.2s;
+}
+
+.specialists__filters-toggle--active {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.specialists__filters-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-6);
+}
+
+.specialists__price-range {
+  display: flex;
+  flex: 0 1 300px;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.specialists__price-label {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.specialists__price-range mat-slider {
+  flex: 1;
+  min-width: 0;
+  margin-inline: 8px;
+}
+
+.specialists__status {
+  --mat-form-field-container-height: 36px;
+  --mat-form-field-container-vertical-padding: 6px;
+  flex: 0 1 160px;
+  font-size: var(--font-size-sm);
+}
+
+.filters-enter {
+  animation: filters-in 0.2s ease-out;
+}
+
+.filters-leave {
+  animation: filters-in 0.15s ease-in reverse;
+}
+
+@keyframes filters-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.specialists__progress {
+  height: 3px;
+  margin-bottom: 10px;
+}
+
+mat-progress-bar {
+  --mat-progress-bar-active-indicator-color: var(--color-primary);
+  --mat-progress-bar-track-color: var(--color-border-soft);
+  --mat-progress-bar-active-indicator-height: 3px;
+  --mat-progress-bar-track-height: 3px;
+  --mat-progress-bar-track-shape: var(--radius-full);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  animation: progress-appear 0.15s ease-out 0.2s both;
+}
+
+@keyframes progress-appear {
+  from {
+    opacity: 0;
+  }
+}
+
+.specialists__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 16px;
+  transition: opacity 0.2s;
+}
+
+// Dim only when loading takes a while; the delay applies on the way in, restoring starts right away.
+.specialists__grid--stale {
+  opacity: 0.55;
+  transition-delay: 0.2s;
+}
+
+.specialist-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: var(--border-width-sm) solid var(--color-border-soft);
+  border-radius: 21.6px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.specialist-card__media {
+  position: relative;
+  min-height: 180px;
+  overflow: hidden;
+  background: var(--color-surface-muted);
+}
+
+.specialist-card__tag {
+  position: absolute;
+  z-index: 2;
+  top: 10.4px;
+  left: 10.4px;
+  max-width: calc(100% - 20.8px);
+  overflow: hidden;
+  padding: 4px 8.8px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+  color: var(--color-text);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.45px;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.specialist-card__avatar {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+:host-context([data-theme='dark']) .specialist-card__avatar--placeholder {
+  filter: invert(0.88);
+}
+
+.specialist-card__content {
+  display: flex;
+  min-height: 172px;
+  flex: 1;
+  flex-direction: column;
+  padding: 18.4px;
+}
+
+.specialist-card__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.specialist-card__heading h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 19.2px;
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.48px;
+}
+
+.specialist-card__description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: var(--space-3) 0 var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.specialist-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: auto;
+}
+
+.specialist-card__price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+.specialist-card__price strong {
+  color: var(--color-text);
+  font-size: 19.2px;
+  line-height: 1;
+}
+
+.specialist-card__price small {
+  font-size: var(--font-size-sm);
+}
+
+.specialists__state {
+  display: grid;
+  grid-column: 1 / -1;
+  justify-items: center;
+  gap: var(--gap-md);
+  padding: 48px;
+  border: var(--border-width-sm) dashed var(--color-border);
+  border-radius: var(--radius-3xl);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  text-align: center;
+
+  p {
+    margin: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .specialists {
+    padding-inline: var(--space-4);
+  }
+
+  .specialist-card {
+    border-radius: 21.6px;
+  }
+
+  .specialist-card__media {
+    min-height: 180px;
+  }
+
+  .specialist-card__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .specialist-card__footer button {
+    align-self: stretch;
+  }
+}
+
+@media (min-width: 768px) {
+  .specialists {
+    padding-block: 48px;
+  }
+
+  .specialists__header {
+    margin-bottom: 40px;
+  }
+
+  .specialists__header h1 {
+    font-size: 40px;
+  }
+
+  .specialists__grid {
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .specialists {
+    padding-block: 64px;
+  }
+
+  .specialists__header h1 {
+    font-size: 52px;
+    letter-spacing: -2.08px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .specialists {
+    padding-block: 80px;
+  }
+
+  .specialists__header {
+    margin-bottom: 48px;
+  }
+
+  .specialists__grid {
+    gap: 24px;
+  }
+}

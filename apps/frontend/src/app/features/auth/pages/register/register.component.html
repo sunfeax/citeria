@@ -1,0 +1,217 @@
+<div class="auth-page auth-page--comfortable">
+  <div class="auth-card auth-card--register auth-card--split">
+    <section class="register-hero" aria-label="Citeria registration overview">
+      <div>
+        <div class="register-hero__brand">
+          <span class="register-hero__mark">
+            <mat-icon class="register-hero__mark-icon">bolt</mat-icon>
+          </span>
+          <span>Citeria</span>
+        </div>
+
+        <h2 class="register-hero__title">
+          Join the world's largest marketplace for high-quality professional services.
+        </h2>
+        <p class="register-hero__text">
+          Connect with over 50,000 top-tier specialists and scale your business with
+          confidence.
+        </p>
+      </div>
+
+      <div class="register-hero__trust">
+        <div class="register-hero__avatars" aria-hidden="true">
+          <span class="register-hero__avatar">G</span>
+          <span class="register-hero__avatar">A</span>
+          <span class="register-hero__avatar">M</span>
+          <span class="register-hero__avatar register-hero__avatar--count">50K</span>
+        </div>
+        <p>Trusted by experts from Google, Apple, and Meta.</p>
+      </div>
+    </section>
+
+    <section class="register-panel">
+      <div class="register-panel__inner">
+        <div class="register-panel__header">
+          <h1 class="register-panel__title">Create your account</h1>
+          <p class="register-panel__subtitle">
+            Join our community of world-class experts.
+          </p>
+        </div>
+
+        <form
+          [formGroup]="registerForm"
+          (ngSubmit)="onSubmit()"
+          class="auth-form auth-form--grid auth-form--register"
+        >
+          <mat-form-field>
+            <mat-label>First name</mat-label>
+            <input
+              matInput
+              type="text"
+              placeholder="Jane"
+              formControlName="firstName"
+              autocomplete="given-name"
+            />
+            <mat-error>{{ getFieldError(registerForm.controls.firstName) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Last name</mat-label>
+            <input
+              matInput
+              type="text"
+              placeholder="Doe"
+              formControlName="lastName"
+              autocomplete="family-name"
+            />
+            <mat-error>{{ getFieldError(registerForm.controls.lastName) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Email address</mat-label>
+            <input
+              matInput
+              type="email"
+              placeholder="name@example.com"
+              formControlName="email"
+              autocomplete="email"
+            />
+            <mat-error>{{ getFieldError(registerForm.controls.email) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Phone number</mat-label>
+            <input
+              matInput
+              type="tel"
+              placeholder="+1 234 567 890"
+              formControlName="phone"
+              autocomplete="tel"
+            />
+            <mat-error>{{ getFieldError(registerForm.controls.phone) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="auth-form__full">
+            <mat-label>Password</mat-label>
+            <input
+              matInput
+              [type]="isPasswordVisible() ? 'text' : 'password'"
+              placeholder="Password"
+              formControlName="password"
+              autocomplete="new-password"
+            />
+            <span matSuffix class="suffix-actions">
+              <button
+                matIconButton
+                type="button"
+                aria-label="Password requirements"
+                [matTooltip]="passwordRequirements"
+                matTooltipClass="multiline-tooltip"
+              >
+                <mat-icon>info</mat-icon>
+              </button>
+              <button
+                matIconButton
+                type="button"
+                [attr.aria-label]="
+                  isPasswordVisible() ? 'Hide password' : 'Show password'
+                "
+                [attr.aria-pressed]="isPasswordVisible()"
+                (click)="isPasswordVisible.update(visible => !visible)"
+              >
+                <mat-icon>
+                  {{ isPasswordVisible() ? 'visibility_off' : 'visibility' }}
+                </mat-icon>
+              </button>
+            </span>
+            <mat-error>{{ getFieldError(registerForm.controls.password) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="auth-form__full">
+            <mat-label>Confirm password</mat-label>
+            <input
+              matInput
+              [type]="isConfirmPasswordVisible() ? 'text' : 'password'"
+              placeholder="Confirm"
+              formControlName="confirmPassword"
+              autocomplete="new-password"
+              [errorStateMatcher]="confirmPasswordMatcher"
+            />
+            <button
+              matIconButton
+              matSuffix
+              type="button"
+              [attr.aria-label]="
+                isConfirmPasswordVisible()
+                  ? 'Hide confirm password'
+                  : 'Show confirm password'
+              "
+              [attr.aria-pressed]="isConfirmPasswordVisible()"
+              (click)="isConfirmPasswordVisible.update(visible => !visible)"
+            >
+              <mat-icon>
+                {{ isConfirmPasswordVisible() ? 'visibility_off' : 'visibility' }}
+              </mat-icon>
+            </button>
+            <mat-error>
+              @if (registerForm.controls.confirmPassword.invalid) {
+                {{ getFieldError(registerForm.controls.confirmPassword) }}
+              } @else {
+                Passwords don't match
+              }
+            </mat-error>
+          </mat-form-field>
+
+          <div class="auth-form__full">
+            <span class="form-label">Are you joining as a</span>
+            <mat-button-toggle-group
+              class="type-toggle"
+              formControlName="type"
+              hideSingleSelectionIndicator
+              aria-label="Account type"
+            >
+              <mat-button-toggle [value]="UserType.CLIENT">Client</mat-button-toggle>
+              <mat-button-toggle [value]="UserType.SPECIALIST">
+                Specialist
+              </mat-button-toggle>
+            </mat-button-toggle-group>
+            @if (registerForm.controls.type.hasError('server')) {
+              <p class="form-error">{{ getFieldError(registerForm.controls.type) }}</p>
+            }
+          </div>
+
+          <div class="auth-form__full">
+            <button
+              matButton="filled"
+              type="submit"
+              class="btn-block"
+              [disabled]="isLoading()"
+            >
+              @if (isLoading()) {
+                <mat-progress-spinner mode="indeterminate" diameter="20" />
+              }
+              Create Account
+            </button>
+          </div>
+
+          @if (isGoogleEnabled) {
+            <div class="auth-divider auth-divider--compact auth-form__full">
+              <div class="auth-divider__line"></div>
+              <span class="auth-divider__text">OR CONTINUE WITH</span>
+              <div class="auth-divider__line"></div>
+            </div>
+
+            <div class="auth-form__full">
+              <app-google-sign-in [type]="registerForm.controls.type.value" />
+            </div>
+          }
+
+          <p class="auth-switch auth-form__full">
+            Already have an account?
+            <a [routerLink]="routePaths.login" class="auth-link">Log in</a>
+          </p>
+        </form>
+      </div>
+    </section>
+  </div>
+</div>

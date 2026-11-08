@@ -1,0 +1,26 @@
+:host {
+  mat-form-field {
+    width: 100%;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: var(--space-2);
+    color: var(--color-text-soft);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .type-toggle {
+    width: 100%;
+  }
+
+  .type-toggle mat-button-toggle {
+    flex: 1;
+  }
+
+  .suffix-actions {
+    display: inline-flex;
+    align-items: center;
+  }
+}
