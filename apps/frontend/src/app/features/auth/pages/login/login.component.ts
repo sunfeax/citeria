@@ -76,7 +76,7 @@ export class LoginComponent {
 
           try {
             await firstValueFrom(this.authService.login(this.loginModel()));
-            this.router.navigateByUrl(routePaths.profile);
+            this.router.navigateByUrl(routePaths.offerings);
           } catch (err) {
             this.snackbarService.error(
               (err as HttpErrorResponse).status === 401

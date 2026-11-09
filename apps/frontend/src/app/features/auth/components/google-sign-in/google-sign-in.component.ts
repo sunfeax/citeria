@@ -80,7 +80,7 @@ export class GoogleSignInComponent {
       .loginWithGoogle({ credential, type: this.type() ?? undefined })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: () => this.router.navigateByUrl(routePaths.profile),
+        next: () => this.router.navigateByUrl(routePaths.offerings),
         error: (err: HttpErrorResponse) => {
           const apiError = err.error as ApiError | null;
           const message =

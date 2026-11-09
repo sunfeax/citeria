@@ -43,7 +43,7 @@ export class AuthService {
       )
       .subscribe(data => {
         if (data.event === 'login') {
-          this.router.navigateByUrl(routePaths.profile);
+          this.router.navigateByUrl(routePaths.offerings);
         } else {
           this.router.navigateByUrl(routePaths.login);
         }
