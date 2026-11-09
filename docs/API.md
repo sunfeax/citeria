@@ -54,7 +54,7 @@ Every list endpoint (`GET /api/users`, `/api/offerings`, `/api/working-hours`, `
 | Param | Type | Default | Description |
 |---|---|---|---|
 | `page` | int | `0` | Page index, **0-based** |
-| `size` | int | `20` | Items per page |
+| `size` | int | `20` | Items per page, at most `50` |
 | `sort` | string | per endpoint | `property,direction` — e.g. `sort=startTime,desc`. Repeat the param for multi-field sorting (`?sort=status,asc&sort=startTime,desc`); `direction` is optional and defaults to `asc`. |
 
 **Sort fields are whitelisted.** Any property not in the allowed list below is silently ignored (it is *not* an error); if nothing valid remains, the endpoint's default sort is applied. This prevents sorting by arbitrary/internal columns.

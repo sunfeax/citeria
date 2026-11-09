@@ -48,7 +48,7 @@ Frontend domain: `https://citeria.sunfeax.com`.
 - [ ] Run production without the `dev` profile. `compose.yaml` defaults to `dev`, which loads test accounts with known passwords.
 - [ ] Set `app.jwt.refreshCookieSecure=true`.
 - [ ] Set `app.cors.allowed-origin` to the production frontend origin.
-- [ ] Rate limiter: `RateLimitFilter` reads `X-Forwarded-For`, which a client can forge to bypass the login limit. Trust it only from the reverse proxy.
+- [x] Rate limiter: uses the client address resolved by the servlet container; the reverse proxy must set `X-Forwarded-For`. Public catalog reads are limited too.
 - [ ] Remove `/h2-console/**` from the `permitAll` list. H2 is not used.
 - [ ] Decide whether Swagger stays public in production.
 - [ ] Remove the default datasource username from `application.properties`.

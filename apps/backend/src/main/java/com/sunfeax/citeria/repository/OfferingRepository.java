@@ -2,6 +2,10 @@ package com.sunfeax.citeria.repository;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -10,6 +14,10 @@ import com.sunfeax.citeria.entity.OfferingEntity;
 
 @Repository
 public interface OfferingRepository extends JpaRepository<OfferingEntity, UUID>, JpaSpecificationExecutor<OfferingEntity> {
+    @Override
+    @EntityGraph(attributePaths = "specialist")
+    Page<OfferingEntity> findAll(Specification<OfferingEntity> spec, Pageable pageable);
+
     boolean existsBySpecialistIdAndNameIgnoreCase(UUID specialistId, String name);
     boolean existsBySpecialistIdAndNameIgnoreCaseAndIdNot(UUID specialistId, String name, UUID id);
     List<OfferingEntity> findBySpecialistIdAndIsActiveTrue(UUID specialistId);
