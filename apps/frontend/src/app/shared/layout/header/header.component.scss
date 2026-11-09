@@ -36,25 +36,19 @@ nav a:hover,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 11px 16px;
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
-  border-radius: 9px;
+  padding: 11px 20px;
+  border-radius: var(--radius-full);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  font-weight: var(--font-weight-semibold);
   transition: background var(--transition-fast);
 }
 .action-link:hover,
 .theme-toggle:hover {
   background: var(--color-surface-muted);
 }
-.action-link mat-icon {
-  width: 17px;
-  height: 17px;
-  font-size: 17px;
-}
-
 .action-link--primary {
   background: var(--color-primary);
+  box-shadow: none;
   color: var(--color-on-primary);
 }
 

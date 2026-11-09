@@ -21,15 +21,11 @@
       </mat-icon>
     </button>
     @if (sessionStore.user()) {
-      <a class="action-link" [routerLink]="routePaths.profile">
-        My profile
-        <mat-icon>arrow_forward</mat-icon>
-      </a>
+      <a class="action-link" [routerLink]="routePaths.profile">My profile</a>
     } @else {
       <a class="login-link" [routerLink]="routePaths.login">Log in</a>
       <a class="action-link action-link--primary" [routerLink]="routePaths.register">
         Get started
-        <mat-icon>arrow_forward</mat-icon>
       </a>
     }
   </div>
