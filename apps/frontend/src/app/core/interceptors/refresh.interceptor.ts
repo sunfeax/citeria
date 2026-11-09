@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, switchMap, throwError } from 'rxjs';
+import { catchError, of, switchMap, throwError } from 'rxjs';
 import { SKIP_REFRESH } from '../config/http-context';
 import { AuthService } from './../../features/auth/services/auth.service';
 
@@ -17,7 +17,10 @@ export const refreshInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => err);
       }
 
-      return authService.refresh().pipe(switchMap(() => next(req)));
+      return authService.refresh().pipe(
+        catchError(() => of(null)),
+        switchMap(() => next(req)),
+      );
     }),
   );
 };

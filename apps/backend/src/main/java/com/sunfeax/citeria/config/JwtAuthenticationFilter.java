@@ -2,6 +2,7 @@ package com.sunfeax.citeria.config;
 
 import java.io.IOException;
 
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,9 +27,11 @@ import lombok.RequiredArgsConstructor;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     public static final String JWT_ERROR_ATTRIBUTE = "jwt_error_code";
+    private static final String AUTH_PATH_PREFIX = "/api/auth/";
 
     private final JwtProvider jwtProvider;
     private final UserDetailsService userDetailsService;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Override
     protected void doFilterInternal(
@@ -51,12 +54,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             userEmail = jwtProvider.extractUsername(jwt);
         } catch (ExpiredJwtException ex) {
-            request.setAttribute(JWT_ERROR_ATTRIBUTE, "EXPIRED");
-            filterChain.doFilter(request, response);
+            rejectOrContinue("EXPIRED", request, response, filterChain);
             return;
         } catch (JwtException | IllegalArgumentException ex) {
-            request.setAttribute(JWT_ERROR_ATTRIBUTE, "INVALID");
-            filterChain.doFilter(request, response);
+            rejectOrContinue("INVALID", request, response, filterChain);
             return;
         }
 
@@ -76,5 +77,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void rejectOrContinue(
+            String errorCode,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
+        request.setAttribute(JWT_ERROR_ATTRIBUTE, errorCode);
+
+        if (request.getServletPath().startsWith(AUTH_PATH_PREFIX)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        jwtAuthenticationEntryPoint.commence(
+            request,
+            response,
+            new BadCredentialsException("Access token rejected")
+        );
     }
 }

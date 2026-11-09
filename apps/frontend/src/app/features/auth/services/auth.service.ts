@@ -73,7 +73,7 @@ export class AuthService {
         tap(response => this.sessionStore.setAccessToken(response.accessToken)),
         catchError((err: HttpErrorResponse) => {
           if (err.status === 401) {
-            this.endSession();
+            this.endSession(!this.isOnPublicPage());
           }
           return throwError(() => err);
         }),
@@ -115,11 +115,16 @@ export class AuthService {
     this.tabSyncService.send('login');
   }
 
-  private endSession(): void {
+  private endSession(redirectToLogin = true): void {
     const hadUser = this.sessionStore.user() !== null;
     this.sessionStore.clearSession();
-    if (hadUser) {
+    if (hadUser && redirectToLogin) {
       void this.router.navigateByUrl(routePaths.login);
     }
+  }
+
+  private isOnPublicPage(): boolean {
+    const path = this.router.url.split(/[?#]/, 1)[0];
+    return path === routePaths.home || path === routePaths.offerings;
   }
 }
