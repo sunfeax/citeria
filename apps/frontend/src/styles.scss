@@ -272,6 +272,12 @@ input {
 @include auth.styles;
 @include page.styles;
 
+:root {
+  --mat-select-trigger-text-size: var(--font-size-sm);
+  --mat-option-label-text-size: var(--font-size-sm);
+  --mat-paginator-select-trigger-text-size: var(--font-size-sm);
+}
+
 mat-form-field {
   min-width: 0;
   align-self: start;
@@ -301,6 +307,10 @@ mat-form-field {
   }
 }
 
+.mat-mdc-select-arrow svg {
+  max-width: none;
+}
+
 mat-paginator {
   margin-top: 20px;
   --mat-paginator-container-background-color: transparent;
@@ -308,8 +318,26 @@ mat-paginator {
   --mat-paginator-enabled-icon-color: var(--color-text-soft);
   --mat-paginator-disabled-icon-color: var(--color-border);
 
+  --mat-paginator-page-size-select-width: 72px;
+
   .mat-mdc-paginator-container {
+    align-items: center;
     justify-content: space-between;
+    padding-inline: 0;
+  }
+
+  .mat-mdc-paginator-page-size {
+    align-items: center;
+  }
+
+  .mat-mdc-paginator-page-size-label {
+    margin-left: 0;
+  }
+
+  mat-form-field {
+    align-self: center;
+    --mat-form-field-container-height: 32px;
+    --mat-form-field-container-vertical-padding: 4px;
   }
 }
 
