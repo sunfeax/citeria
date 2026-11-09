@@ -10,6 +10,7 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { MatSelect } from '@angular/material/select';
 import { MatSlider, MatSliderRangeThumb } from '@angular/material/slider';
+import { RouterLink } from '@angular/router';
 import { PageableContent } from '../../../../shared/models/pageable';
 import { avatarUrl } from '../../../../shared/util/avatar-url';
 import { debouncedSignal } from '../../../../shared/util/rxjs-helpers';
@@ -17,12 +18,14 @@ import { OfferingList, OfferingFilters } from '../../models/offering-list';
 import { UserRole } from '../../../auth/models/user-role';
 import { SessionStore } from '../../../auth/session.store';
 import { OfferingService } from '../../services/offering.service';
+import { routePaths } from '../../../../shared/util/route-paths';
 
 type OfferingPage = PageableContent<OfferingList>;
 
 @Component({
   selector: 'app-offering',
   imports: [
+    RouterLink,
     MatButton,
     MatFormField,
     MatPrefix,
@@ -44,6 +47,8 @@ export class OfferingComponent {
   private readonly sessionStore = inject(SessionStore);
 
   protected readonly avatarUrl = avatarUrl;
+  protected readonly routePaths = routePaths;
+  protected readonly user = this.sessionStore.user;
 
   readonly search = signal('');
   readonly priceSlider = { min: 0, max: 500, step: 10 } as const;

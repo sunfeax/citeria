@@ -1,12 +1,13 @@
 <div class="auth-page">
   <header class="auth-intro">
-    <app-brand />
     <h1 class="page-title page-title--display">Welcome back.</h1>
     <p class="page-lede">Log in to find specialists and manage your bookings.</p>
   </header>
 
   <div class="auth-card">
     <form [formRoot]="loginForm" class="auth-form">
+      <app-brand class="login-brand" />
+
       <mat-form-field>
         <mat-label>Email</mat-label>
         <input
@@ -44,7 +45,12 @@
           <mat-error>{{ getFieldError(loginForm.password()) }}</mat-error>
         </mat-form-field>
         <div class="auth-actions auth-actions--end">
-          <a [routerLink]="routePaths.forgotPassword" class="auth-link auth-link--small">
+          <a
+            [routerLink]="routePaths.forgotPassword"
+            [queryParams]="{ returnUrl: returnUrl }"
+            class="auth-link auth-link--small"
+            title="Reset your password"
+          >
             Forgot password?
           </a>
         </div>
@@ -64,7 +70,14 @@
 
       <p class="auth-switch">
         Don't have an account?
-        <a [routerLink]="routePaths.register" class="auth-link">Sign up</a>
+        <a
+          [routerLink]="routePaths.register"
+          [queryParams]="{ returnUrl: returnUrl }"
+          class="auth-link"
+          title="Create a Citeria account"
+        >
+          Sign up
+        </a>
       </p>
 
       @if (isGoogleEnabled) {

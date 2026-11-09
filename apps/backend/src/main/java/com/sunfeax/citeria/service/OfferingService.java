@@ -62,6 +62,9 @@ public class OfferingService {
             specs.add((root, query, cb) -> cb.equal(root.get("specialist").get("id"), specialistId));
         }
         specs.add((root, query, cb) -> cb.equal(root.get("isActive"), effectiveActive));
+        if (!canViewInactive(specialistId)) {
+            specs.add((root, query, cb) -> cb.isTrue(root.get("specialist").get("isActive")));
+        }
         if (minPrice != null) {
             specs.add((root, query, cb) -> cb.greaterThanOrEqualTo(root.<BigDecimal>get("priceAmount"), minPrice));
         }
@@ -83,6 +86,8 @@ public class OfferingService {
     @Transactional(readOnly = true)
     public OfferingResponseDto getById(UUID id) {
         return offeringRepository.findById(id)
+            .filter(offering -> (offering.isActive() && offering.getSpecialist().isActive())
+                || canViewInactive(offering.getSpecialist().getId()))
             .map(offeringMapper::toResponseDto)
             .orElseThrow(() -> new ResourceNotFoundException("Service with id " + id + " not found"));
     }
@@ -152,11 +157,14 @@ public class OfferingService {
             return true;
         }
 
-        UserEntity current = currentUserProvider.getCurrentUser();
-        boolean canViewInactive = currentUserProvider.isAdmin(current)
-            || (current.getType() == UserType.SPECIALIST && current.getId().equals(specialistId));
+        return !canViewInactive(specialistId);
+    }
 
-        return !canViewInactive;
+    private boolean canViewInactive(UUID specialistId) {
+        return currentUserProvider.findCurrentUser()
+            .map(current -> currentUserProvider.isAdmin(current)
+                || (current.getType() == UserType.SPECIALIST && current.getId().equals(specialistId)))
+            .orElse(false);
     }
 
     private OfferingEntity findOfferingOrThrow(UUID id) {

@@ -33,6 +33,7 @@ public class SpecialistDetailService {
     @Transactional(readOnly = true)
     public SpecialistDetailResponseDto getDetail(UUID specialistId) {
         UserEntity specialist = userRepository.findById(specialistId)
+            .filter(UserEntity::isActive)
             .filter(user -> user.getType() == UserType.SPECIALIST)
             .orElseThrow(() -> new ResourceNotFoundException("Specialist with id " + specialistId + " not found"));
 

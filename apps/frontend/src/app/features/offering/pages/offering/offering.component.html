@@ -95,7 +95,24 @@
                   <strong>{{ specialist.priceAmount }} {{ specialist.currency }}</strong>
                   <small>/ {{ specialist.durationMinutes }} min</small>
                 </span>
-                <button matButton="filled" type="button">Book</button>
+                @if (user()) {
+                  <button matButton="filled" type="button">Book</button>
+                } @else {
+                  <a
+                    matButton="filled"
+                    [routerLink]="routePaths.login"
+                    [queryParams]="{ returnUrl: routePaths.offerings }"
+                    [attr.aria-label]="'Sign in to book ' + specialist.name"
+                    [title]="
+                      'Sign in to book ' +
+                      specialist.name +
+                      ' with ' +
+                      specialist.specialistName
+                    "
+                  >
+                    Book
+                  </a>
+                }
               </div>
             </div>
           </article>

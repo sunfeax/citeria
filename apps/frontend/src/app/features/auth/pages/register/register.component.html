@@ -162,7 +162,14 @@
 
         <p class="auth-switch register-form__wide">
           Already have an account?
-          <a [routerLink]="routePaths.login" class="auth-link">Log in</a>
+          <a
+            [routerLink]="routePaths.login"
+            [queryParams]="{ returnUrl: returnUrl }"
+            class="auth-link"
+            title="Log in to Citeria"
+          >
+            Log in
+          </a>
         </p>
       </form>
     </div>

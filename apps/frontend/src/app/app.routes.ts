@@ -20,10 +20,10 @@ export const routes: Routes = [
   {
     path: '',
     component: SidebarLayoutComponent,
-    canActivate: [accessGuard],
     children: [
       {
         path: 'profile',
+        canActivate: [accessGuard],
         loadComponent: () =>
           import('./features/profile/pages/profile/profile.component').then(
             m => m.ProfileComponent,

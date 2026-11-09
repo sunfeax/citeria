@@ -14,7 +14,7 @@ JWT access token (15 min) in the `Authorization` header, plus an httpOnly refres
 Authorization: Bearer <accessToken>
 ```
 
-All endpoints require a valid access token **except** `POST /api/auth/register`, `/login`, `/refresh`, `/logout`.
+All endpoints require a valid access token **except** the authentication endpoints (`POST /api/auth/register`, `/login`, `/google`, `/refresh`, `/logout`) and public reads: `GET /api/offerings`, `/api/offerings/{id}`, `/api/offerings/{id}/slots`, `/api/specialist-detail/{id}` and `/api/users/{id}/avatar`.
 
 - `register` / `login` return `accessToken` + set the `refresh_token` cookie.
 - When the access token expires, call `POST /api/auth/refresh` (sends the cookie) to get a new one.
@@ -263,7 +263,6 @@ Response `200` — image bytes with:
 
 ```http
 GET /api/specialist-detail/22222222-2222-2222-2222-222222222222
-Authorization: Bearer <token>
 ```
 Response `200`:
 ```json
@@ -278,13 +277,13 @@ Response `200`:
 
 ## Offerings — `/api/offerings`
 
-An offering belongs to a specialist (the creator). Reading is open to any authenticated user; writing is specialist-owned.
+An offering belongs to a specialist (the creator). Guests can read active offerings from active specialists, specialist profiles and available slots. Inactive offerings are visible only to their owner or an administrator; an unauthorized `active=false` filter is treated as `active=true`. Writing requires authentication and specialist ownership.
 
 | Method | Path | Description | Access |
 |---|---|---|---|
-| GET | `/` | List/search offerings (filters: `search`, `specialistId`, `active`, `minPrice`, `maxPrice`) | any |
-| GET | `/{id}` | Get offering by id | any |
-| GET | `/{id}/slots` | Available booking slots (`from`, `to` dates) | any |
+| GET | `/` | List/search offerings (filters: `search`, `specialistId`, `active`, `minPrice`, `maxPrice`) | public; inactive: owner or ADMIN |
+| GET | `/{id}` | Get offering by id | public; inactive: owner or ADMIN |
+| GET | `/{id}/slots` | Available booking slots (`from`, `to` dates) | public |
 | POST | `/` | Create an offering | SPECIALIST |
 | PATCH | `/{id}` | Update an offering | owner or ADMIN |
 | DELETE | `/{id}` | Deactivate (soft) | owner or ADMIN |

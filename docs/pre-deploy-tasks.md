@@ -9,7 +9,7 @@ Frontend domain: `https://citeria.sunfeax.com`.
 - [ ] Hosting for the backend, database and frontend.
 - [ ] API domain. `environment.prod.ts` points to `api.citeria.com`, while the frontend lives on `citeria.sunfeax.com`.
 - [ ] Demo data. Seed accounts only load with the `dev` profile, which must not run in production. Choose a separate demo seed or accounts created by hand.
-- [ ] Public catalog. `GET /api/offerings` requires a login, so visitors see nothing until they sign in. Keep it or open it.
+- [x] Public catalog: guests browse active services with header/footer; signed-in users see the sidebar. Private pages and booking actions require login, with a return destination after authentication.
 - [ ] Admin panel: in scope or not.
 
 ## Product: must have
@@ -31,6 +31,9 @@ Frontend domain: `https://citeria.sunfeax.com`.
 ### Specialist dashboard
 - [ ] Own offerings: list including inactive, create, edit, deactivate, restore.
 - [ ] Working hours by weekday. `GET/POST/PATCH/DELETE /working-hours`
+
+### Catalog
+- [ ] Show a `New` tag on cards for recently joined specialists. Decide how long it remains visible and use the specialist's registration date, not the offering's creation date.
 
 ### Error handling
 - [ ] Normalize `HttpErrorResponse` into one app error type.

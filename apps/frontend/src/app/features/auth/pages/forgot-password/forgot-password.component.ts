@@ -1,6 +1,7 @@
+import { authReturnUrl } from '../../../../shared/util/auth-return-url';
 import { BrandComponent } from '../../../../shared/components/brand/brand.component';
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { routePaths } from '../../../../shared/util/route-paths';
 
 @Component({
@@ -12,4 +13,7 @@ import { routePaths } from '../../../../shared/util/route-paths';
 export class ForgotPasswordComponent {
   /** ROUTES */
   readonly routePaths = routePaths;
+  readonly returnUrl = authReturnUrl(
+    inject(ActivatedRoute).snapshot.queryParamMap.get('returnUrl'),
+  );
 }

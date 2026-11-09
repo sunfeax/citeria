@@ -1,3 +1,4 @@
+import { authReturnUrl } from '../../../../shared/util/auth-return-url';
 import { BrandComponent } from '../../../../shared/components/brand/brand.component';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
@@ -12,7 +13,7 @@ import {
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { getFieldError } from '../../../../shared/util/form-errors';
@@ -53,6 +54,9 @@ export class LoginComponent {
 
   /** ROUTES */
   readonly routePaths = routePaths;
+  readonly returnUrl = authReturnUrl(
+    inject(ActivatedRoute).snapshot.queryParamMap.get('returnUrl'),
+  );
 
   /** HELPERS */
   readonly getFieldError = getFieldError;
@@ -76,7 +80,7 @@ export class LoginComponent {
 
           try {
             await firstValueFrom(this.authService.login(this.loginModel()));
-            this.router.navigateByUrl(routePaths.offerings);
+            this.router.navigateByUrl(this.returnUrl);
           } catch (err) {
             this.snackbarService.error(
               (err as HttpErrorResponse).status === 401

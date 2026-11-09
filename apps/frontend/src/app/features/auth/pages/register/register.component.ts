@@ -1,3 +1,4 @@
+import { authReturnUrl } from '../../../../shared/util/auth-return-url';
 import { BrandComponent } from '../../../../shared/components/brand/brand.component';
 import { Component, inject, signal } from '@angular/core';
 import {
@@ -20,7 +21,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { getFieldError, handleSubmitError } from '../../../../shared/util/form-errors';
@@ -71,6 +72,9 @@ export class RegisterComponent {
 
   readonly UserType = UserType;
   readonly routePaths = routePaths;
+  readonly returnUrl = authReturnUrl(
+    inject(ActivatedRoute).snapshot.queryParamMap.get('returnUrl'),
+  );
 
   /** TEMPLATE HELPERS */
   readonly getFieldError = getFieldError;
@@ -124,7 +128,9 @@ export class RegisterComponent {
             await firstValueFrom(
               this.authService.register(getRegisterPayload(this.registerModel())),
             );
-            this.router.navigateByUrl(routePaths.login);
+            this.router.navigate([routePaths.login], {
+              queryParams: { returnUrl: this.returnUrl },
+            });
           } catch (err) {
             return handleSubmitError(field, err, 'Registration failed.', message =>
               this.snackbarService.error(message),

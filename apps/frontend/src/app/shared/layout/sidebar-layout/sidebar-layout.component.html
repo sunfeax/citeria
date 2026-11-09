@@ -1,6 +1,13 @@
-<div class="sidebar-layout">
-  <app-sidebar />
-  <main>
+<div class="sidebar-layout" [class.sidebar-layout--guest]="!sessionStore.user()">
+  @if (sessionStore.user()) {
+    <app-sidebar />
+  } @else {
+    <app-header />
+  }
+  <main id="main-content" tabindex="-1">
     <router-outlet />
   </main>
+  @if (!sessionStore.user()) {
+    <app-footer />
+  }
 </div>

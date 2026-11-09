@@ -50,6 +50,12 @@ public class SecurityConfig {
                     "/api/auth/logout"
                 ).permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users/*/avatar").permitAll()
+                .requestMatchers(HttpMethod.GET,
+                    "/api/offerings",
+                    "/api/offerings/*",
+                    "/api/offerings/*/slots",
+                    "/api/specialist-detail/*"
+                ).permitAll()
                 .requestMatchers(
                     "/swagger-ui/**",
                     "/swagger-ui.html",

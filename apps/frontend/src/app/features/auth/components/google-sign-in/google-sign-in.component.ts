@@ -1,3 +1,4 @@
+import { authReturnUrl } from '../../../../shared/util/auth-return-url';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   afterRenderEffect,
@@ -12,11 +13,10 @@ import {
 } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ApiError } from '../../../../shared/models/api-error';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
-import { routePaths } from '../../../../shared/util/route-paths';
 import { UserType } from '../../models/user-type';
 import { AuthService } from '../../services/auth.service';
 import { GoogleIdentityService } from '../../services/google-identity.service';
@@ -35,6 +35,7 @@ export class GoogleSignInComponent {
   private readonly authService = inject(AuthService);
   private readonly snackbarService = inject(SnackbarService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   /** INPUTS */
   readonly type = input<UserType | null>(null);
@@ -80,7 +81,10 @@ export class GoogleSignInComponent {
       .loginWithGoogle({ credential, type: this.type() ?? undefined })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: () => this.router.navigateByUrl(routePaths.offerings),
+        next: () =>
+          this.router.navigateByUrl(
+            authReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl')),
+          ),
         error: (err: HttpErrorResponse) => {
           const apiError = err.error as ApiError | null;
           const message =
