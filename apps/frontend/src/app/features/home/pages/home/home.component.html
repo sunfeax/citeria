@@ -1,0 +1,88 @@
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero__intro">
+    <h1 id="hero-title" class="hero__title">Book the hour that suits you.</h1>
+    <div class="hero__aside">
+      <p class="hero__text">
+        Find hairdressers, therapists, tutors and advisers. See when they are free and
+        book online.
+      </p>
+      <div class="hero__actions">
+        <a class="button button--primary" [routerLink]="routePaths.offerings">
+          Find a specialist
+        </a>
+        <a class="hero__link" href="#how-it-works">How it works</a>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="board"
+    role="img"
+    aria-label="Example week of appointments, with your physiotherapy booking on Wednesday at 14:00"
+  >
+    @for (day of days; track day; let index = $index) {
+      <span
+        class="board__day"
+        [class.board__wide-only]="index > 2"
+        [style.grid-column]="index + 2"
+      >
+        {{ day }}
+      </span>
+    }
+    @for (hour of hours; track hour; let index = $index) {
+      <span class="board__hour" [style.grid-row]="index * 2 + 2 + ' / span 2'">
+        {{ hour }}
+      </span>
+    }
+    @for (entry of entries; track $index) {
+      <div
+        class="board__entry"
+        [class.board__entry--own]="entry.isOwn"
+        [class.board__wide-only]="entry.isWideOnly"
+        [style.grid-column]="entry.day + 1"
+        [style.grid-row]="entry.start + 2 + ' / span ' + entry.span"
+      >
+        <strong>{{ entry.label }}</strong>
+        @if (entry.isOwn) {
+          <span>Your booking</span>
+        }
+        <span class="board__time">{{ entry.time }}</span>
+      </div>
+    }
+  </div>
+</section>
+
+<section class="how" id="how-it-works" aria-labelledby="how-title">
+  <div class="how__inner">
+    <h2 id="how-title" class="how__title">From search to booked in three steps.</h2>
+    <ol class="how__steps">
+      @for (step of steps; track step.title; let index = $index) {
+        <li class="step">
+          <span class="step__number" aria-hidden="true">{{ index + 1 }}</span>
+          <div>
+            <h3 class="step__title">{{ step.title }}</h3>
+            <p class="step__text">{{ step.description }}</p>
+          </div>
+        </li>
+      }
+    </ol>
+  </div>
+</section>
+
+<section class="join" aria-labelledby="join-title">
+  <div class="join__inner">
+    <h2 id="join-title" class="join__title">Offer your services on Citeria.</h2>
+    <div class="join__aside">
+      <p class="join__text">
+        Add your services and prices, set your working hours, and accept the requests that
+        work for you.
+      </p>
+      <a
+        class="button button--inverse"
+        [routerLink]="sessionStore.user() ? routePaths.profile : routePaths.register"
+      >
+        {{ sessionStore.user() ? 'Go to your profile' : 'Join as a specialist' }}
+      </a>
+    </div>
+  </div>
+</section>

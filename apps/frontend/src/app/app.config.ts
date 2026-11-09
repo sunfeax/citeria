@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MAT_ICON_DEFAULT_OPTIONS } from '@angular/material/icon';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { catchError, of } from 'rxjs';
@@ -18,7 +18,7 @@ import { AuthService } from './features/auth/services/auth.service';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
+    provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled' })),
     provideHttpClient(withInterceptors([refreshInterceptor, tokenInterceptor])),
     {
       provide: MAT_ICON_DEFAULT_OPTIONS,

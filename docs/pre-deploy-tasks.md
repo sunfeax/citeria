@@ -38,7 +38,7 @@ Frontend domain: `https://citeria.sunfeax.com`.
 
 ## Product: dead ends to close
 
-- [ ] Home page: `MainLayoutComponent` has no child route for `/`.
+- [x] Home page: public `/` route with responsive header, footer and light/dark themes.
 - [ ] "Forgot password" link on the login page: the backend has no endpoint. Hide it or build it.
 - [ ] "Messages" and "Help" in the sidebar: no API behind them. Remove them.
 - [ ] Catalog sorting by name, price and date (`sort=name,asc`).

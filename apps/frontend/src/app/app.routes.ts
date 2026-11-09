@@ -7,8 +7,15 @@ export const routes: Routes = [
   {
     path: '',
     component: MainLayoutComponent,
-    canActivate: [accessGuard],
-    children: [],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        title: 'Citeria — Find your next specialist',
+        loadComponent: () =>
+          import('./features/home/pages/home/home.component').then(m => m.HomeComponent),
+      },
+    ],
   },
   {
     path: '',
