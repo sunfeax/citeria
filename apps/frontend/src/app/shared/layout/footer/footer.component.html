@@ -4,9 +4,15 @@
       <app-brand />
     </div>
     <nav aria-label="Footer navigation">
-      <a [routerLink]="routePaths.offerings">Explore services</a>
-      <a [routerLink]="routePaths.home" fragment="how-it-works">How it works</a>
-      <a [routerLink]="routePaths.register">Join Citeria</a>
+      <a [routerLink]="routePaths.offerings" title="Explore specialist services">
+        Explore services
+      </a>
+      <a [routerLink]="routePaths.home" fragment="how-it-works" title="How Citeria works">
+        How it works
+      </a>
+      <a [routerLink]="routePaths.register" title="Create a Citeria account">
+        Join Citeria
+      </a>
     </nav>
   </div>
   <div class="footer-bottom">

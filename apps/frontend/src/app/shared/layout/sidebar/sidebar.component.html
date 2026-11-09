@@ -22,7 +22,7 @@
         [routerLink]="item.path"
         [class.disabled]="item.disabled"
         [attr.aria-label]="!isExpandedSidebar() ? item.label : null"
-        [attr.title]="!isExpandedSidebar() ? item.label : null"
+        [attr.title]="item.label"
       >
         <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
         <span>{{ item.label }}</span>
@@ -34,7 +34,7 @@
       class="user"
       [routerLink]="routePaths.profile"
       [attr.aria-label]="'Open profile: ' + displayName()"
-      [attr.title]="!isExpandedSidebar() ? 'My profile' : null"
+      title="Open your profile"
     >
       <span class="user-avatar" aria-hidden="true">
         @if (avatarSrc(); as src) {
