@@ -20,24 +20,6 @@
   }
 }
 
-.register-brand {
-  display: inline-flex;
-  width: fit-content;
-  align-self: center;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--color-text);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: -0.5px;
-}
-
-.register-brand:focus-visible {
-  border-radius: var(--radius-sm);
-  outline: var(--border-width-md) solid var(--color-primary);
-  outline-offset: var(--space-1);
-}
-
 .register-panel__inner {
   width: min(100%, 440px);
   margin: auto;
@@ -46,19 +28,18 @@
 
 .register-panel__header {
   display: grid;
-  justify-items: center;
-  gap: var(--space-2);
+  justify-items: start;
+  gap: var(--space-5);
   margin-bottom: var(--space-8);
-  text-align: center;
 }
 
 .register-panel__title {
   margin: 0;
   color: var(--color-text);
-  font-size: var(--font-size-3xl);
+  font-size: 40px;
   font-weight: var(--font-weight-semibold);
-  letter-spacing: -1px;
-  line-height: var(--line-height-tight);
+  letter-spacing: -0.045em;
+  line-height: 1.05;
 }
 
 .register-form {

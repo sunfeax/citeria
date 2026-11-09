@@ -1,13 +1,9 @@
 <div class="auth-page">
-  <div class="auth-card auth-card--login">
-    <div class="auth-card__header">
-      <div class="brand-block">
-        <div class="brand-block__icon">
-          <mat-icon class="brand-block__icon-svg">bolt</mat-icon>
-        </div>
-        <h1 class="brand-block__title">Citeria</h1>
-      </div>
-    </div>
+  <header class="auth-intro">
+    <app-brand />
+    <h1 class="page-title page-title--display">Welcome back.</h1>
+    <p class="page-lede">Log in to find specialists and manage your bookings.</p>
+  </header>
 
   <div class="auth-card">
     <form [formRoot]="loginForm" class="auth-form">
@@ -63,7 +59,7 @@
         @if (loginForm().submitting()) {
           <mat-progress-spinner mode="indeterminate" diameter="20" />
         }
-        Login
+        Log in
       </button>
 
       <p class="auth-switch">
@@ -74,7 +70,7 @@
       @if (isGoogleEnabled) {
         <div class="auth-divider">
           <div class="auth-divider__line"></div>
-          <span class="auth-divider__text">OR CONTINUE WITH</span>
+          <span class="auth-divider__text">or continue with</span>
           <div class="auth-divider__line"></div>
         </div>
 

@@ -1,8 +1,10 @@
 <section class="specialists" aria-labelledby="specialists-title">
   <div class="specialists__container">
     <header class="specialists__header">
-      <h1 id="specialists-title">Find your specialist</h1>
-      <p>Choose an expert and book a service that fits your needs.</p>
+      <h1 id="specialists-title" class="page-title">Find a specialist.</h1>
+      <p class="page-lede">
+        Search by service and compare prices, length and descriptions.
+      </p>
     </header>
 
     <div class="specialists__filters" role="search">
@@ -88,22 +90,22 @@
       <div class="specialists__grid" [class.specialists__grid--stale]="isLoading()">
         @for (specialist of offerings(); track specialist.id) {
           <article class="specialist-card">
-            <div class="specialist-card__media" aria-hidden="true">
-              @let avatar = avatarUrl(specialist.specialistId, specialist.specialistAvatarVersion);
-              <img
-                class="specialist-card__avatar"
-                [class.specialist-card__avatar--placeholder]="!avatar"
-                [src]="avatar ?? '/assets/images/default-avatar.png'"
-                alt=""
-              />
-            </div>
-
             <div class="specialist-card__content">
               <div class="specialist-card__heading">
-                <h2>{{ specialist.specialistName }}</h2>
+                @let avatar =
+                  avatarUrl(specialist.specialistId, specialist.specialistAvatarVersion);
+                <img
+                  class="specialist-card__avatar"
+                  [class.specialist-card__avatar--placeholder]="!avatar"
+                  [src]="avatar ?? '/assets/images/default-avatar.png'"
+                  alt=""
+                />
+                <div class="specialist-card__identity">
+                  <h2>{{ specialist.specialistName }}</h2>
+                  <p class="specialist-card__category">{{ specialist.name }}</p>
+                </div>
               </div>
 
-              <p class="specialist-card__category">{{ specialist.name }}</p>
               <p class="specialist-card__description">{{ specialist.description }}</p>
 
               <div class="specialist-card__footer">
