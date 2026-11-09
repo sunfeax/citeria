@@ -1,14 +1,9 @@
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatButton } from '@angular/material/button';
 import { MatOption } from '@angular/material/core';
-import {
-  MatFormField,
-  MatLabel,
-  MatPrefix,
-  MatSuffix,
-} from '@angular/material/form-field';
+import { MatFormField, MatPrefix } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
@@ -19,6 +14,8 @@ import { PageableContent } from '../../../../shared/models/pageable';
 import { avatarUrl } from '../../../../shared/util/avatar-url';
 import { debouncedSignal } from '../../../../shared/util/rxjs-helpers';
 import { OfferingList, OfferingFilters } from '../../models/offering-list';
+import { UserRole } from '../../../auth/models/user-role';
+import { SessionStore } from '../../../auth/session.store';
 import { OfferingService } from '../../services/offering.service';
 
 type OfferingPage = PageableContent<OfferingList>;
@@ -27,11 +24,8 @@ type OfferingPage = PageableContent<OfferingList>;
   selector: 'app-offering',
   imports: [
     MatButton,
-    MatIconButton,
     MatFormField,
-    MatLabel,
     MatPrefix,
-    MatSuffix,
     MatInput,
     MatIcon,
     MatSelect,
@@ -47,6 +41,7 @@ type OfferingPage = PageableContent<OfferingList>;
 })
 export class OfferingComponent {
   private readonly offeringService = inject(OfferingService);
+  private readonly sessionStore = inject(SessionStore);
 
   protected readonly avatarUrl = avatarUrl;
 
@@ -54,7 +49,15 @@ export class OfferingComponent {
   readonly priceSlider = { min: 0, max: 500, step: 10 } as const;
   readonly minPrice = signal<number>(this.priceSlider.min);
   readonly maxPrice = signal<number>(this.priceSlider.max);
-  readonly active = signal<boolean | null>(null);
+  readonly active = signal<boolean>(true);
+  readonly isAdmin = computed(() => this.sessionStore.user()?.role === UserRole.ADMIN);
+  readonly sortOptions = [
+    { value: 'name,asc', label: 'Name A–Z' },
+    { value: 'priceAmount,asc', label: 'Lowest price' },
+    { value: 'priceAmount,desc', label: 'Highest price' },
+    { value: 'createdAt,desc', label: 'Newest' },
+  ];
+  readonly sort = signal(this.sortOptions[0].value);
 
   private readonly debouncedSearch = debouncedSignal(
     computed(() => this.search().trim()),
@@ -71,12 +74,13 @@ export class OfferingComponent {
       minPrice: min === this.priceSlider.min ? null : min,
       maxPrice: max === this.priceSlider.max ? null : max,
       active: this.active(),
+      sort: this.sort(),
     };
   });
 
   readonly hasFilters = computed(() => {
     const { search, minPrice, maxPrice, active } = this.filters();
-    return search !== '' || minPrice !== null || maxPrice !== null || active !== null;
+    return search !== '' || minPrice !== null || maxPrice !== null || !active;
   });
 
   readonly page = linkedSignal({ source: this.filters, computation: () => 0 });
@@ -102,14 +106,9 @@ export class OfferingComponent {
   readonly hasLoaded = computed(() => this.lastPage() !== undefined);
   readonly offerings = computed(() => this.lastPage()?.content ?? []);
   readonly totalElements = computed(() => this.lastPage()?.totalElements ?? 0);
-  readonly filtersExpanded = signal(false);
 
   readonly formatPrice = (value: number): string =>
-    value === this.priceSlider.max ? `${value}+` : `${value}`;
-
-  toggleFilters(): void {
-    this.filtersExpanded.update(expanded => !expanded);
-  }
+    value === this.priceSlider.max ? `€${value}+` : `€${value}`;
 
   onPage(event: PageEvent): void {
     this.page.set(event.pageIndex);
@@ -124,6 +123,6 @@ export class OfferingComponent {
     this.search.set('');
     this.minPrice.set(this.priceSlider.min);
     this.maxPrice.set(this.priceSlider.max);
-    this.active.set(null);
+    this.active.set(true);
   }
 }

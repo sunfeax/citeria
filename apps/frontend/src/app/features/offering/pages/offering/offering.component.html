@@ -9,69 +9,51 @@
 
     <div class="specialists__filters" role="search">
       <mat-form-field class="specialists__search" subscriptSizing="dynamic">
-        <mat-label>Search services</mat-label>
         <mat-icon matPrefix>search</mat-icon>
-        <input [(ngModel)]="search" matInput type="search" autocomplete="off" />
-        <button
-          matIconButton
-          type="button"
-          matSuffix
-          class="specialists__filters-toggle"
-          [class.specialists__filters-toggle--active]="filtersExpanded()"
-          [attr.aria-expanded]="filtersExpanded()"
-          aria-controls="catalog-filters"
-          aria-label="Toggle filters"
-          (click)="toggleFilters()"
-        >
-          <mat-icon>tune</mat-icon>
-        </button>
+        <input
+          [(ngModel)]="search"
+          matInput
+          type="search"
+          autocomplete="off"
+          placeholder="Search services"
+          aria-label="Search services"
+        />
       </mat-form-field>
 
-      @if (filtersExpanded()) {
-        <div
-          id="catalog-filters"
-          class="specialists__filters-panel"
-          animate.enter="filters-enter"
-          animate.leave="filters-leave"
+      <div class="specialists__price" role="group" aria-label="Price range">
+        <span class="specialists__price-value">
+          <span>{{ formatPrice(minPrice()) }}</span>
+          <span>–</span>
+          <span>{{ formatPrice(maxPrice()) }}</span>
+        </span>
+        <mat-slider
+          [min]="priceSlider.min"
+          [max]="priceSlider.max"
+          [step]="priceSlider.step"
         >
-          <div
-            class="specialists__price-range"
-            role="group"
-            aria-labelledby="price-range-label"
-          >
-            <span id="price-range-label" class="specialists__price-label">
-              Price range
-            </span>
-            <mat-slider
-              [min]="priceSlider.min"
-              [max]="priceSlider.max"
-              [step]="priceSlider.step"
-              discrete
-              [displayWith]="formatPrice"
-            >
-              <input
-                matSliderStartThumb
-                [(ngModel)]="minPrice"
-                aria-label="Minimum price"
-              />
-              <input
-                matSliderEndThumb
-                [(ngModel)]="maxPrice"
-                aria-label="Maximum price"
-              />
-            </mat-slider>
-          </div>
+          <input matSliderStartThumb [(ngModel)]="minPrice" aria-label="Minimum price" />
+          <input matSliderEndThumb [(ngModel)]="maxPrice" aria-label="Maximum price" />
+        </mat-slider>
+      </div>
 
-          <mat-form-field class="specialists__status" subscriptSizing="dynamic">
-            <mat-label>Status</mat-label>
-            <mat-select [(ngModel)]="active">
-              <mat-option [value]="null">Any</mat-option>
-              <mat-option [value]="true">Active only</mat-option>
-              <mat-option [value]="false">Inactive only</mat-option>
+      <div class="specialists__selects">
+        @if (isAdmin()) {
+          <mat-form-field class="specialists__select" subscriptSizing="dynamic">
+            <mat-select [(ngModel)]="active" aria-label="Status">
+              <mat-option [value]="true">Active</mat-option>
+              <mat-option [value]="false">Inactive</mat-option>
             </mat-select>
           </mat-form-field>
-        </div>
-      }
+        }
+
+        <mat-form-field class="specialists__select" subscriptSizing="dynamic">
+          <mat-select [(ngModel)]="sort" aria-label="Sort by">
+            @for (option of sortOptions; track option.value) {
+              <mat-option [value]="option.value">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
     </div>
 
     <div class="specialists__progress">

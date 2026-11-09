@@ -41,7 +41,7 @@ Frontend domain: `https://citeria.sunfeax.com`.
 - [x] Home page: public `/` route with responsive header, footer and light/dark themes.
 - [ ] "Forgot password" link on the login page: the backend has no endpoint. Hide it or build it.
 - [ ] "Messages" and "Help" in the sidebar: no API behind them. Remove them.
-- [ ] Catalog sorting by name, price and date (`sort=name,asc`).
+- [x] Catalog sorting by name, price and date (`sort=name,asc`).
 
 ## Backend hardening
 

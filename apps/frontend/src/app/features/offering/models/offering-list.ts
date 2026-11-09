@@ -17,4 +17,5 @@ export interface OfferingFilters {
   minPrice: number | null;
   maxPrice: number | null;
   active: boolean | null;
+  sort: string;
 }
