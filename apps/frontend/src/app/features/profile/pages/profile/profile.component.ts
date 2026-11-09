@@ -1,6 +1,13 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
-import { email, form, FormField, FormRoot, required } from '@angular/forms/signals';
+import {
+  email,
+  form,
+  FormField,
+  FormRoot,
+  required,
+  validate,
+} from '@angular/forms/signals';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import {
   MatError,
@@ -12,10 +19,12 @@ import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
+import { RouterLink } from '@angular/router';
 import { exhaustMap, finalize, firstValueFrom, switchMap } from 'rxjs';
 import { ApiError } from '../../../../shared/models/api-error';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { avatarUrl } from '../../../../shared/util/avatar-url';
+import { routePaths } from '../../../../shared/util/route-paths';
 import { getFieldError, handleSubmitError } from '../../../../shared/util/form-errors';
 import {
   newPasswordRules,
@@ -38,6 +47,7 @@ type SettingsSection = 'profile' | 'security' | 'account';
 @Component({
   selector: 'app-profile',
   imports: [
+    RouterLink,
     FormField,
     FormRoot,
     MatButton,
@@ -64,10 +74,11 @@ export class ProfileComponent {
 
   /** TEMPLATE HELPERS */
   readonly getFieldError = getFieldError;
+  readonly routePaths = routePaths;
 
   /** DATA */
   readonly user = computed(() => this.sessionStore.requireUser());
-  readonly hasPassword = computed(() => this.user().hasPassword);
+  readonly hasPassword = computed(() => this.user().hasPassword !== false);
   readonly avatarSrc = computed(() =>
     avatarUrl(this.user().id, this.user().avatarVersion),
   );
@@ -83,6 +94,7 @@ export class ProfileComponent {
   isAvatarLoading = signal<boolean>(false);
   isCurrentPasswordVisible = signal<boolean>(false);
   isNewPasswordVisible = signal<boolean>(false);
+  isConfirmPasswordVisible = signal<boolean>(false);
 
   /** FORM */
   profileModel = signal({
@@ -123,12 +135,18 @@ export class ProfileComponent {
       },
     },
   );
-  passwordModel = signal({ currentPassword: '', newPassword: '' });
+  passwordModel = signal({ currentPassword: '', newPassword: '', confirmPassword: '' });
   passwordForm = form(
     this.passwordModel,
     s => {
       required(s.currentPassword, { when: () => this.hasPassword() });
       newPasswordRules(s.newPassword);
+      required(s.confirmPassword);
+      validate(s.confirmPassword, ({ value, valueOf }) =>
+        value() && valueOf(s.newPassword) && value() !== valueOf(s.newPassword)
+          ? { kind: 'passwordMismatch', message: "Passwords don't match" }
+          : undefined,
+      );
     },
     {
       submission: {
@@ -147,7 +165,14 @@ export class ProfileComponent {
             if (wasSet) {
               this.sessionStore.setUser({ ...this.user(), hasPassword: true });
             }
-            this.passwordForm().reset({ currentPassword: '', newPassword: '' });
+            this.passwordForm().reset({
+              currentPassword: '',
+              newPassword: '',
+              confirmPassword: '',
+            });
+            this.isCurrentPasswordVisible.set(false);
+            this.isNewPasswordVisible.set(false);
+            this.isConfirmPasswordVisible.set(false);
           } catch (err) {
             return handleSubmitError(field, err, 'Password update failed.', message =>
               this.snackbarService.error(message),

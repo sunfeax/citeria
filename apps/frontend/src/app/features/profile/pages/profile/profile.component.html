@@ -154,7 +154,10 @@
         }
       </header>
       <form [formRoot]="passwordForm" class="profile-form">
-        <div class="profile-form__grid">
+        <div
+          class="profile-form__grid"
+          [class.profile-form__grid--three-columns]="hasPassword()"
+        >
           @if (hasPassword()) {
             <mat-form-field>
               <mat-label>Current password</mat-label>
@@ -210,13 +213,47 @@
             </button>
             <mat-error>{{ getFieldError(passwordForm.newPassword()) }}</mat-error>
           </mat-form-field>
+
+          <mat-form-field>
+            <mat-label>Confirm password</mat-label>
+            <input
+              matInput
+              [type]="isConfirmPasswordVisible() ? 'text' : 'password'"
+              [formField]="passwordForm.confirmPassword"
+              autocomplete="new-password"
+            />
+            <button
+              matIconButton
+              matSuffix
+              type="button"
+              [attr.aria-label]="
+                isConfirmPasswordVisible()
+                  ? 'Hide confirm password'
+                  : 'Show confirm password'
+              "
+              [attr.aria-pressed]="isConfirmPasswordVisible()"
+              (click)="isConfirmPasswordVisible.update(visible => !visible)"
+            >
+              <mat-icon>
+                {{ isConfirmPasswordVisible() ? 'visibility_off' : 'visibility' }}
+              </mat-icon>
+            </button>
+            <mat-error>{{ getFieldError(passwordForm.confirmPassword()) }}</mat-error>
+          </mat-form-field>
         </div>
 
         <p class="password-hint">
-          Use at least 8 characters, including an uppercase letter and a special character
-          (@ # $ % ^ &amp; + = !).
+          Use at least 8 characters, including a digit, an uppercase letter and a special
+          character (@ # $ % ^ &amp; + = !).
         </p>
         <div class="profile-form__actions">
+          <a
+            matButton
+            class="profile-form__forgot"
+            [routerLink]="routePaths.forgotPassword"
+          >
+            Forgot password?
+          </a>
           <button
             matButton="filled"
             type="submit"

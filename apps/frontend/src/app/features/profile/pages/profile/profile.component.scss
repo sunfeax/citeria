@@ -193,6 +193,10 @@ h3 {
   gap: 8px 20px;
 }
 
+.profile-form__grid--three-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 mat-form-field {
   width: 100%;
 }
@@ -205,11 +209,15 @@ mat-form-field {
   gap: 16px;
   padding-top: 24px;
   margin-top: 4px;
-  border-top: 1px solid var(--color-border-soft);
 }
 
 .profile-form__submit {
   min-width: 144px;
+}
+
+.profile-form__forgot {
+  margin-inline-end: auto;
+  --mat-button-text-label-text-color: var(--color-primary);
 }
 
 .password-hint {
@@ -247,6 +255,10 @@ mat-form-field {
 }
 
 @media (max-width: 1100px) {
+  .profile-form__grid--three-columns {
+    grid-template-columns: 1fr;
+  }
+
   .profile-details {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-8);

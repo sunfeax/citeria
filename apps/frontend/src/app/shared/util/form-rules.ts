@@ -22,5 +22,5 @@ export function phoneRules(path: SchemaPath<string>): void {
 export function newPasswordRules(path: SchemaPath<string>): void {
   required(path);
   minLength(path, 8);
-  pattern(path, /^(?=.*[A-Z])(?=.*[@#$%^&+=!])[A-Za-z0-9@#$%^&+=!]+$/);
+  pattern(path, /^(?=.*[0-9])(?=.*[A-Z])(?=.*[@#$%^&+=!])[A-Za-z0-9@#$%^&+=!]+$/);
 }
