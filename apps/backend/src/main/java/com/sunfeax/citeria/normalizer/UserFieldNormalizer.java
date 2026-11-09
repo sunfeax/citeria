@@ -15,7 +15,7 @@ public class UserFieldNormalizer {
             normalizeName(request.firstName()),
             normalizeName(request.lastName()),
             normalizeEmail(request.email()),
-            normalizePhone(request.phone()),
+            emptyToNull(normalizePhone(request.phone())),
             request.password(),
             request.type()
         );
@@ -44,5 +44,9 @@ public class UserFieldNormalizer {
 
     public String normalizePhone(String value) {
         return value == null ? null : value.replaceAll("[+()\\s\\p{Pd}]", "");
+    }
+
+    private String emptyToNull(String value) {
+        return value == null || value.isEmpty() ? null : value;
     }
 }

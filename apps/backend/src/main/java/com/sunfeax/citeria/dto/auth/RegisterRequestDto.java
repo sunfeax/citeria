@@ -2,6 +2,7 @@ package com.sunfeax.citeria.dto.auth;
 
 import com.sunfeax.citeria.enums.UserType;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -30,7 +31,7 @@ public record RegisterRequestDto(
     @Size(min = 5, max = 100)
     String email,
 
-    @NotBlank(message = "Phone is required")
+    @Nullable
     @Size(min = 7, max = 20)
     String phone,
 

@@ -6,7 +6,7 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
+  phone: string | null;
   role: UserRole;
   type: UserType;
   isActive: boolean;

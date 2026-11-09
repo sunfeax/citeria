@@ -14,7 +14,6 @@ export function personNameRules(path: SchemaPath<string>): void {
 }
 
 export function phoneRules(path: SchemaPath<string>): void {
-  required(path);
   minLength(path, 7);
   maxLength(path, 20);
   pattern(path, /^\+?\d+$/);

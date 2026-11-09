@@ -52,7 +52,7 @@ public class UserMapper {
             entity.setEmail(request.email());
         }
         if (request.phone() != null) {
-            entity.setPhone(request.phone());
+            entity.setPhone(request.phone().isEmpty() ? null : request.phone());
         }
 
         return entity;

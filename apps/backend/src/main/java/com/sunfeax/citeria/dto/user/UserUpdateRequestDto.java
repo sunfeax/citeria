@@ -28,6 +28,6 @@ public record UserUpdateRequestDto(
     String email,
 
     @Nullable
-    @Size(min = 7, max = 20)
+    @Pattern(regexp = "^$|^.{7,20}$", message = "Phone must be between 7 and 20 characters")
     String phone
 ) {}

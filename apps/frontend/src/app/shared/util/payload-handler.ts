@@ -7,7 +7,7 @@ export function getRegisterPayload(raw: RegisterRequest): RegisterRequest {
     firstName: raw.firstName.trim(),
     lastName: raw.lastName.trim(),
     email: raw.email.trim(),
-    phone: raw.phone.trim(),
+    phone: raw.phone?.trim() || null,
     password: raw.password,
     type: raw.type,
   };

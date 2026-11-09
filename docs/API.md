@@ -124,6 +124,7 @@ Content-Type: application/json
   "type": "CLIENT"
 }
 ```
+`phone` is optional.
 Response `201`:
 ```json
 {
@@ -180,6 +181,7 @@ Authorization: Bearer <token>
 
 { "firstName": "Clara", "phone": "+3725550102" }
 ```
+Send `"phone": ""` to remove the phone number.
 
 ```http
 PATCH /api/users/{id}/password
