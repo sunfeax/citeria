@@ -7,16 +7,10 @@
         book online.
       </p>
       <div class="hero__actions">
-        <a
-          class="button button--primary"
-          [routerLink]="routePaths.offerings"
-          title="Explore specialist services"
-        >
+        <a class="button button--primary" [routerLink]="routePaths.offerings">
           Find a specialist
         </a>
-        <a class="hero__link" href="#how-it-works" title="How Citeria works">
-          How it works
-        </a>
+        <a class="hero__link" href="#how-it-works">How it works</a>
       </div>
     </div>
   </div>
@@ -86,7 +80,6 @@
       <a
         class="button button--inverse"
         [routerLink]="sessionStore.user() ? routePaths.profile : routePaths.register"
-        [title]="sessionStore.user() ? 'Open your profile' : 'Register as a specialist'"
       >
         {{ sessionStore.user() ? 'Go to your profile' : 'Join as a specialist' }}
       </a>

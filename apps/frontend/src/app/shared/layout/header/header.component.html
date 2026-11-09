@@ -1,16 +1,9 @@
-<a class="skip-link" href="#main-content" title="Skip to main content">Skip to content</a>
+<a class="skip-link" href="#main-content">Skip to content</a>
 <header class="header">
   <app-brand />
   <nav aria-label="Main navigation">
-    <a [routerLink]="routePaths.offerings" title="Explore specialist services">
-      Explore services
-    </a>
-    <a
-      class="how-link"
-      [routerLink]="routePaths.home"
-      fragment="how-it-works"
-      title="How Citeria works"
-    >
+    <a [routerLink]="routePaths.offerings">Explore services</a>
+    <a class="how-link" [routerLink]="routePaths.home" fragment="how-it-works">
       How it works
     </a>
   </nav>
@@ -28,15 +21,12 @@
       </mat-icon>
     </button>
     @if (sessionStore.user()) {
-      <a class="action-link" [routerLink]="routePaths.profile" title="Open your profile">
-        My profile
-      </a>
+      <a class="action-link" [routerLink]="routePaths.profile">My profile</a>
     } @else {
       <a
         class="login-link"
         [routerLink]="routePaths.login"
         [queryParams]="{ returnUrl: returnUrl }"
-        title="Log in to Citeria"
       >
         Log in
       </a>
@@ -44,7 +34,6 @@
         class="action-link action-link--primary"
         [routerLink]="routePaths.register"
         [queryParams]="{ returnUrl: returnUrl }"
-        title="Create a Citeria account"
       >
         Get started
       </a>

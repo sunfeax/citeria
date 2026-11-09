@@ -131,12 +131,6 @@ mat-progress-bar {
   background: var(--color-surface);
 }
 
-.specialist-card:target,
-.specialist-card:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 4px;
-}
-
 .specialist-card__avatar {
   flex: 0 0 56px;
   width: 56px;
