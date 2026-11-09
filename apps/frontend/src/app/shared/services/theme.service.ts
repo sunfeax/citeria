@@ -30,7 +30,9 @@ export class ThemeService {
 
     try {
       localStorage.setItem(STORAGE_KEY, next);
-    } catch {}
+    } catch {
+      // Keep the selected theme active when browser storage is unavailable.
+    }
   }
 
   // HELPERS

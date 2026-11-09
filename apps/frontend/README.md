@@ -28,3 +28,12 @@ Build and tests:
 npm run build
 npm test
 ```
+
+Lint TypeScript and Angular templates:
+
+```bash
+npm run lint
+npm run lint:fix
+```
+
+ESLint checks code and template accessibility. Prettier handles formatting separately with `npm run format`.
