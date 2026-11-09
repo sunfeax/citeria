@@ -1,0 +1,24 @@
+@mixin styles {
+  .page-title {
+    margin: 0;
+    color: var(--color-text);
+    font-size: clamp(40px, 5vw, 68px);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1;
+    letter-spacing: -0.05em;
+    text-wrap: balance;
+  }
+
+  .page-title--display {
+    font-size: clamp(50px, 7.4vw, 104px);
+    line-height: 0.98;
+  }
+
+  .page-lede {
+    max-width: 52ch;
+    margin: var(--space-4) 0 0;
+    color: var(--color-text-soft);
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-relaxed);
+  }
+}

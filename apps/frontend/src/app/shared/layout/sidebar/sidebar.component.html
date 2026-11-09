@@ -1,18 +1,6 @@
 <aside [class.collapsed]="!isExpandedSidebar()">
   <header>
-    <div class="brand">
-      <img
-        class="brand-logo"
-        src="/assets/logos/citeria-mark.png"
-        alt=""
-        width="40"
-        height="40"
-      />
-      <div class="brand-copy">
-        <h3>Citeria</h3>
-        <p>EXPERTISE MARKET</p>
-      </div>
-    </div>
+    <app-brand [compact]="!isExpandedSidebar()" />
     <button
       matIconButton
       type="button"
@@ -42,7 +30,12 @@
     }
   </nav>
   <footer>
-    <div class="user">
+    <a
+      class="user"
+      [routerLink]="routePaths.profile"
+      [attr.aria-label]="'Open profile: ' + displayName()"
+      [attr.title]="!isExpandedSidebar() ? 'My profile' : null"
+    >
       <span class="user-avatar" aria-hidden="true">
         @if (avatarSrc(); as src) {
           <img [src]="src" alt="" />
@@ -51,7 +44,7 @@
         }
       </span>
       <span class="user-name">{{ displayName() }}</span>
-    </div>
+    </a>
     <div class="sidebar-actions">
       @if (themeService.theme() === 'dark') {
         <button

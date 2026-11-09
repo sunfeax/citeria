@@ -1,1 +1,36 @@
-<p>header works!</p>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="header">
+  <app-brand />
+  <nav aria-label="Main navigation">
+    <a [routerLink]="routePaths.offerings">Explore services</a>
+    <a class="how-link" [routerLink]="routePaths.home" fragment="how-it-works">
+      How it works
+    </a>
+  </nav>
+  <div class="actions">
+    <button
+      class="theme-toggle"
+      type="button"
+      [attr.aria-label]="
+        themeService.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
+      "
+      (click)="themeService.toggle()"
+    >
+      <mat-icon>
+        {{ themeService.theme() === 'dark' ? 'light_mode' : 'dark_mode' }}
+      </mat-icon>
+    </button>
+    @if (sessionStore.user()) {
+      <a class="action-link" [routerLink]="routePaths.profile">
+        My profile
+        <mat-icon>arrow_forward</mat-icon>
+      </a>
+    } @else {
+      <a class="login-link" [routerLink]="routePaths.login">Log in</a>
+      <a class="action-link action-link--primary" [routerLink]="routePaths.register">
+        Get started
+        <mat-icon>arrow_forward</mat-icon>
+      </a>
+    }
+  </div>
+</header>

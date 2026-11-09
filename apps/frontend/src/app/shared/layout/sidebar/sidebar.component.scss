@@ -6,11 +6,8 @@ aside {
   padding: var(--space-6) var(--space-4);
   overflow-x: hidden;
   background: var(--color-surface);
-  border-right: var(--border-width-sm) solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   flex-direction: column;
-  transition:
-    width var(--transition-base),
-    padding var(--transition-base);
 }
 
 aside.collapsed {
@@ -25,46 +22,6 @@ header {
   justify-content: space-between;
   gap: var(--space-2);
   margin-bottom: var(--space-8);
-
-  .brand {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    gap: var(--space-2);
-    overflow: hidden;
-    white-space: nowrap;
-  }
-
-  .brand-logo {
-    width: 40px;
-    height: 40px;
-    flex: 0 0 40px;
-    object-fit: contain;
-  }
-
-  .brand-copy {
-    max-width: 136px;
-    overflow: hidden;
-    transition:
-      max-width var(--transition-base),
-      opacity var(--transition-fast),
-      transform var(--transition-base);
-  }
-
-  h3 {
-    margin: 0;
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text);
-  }
-
-  p {
-    margin: var(--space-1) 0 0;
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-medium);
-    letter-spacing: 0.6px;
-    color: var(--color-text-muted);
-  }
 
   .sidebar-toggle {
     flex: 0 0 auto;
@@ -88,11 +45,6 @@ nav a {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-soft);
-  transition:
-    background-color var(--transition-fast),
-    color var(--transition-fast),
-    padding var(--transition-base),
-    gap var(--transition-base);
 
   mat-icon {
     flex: 0 0 auto;
@@ -104,10 +56,6 @@ nav a {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    transition:
-      max-width var(--transition-base),
-      opacity var(--transition-fast),
-      transform var(--transition-base);
   }
 
   &:hover {
@@ -141,6 +89,11 @@ footer {
     flex: 1;
     align-items: center;
     gap: var(--space-2);
+    border-radius: var(--radius-md);
+
+    &:hover .user-name {
+      color: var(--color-primary);
+    }
   }
 
   .user-avatar {
@@ -177,9 +130,6 @@ footer {
     color: var(--color-text-soft);
     text-overflow: ellipsis;
     white-space: nowrap;
-    transition:
-      max-width var(--transition-base),
-      opacity var(--transition-fast);
   }
 
   .sidebar-actions {
@@ -193,18 +143,17 @@ footer {
   }
 }
 
+a.user:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 4px;
+}
+
 aside.collapsed {
   header {
     flex-direction: column;
     justify-content: center;
     gap: var(--space-1);
     margin-bottom: var(--space-6);
-
-    .brand-copy {
-      max-width: 0;
-      opacity: 0;
-      transform: translateY(-4px);
-    }
   }
 
   nav a {
@@ -236,15 +185,5 @@ aside.collapsed {
     .sidebar-actions {
       flex-direction: column;
     }
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  aside,
-  header .brand-copy,
-  nav a,
-  nav a span,
-  footer .user-name {
-    transition: none;
   }
 }

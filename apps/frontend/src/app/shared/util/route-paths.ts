@@ -4,4 +4,5 @@ export const routePaths = {
   register: '/register',
   forgotPassword: '/forgot-password',
   profile: '/profile',
+  offerings: '/offerings',
 };

@@ -1,3 +1,4 @@
+import { BrandComponent } from '../../components/brand/brand.component';
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
@@ -8,11 +9,12 @@ import { DialogService } from '../../services/dialog.service';
 import { ThemeService } from '../../services/theme.service';
 import { avatarUrl } from '../../util/avatar-url';
 import { SIDEBAR_CONFIG } from '../../util/sidebar.config';
+import { routePaths } from '../../util/route-paths';
 import { AuthService } from './../../../features/auth/services/auth.service';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [MatIcon, MatIconButton, RouterLink],
+  imports: [BrandComponent, MatIcon, MatIconButton, RouterLink],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })
@@ -25,6 +27,7 @@ export class SidebarComponent {
 
   /** DATA */
   sidebarData = SIDEBAR_CONFIG;
+  protected readonly routePaths = routePaths;
   isExpandedSidebar = signal<boolean>(true);
   protected readonly displayName = computed(() => {
     const user = this.sessionStore.user();
