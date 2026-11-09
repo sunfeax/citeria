@@ -28,7 +28,6 @@ export class OfferingService {
       `${environment.baseUrl}/offerings`,
       {
         params,
-        withCredentials: true,
       },
     );
   }

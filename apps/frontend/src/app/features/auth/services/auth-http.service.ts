@@ -60,14 +60,10 @@ export class AuthHttpService {
   }
 
   getMe(): Observable<User> {
-    return this.http.get<User>(`${environment.baseUrl}/users/me`, {
-      withCredentials: true,
-    });
+    return this.http.get<User>(`${environment.baseUrl}/users/me`);
   }
 
   softDeleteAccount(uuid: string): Observable<User> {
-    return this.http.delete<User>(`${environment.baseUrl}/users/${uuid}`, {
-      withCredentials: true,
-    });
+    return this.http.delete<User>(`${environment.baseUrl}/users/${uuid}`);
   }
 }
