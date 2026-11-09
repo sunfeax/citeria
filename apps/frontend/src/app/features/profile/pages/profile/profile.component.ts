@@ -1,11 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
-import {
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators as v,
-} from '@angular/forms';
+import { email, form, FormField, FormRoot, required } from '@angular/forms/signals';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import {
   MatError,
@@ -16,14 +11,17 @@ import {
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { finalize, switchMap } from 'rxjs';
+import { MatTooltip } from '@angular/material/tooltip';
+import { exhaustMap, finalize, firstValueFrom, switchMap } from 'rxjs';
 import { ApiError } from '../../../../shared/models/api-error';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
+import { avatarUrl } from '../../../../shared/util/avatar-url';
+import { getFieldError, handleSubmitError } from '../../../../shared/util/form-errors';
 import {
-  applyServerErrors,
-  clearServerErrors,
-  getFieldError,
-} from '../../../../shared/util/form-errors';
+  newPasswordRules,
+  personNameRules,
+  phoneRules,
+} from '../../../../shared/util/form-rules';
 import { SessionStore } from '../../../auth/session.store';
 import { ProfileService } from '../../services/profile.service';
 import { DialogService } from './../../../../shared/services/dialog.service';
@@ -33,10 +31,15 @@ import {
 } from './../../../../shared/util/payload-handler';
 import { AuthService } from './../../../auth/services/auth.service';
 
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+const AVATAR_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
+type SettingsSection = 'profile' | 'security' | 'account';
+
 @Component({
   selector: 'app-profile',
   imports: [
-    ReactiveFormsModule,
+    FormField,
+    FormRoot,
     MatButton,
     MatIconButton,
     MatFormField,
@@ -46,6 +49,7 @@ import { AuthService } from './../../../auth/services/auth.service';
     MatInput,
     MatIcon,
     MatProgressSpinner,
+    MatTooltip,
   ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
@@ -64,136 +68,158 @@ export class ProfileComponent {
   /** DATA */
   readonly user = computed(() => this.sessionStore.requireUser());
   readonly hasPassword = computed(() => this.user().hasPassword);
+  readonly avatarSrc = computed(() =>
+    avatarUrl(this.user().id, this.user().avatarVersion),
+  );
+  readonly avatarAccept = AVATAR_TYPES.join(',');
 
   /** STATE */
-  isProfileLoading = signal<boolean>(false);
-  isPasswordLoading = signal<boolean>(false);
+  readonly activeSection = signal<SettingsSection>('profile');
+  readonly sections: { id: SettingsSection; label: string; icon: string }[] = [
+    { id: 'profile', label: 'Profile', icon: 'person_outline' },
+    { id: 'security', label: 'Security', icon: 'shield' },
+    { id: 'account', label: 'Account', icon: 'manage_accounts' },
+  ];
+  isAvatarLoading = signal<boolean>(false);
   isCurrentPasswordVisible = signal<boolean>(false);
   isNewPasswordVisible = signal<boolean>(false);
 
   /** FORM */
-  profileForm = new FormGroup({
-    firstName: new FormControl(this.user().firstName, {
-      nonNullable: true,
-      validators: [
-        v.required,
-        v.minLength(2),
-        v.maxLength(50),
-        v.pattern(/^[\p{L}]+(?:[\s'-][\p{L}]+)*$/u),
-      ],
-    }),
-    lastName: new FormControl(this.user().lastName, {
-      nonNullable: true,
-      validators: [
-        v.required,
-        v.minLength(2),
-        v.maxLength(50),
-        v.pattern(/^[\p{L}]+(?:[\s'-][\p{L}]+)*$/u),
-      ],
-    }),
-    email: new FormControl(this.user().email, {
-      nonNullable: true,
-      validators: [v.required, v.email],
-    }),
-    phone: new FormControl(this.user().phone, {
-      nonNullable: true,
-      validators: [v.required, v.minLength(7), v.maxLength(20), v.pattern(/^\+?\d+$/)],
-    }),
+  profileModel = signal({
+    firstName: this.user().firstName,
+    lastName: this.user().lastName,
+    email: this.user().email,
+    phone: this.user().phone ?? '',
   });
-  passwordForm = new FormGroup({
-    currentPassword: new FormControl('', {
-      nonNullable: true,
-      validators: [v.required],
-    }),
-    newPassword: new FormControl('', {
-      nonNullable: true,
-      validators: [
-        v.required,
-        v.minLength(8),
-        v.pattern(/^(?=.*[A-Z])(?=.*[@#$%^&+=!])[A-Za-z0-9@#$%^&+=!]+$/),
-      ],
-    }),
-  });
-
-  constructor() {
-    if (!this.hasPassword()) {
-      this.passwordForm.controls.currentPassword.disable();
-    }
-  }
+  profileForm = form(
+    this.profileModel,
+    s => {
+      personNameRules(s.firstName);
+      personNameRules(s.lastName);
+      required(s.email);
+      email(s.email);
+      phoneRules(s.phone);
+    },
+    {
+      submission: {
+        action: async field => {
+          try {
+            const user = await firstValueFrom(
+              this.profileService.update(
+                this.user().id,
+                getUserUpdatePayload(this.profileModel()),
+              ),
+            );
+            this.sessionStore.setUser(user);
+            this.snackbarService.success('Your information has been updated.');
+            this.profileForm().reset();
+          } catch (err) {
+            return handleSubmitError(field, err, 'Update failed.', message =>
+              this.snackbarService.error(message),
+            );
+          }
+          return undefined;
+        },
+      },
+    },
+  );
+  passwordModel = signal({ currentPassword: '', newPassword: '' });
+  passwordForm = form(
+    this.passwordModel,
+    s => {
+      required(s.currentPassword, { when: () => this.hasPassword() });
+      newPasswordRules(s.newPassword);
+    },
+    {
+      submission: {
+        action: async field => {
+          try {
+            await firstValueFrom(
+              this.profileService.changePassword(
+                this.user().id,
+                getChangePasswordPayload(this.passwordModel()),
+              ),
+            );
+            const wasSet = !this.hasPassword();
+            this.snackbarService.success(
+              wasSet ? 'Your password has been set.' : 'Your password has been updated.',
+            );
+            if (wasSet) {
+              this.sessionStore.setUser({ ...this.user(), hasPassword: true });
+            }
+            this.passwordForm().reset({ currentPassword: '', newPassword: '' });
+          } catch (err) {
+            return handleSubmitError(field, err, 'Password update failed.', message =>
+              this.snackbarService.error(message),
+            );
+          }
+          return undefined;
+        },
+      },
+    },
+  );
 
   /** ACTIONS */
-  submitProfileForm(): void {
-    clearServerErrors(this.profileForm);
+  onAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
 
-    if (this.profileForm.invalid) {
-      this.profileForm.markAllAsTouched();
+    if (!file) {
+      return;
+    }
+    if (!AVATAR_TYPES.includes(file.type)) {
+      this.snackbarService.error('Please choose a PNG or JPEG image.');
+      return;
+    }
+    if (file.size > AVATAR_MAX_BYTES) {
+      this.snackbarService.error('The photo must not exceed 5 MB.');
       return;
     }
 
-    this.isProfileLoading.set(true);
+    this.isAvatarLoading.set(true);
     this.profileService
-      .update(this.user().id, getUserUpdatePayload(this.profileForm.getRawValue()))
-      .pipe(
-        finalize(() => {
-          this.isProfileLoading.set(false);
-        }),
-      )
+      .uploadAvatar(this.user().id, file)
+      .pipe(finalize(() => this.isAvatarLoading.set(false)))
       .subscribe({
         next: user => {
           this.sessionStore.setUser(user);
-          this.snackbarService.success('Your information has been updated.');
-          this.profileForm.markAsPristine();
+          this.snackbarService.success('Your photo has been updated.');
         },
         error: (err: HttpErrorResponse) => {
-          const apiError = err.error as ApiError;
-          if (apiError.errors) {
-            applyServerErrors(this.profileForm, apiError.errors);
-          } else {
-            this.snackbarService.error(apiError.detail ?? 'Update failed.');
-          }
+          const apiError = err.error as ApiError | null;
+          this.snackbarService.error(
+            apiError?.errors?.['file'] ??
+              apiError?.detail ??
+              'Unable to upload the photo.',
+          );
         },
       });
   }
 
-  submitPasswordForm(): void {
-    clearServerErrors(this.passwordForm);
-
-    if (this.passwordForm.invalid) {
-      this.passwordForm.markAllAsTouched();
-      return;
-    }
-
-    this.isPasswordLoading.set(true);
-    this.profileService
-      .changePassword(
-        this.user().id,
-        getChangePasswordPayload(this.passwordForm.getRawValue()),
-      )
+  removeAvatar(): void {
+    this.dialogService
+      .confirm({
+        title: 'Remove photo',
+        message: 'Do you want to remove your profile photo?',
+        confirmText: 'Remove',
+        cancelText: 'Cancel',
+        variant: 'danger',
+      })
       .pipe(
-        finalize(() => {
-          this.isPasswordLoading.set(false);
+        exhaustMap(() => {
+          this.isAvatarLoading.set(true);
+          return this.profileService
+            .deleteAvatar(this.user().id)
+            .pipe(finalize(() => this.isAvatarLoading.set(false)));
         }),
       )
       .subscribe({
         next: () => {
-          const wasSet = !this.hasPassword();
-          this.snackbarService.success(
-            wasSet ? 'Your password has been set.' : 'Your password has been updated.',
-          );
-          if (wasSet) {
-            this.sessionStore.setUser({ ...this.user(), hasPassword: true });
-            this.passwordForm.controls.currentPassword.enable();
-          }
-          this.passwordForm.reset();
+          this.sessionStore.setUser({ ...this.user(), avatarVersion: null });
+          this.snackbarService.success('Your photo has been removed.');
         },
-        error: (err: HttpErrorResponse) => {
-          const apiError = err.error as ApiError;
-          if (apiError.errors) {
-            applyServerErrors(this.passwordForm, apiError.errors);
-          } else {
-            this.snackbarService.error(apiError.detail ?? 'Password update failed.');
-          }
-        },
+        error: () => this.snackbarService.error('Unable to remove the photo.'),
       });
   }
 

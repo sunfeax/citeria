@@ -9,17 +9,18 @@
       </div>
     </div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+  <div class="auth-card">
+    <form [formRoot]="loginForm" class="auth-form">
       <mat-form-field>
         <mat-label>Email</mat-label>
         <input
           matInput
           type="email"
           placeholder="name@example.com"
-          formControlName="email"
+          [formField]="loginForm.email"
           autocomplete="email"
         />
-        <mat-error>{{ getFieldError(loginForm.controls.email) }}</mat-error>
+        <mat-error>{{ getFieldError(loginForm.email()) }}</mat-error>
       </mat-form-field>
 
       <div class="password-block">
@@ -29,7 +30,7 @@
             matInput
             [type]="isPasswordVisible() ? 'text' : 'password'"
             placeholder="••••••••"
-            formControlName="password"
+            [formField]="loginForm.password"
             autocomplete="current-password"
           />
           <button
@@ -44,7 +45,7 @@
               {{ isPasswordVisible() ? 'visibility_off' : 'visibility' }}
             </mat-icon>
           </button>
-          <mat-error>{{ getFieldError(loginForm.controls.password) }}</mat-error>
+          <mat-error>{{ getFieldError(loginForm.password()) }}</mat-error>
         </mat-form-field>
         <div class="auth-actions auth-actions--end">
           <a [routerLink]="routePaths.forgotPassword" class="auth-link auth-link--small">
@@ -57,9 +58,9 @@
         matButton="filled"
         type="submit"
         class="btn-block btn-lg"
-        [disabled]="isLoading()"
+        [disabled]="loginForm().submitting()"
       >
-        @if (isLoading()) {
+        @if (loginForm().submitting()) {
           <mat-progress-spinner mode="indeterminate" diameter="20" />
         }
         Login

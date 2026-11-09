@@ -13,12 +13,12 @@
         <h1 id="register-title" class="register-panel__title">Create your account</h1>
       </header>
 
-      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+      <form [formRoot]="registerForm" class="register-form">
         <div class="register-form__wide register-form__account-type">
           <span class="form-label">I'm joining as a</span>
           <mat-button-toggle-group
             class="type-toggle"
-            formControlName="type"
+            [formField]="registerForm.type"
             hideSingleSelectionIndicator
             aria-label="Account type"
           >
@@ -27,14 +27,14 @@
               Specialist
             </mat-button-toggle>
           </mat-button-toggle-group>
-          @if (registerForm.controls.type.hasError('server')) {
-            <p class="form-error">{{ getFieldError(registerForm.controls.type) }}</p>
+          @if (getFieldError(registerForm.type()); as typeError) {
+            <p class="form-error">{{ typeError }}</p>
           }
         </div>
 
         @if (isGoogleEnabled) {
           <div class="register-form__wide">
-            <app-google-sign-in [type]="registerForm.controls.type.value" large />
+            <app-google-sign-in [type]="registerForm.type().value()" large />
           </div>
           <div class="auth-divider register-form__wide">
             <div class="auth-divider__line"></div>
@@ -49,10 +49,10 @@
             matInput
             type="text"
             placeholder="Jane"
-            formControlName="firstName"
+            [formField]="registerForm.firstName"
             autocomplete="given-name"
           />
-          <mat-error>{{ getFieldError(registerForm.controls.firstName) }}</mat-error>
+          <mat-error>{{ getFieldError(registerForm.firstName()) }}</mat-error>
         </mat-form-field>
 
         <mat-form-field subscriptSizing="fixed">
@@ -61,10 +61,10 @@
             matInput
             type="text"
             placeholder="Doe"
-            formControlName="lastName"
+            [formField]="registerForm.lastName"
             autocomplete="family-name"
           />
-          <mat-error>{{ getFieldError(registerForm.controls.lastName) }}</mat-error>
+          <mat-error>{{ getFieldError(registerForm.lastName()) }}</mat-error>
         </mat-form-field>
 
         <mat-form-field class="register-form__contact" subscriptSizing="fixed">
@@ -73,10 +73,10 @@
             matInput
             type="email"
             placeholder="name@example.com"
-            formControlName="email"
+            [formField]="registerForm.email"
             autocomplete="email"
           />
-          <mat-error>{{ getFieldError(registerForm.controls.email) }}</mat-error>
+          <mat-error>{{ getFieldError(registerForm.email()) }}</mat-error>
         </mat-form-field>
 
         <mat-form-field class="register-form__contact" subscriptSizing="fixed">
@@ -85,10 +85,10 @@
             matInput
             type="tel"
             placeholder="+1234567890"
-            formControlName="phone"
+            [formField]="registerForm.phone"
             autocomplete="tel"
           />
-          <mat-error>{{ getFieldError(registerForm.controls.phone) }}</mat-error>
+          <mat-error>{{ getFieldError(registerForm.phone()) }}</mat-error>
         </mat-form-field>
 
         <mat-form-field class="register-form__wide" subscriptSizing="fixed">
@@ -97,7 +97,7 @@
             matInput
             [type]="isPasswordVisible() ? 'text' : 'password'"
             placeholder="Create a password"
-            formControlName="password"
+            [formField]="registerForm.password"
             autocomplete="new-password"
           />
           <span matSuffix class="suffix-actions">
@@ -122,7 +122,7 @@
               </mat-icon>
             </button>
           </span>
-          <mat-error>{{ getFieldError(registerForm.controls.password) }}</mat-error>
+          <mat-error>{{ getFieldError(registerForm.password()) }}</mat-error>
         </mat-form-field>
 
         <mat-form-field class="register-form__wide" subscriptSizing="fixed">
@@ -131,9 +131,8 @@
             matInput
             [type]="isConfirmPasswordVisible() ? 'text' : 'password'"
             placeholder="Repeat your password"
-            formControlName="confirmPassword"
+            [formField]="registerForm.confirmPassword"
             autocomplete="new-password"
-            [errorStateMatcher]="confirmPasswordMatcher"
           />
           <button
             matIconButton
@@ -151,13 +150,7 @@
               {{ isConfirmPasswordVisible() ? 'visibility_off' : 'visibility' }}
             </mat-icon>
           </button>
-          <mat-error>
-            @if (registerForm.controls.confirmPassword.invalid) {
-              {{ getFieldError(registerForm.controls.confirmPassword) }}
-            } @else {
-              Passwords don't match
-            }
-          </mat-error>
+          <mat-error>{{ getFieldError(registerForm.confirmPassword()) }}</mat-error>
         </mat-form-field>
 
         <div class="register-form__wide">
@@ -165,9 +158,9 @@
             matButton="filled"
             type="submit"
             class="btn-block btn-lg"
-            [disabled]="isLoading()"
+            [disabled]="registerForm().submitting()"
           >
-            @if (isLoading()) {
+            @if (registerForm().submitting()) {
               <mat-progress-spinner mode="indeterminate" diameter="20" />
             }
             Create account

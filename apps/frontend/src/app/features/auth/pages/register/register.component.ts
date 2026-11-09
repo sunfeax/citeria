@@ -1,19 +1,15 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { BrandComponent } from '../../../../shared/components/brand/brand.component';
 import { Component, inject, signal } from '@angular/core';
 import {
-  AbstractControl,
-  FormControl,
-  FormGroup,
-  FormGroupDirective,
-  NgForm,
-  ReactiveFormsModule,
-  Validators as v,
-  ValidationErrors,
-  ValidatorFn,
-} from '@angular/forms';
+  email,
+  form,
+  FormField,
+  FormRoot,
+  required,
+  validate,
+} from '@angular/forms/signals';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
-import { ErrorStateMatcher } from '@angular/material/core';
 import {
   MatError,
   MatFormField,
@@ -25,14 +21,14 @@ import { MatInput } from '@angular/material/input';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
-import { ApiError } from '../../../../shared/models/api-error';
+import { firstValueFrom } from 'rxjs';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
+import { getFieldError, handleSubmitError } from '../../../../shared/util/form-errors';
 import {
-  applyServerErrors,
-  clearServerErrors,
-  getFieldError,
-} from '../../../../shared/util/form-errors';
+  newPasswordRules,
+  personNameRules,
+  phoneRules,
+} from '../../../../shared/util/form-rules';
 import { UserType } from '../../models/user-type';
 import { GoogleSignInComponent } from '../../components/google-sign-in/google-sign-in.component';
 import { AuthService } from '../../services/auth.service';
@@ -43,7 +39,9 @@ import { getRegisterPayload } from './../../../../shared/util/payload-handler';
 @Component({
   selector: 'app-register',
   imports: [
-    ReactiveFormsModule,
+    BrandComponent,
+    FormField,
+    FormRoot,
     GoogleSignInComponent,
     RouterLink,
     MatButton,
@@ -76,7 +74,6 @@ export class RegisterComponent {
 
   /** TEMPLATE HELPERS */
   readonly getFieldError = getFieldError;
-  readonly confirmPasswordMatcher = new ConfirmPasswordErrorMatcher();
   readonly passwordRequirements = [
     'Only Latin letters',
     'At least 8 characters',
@@ -87,114 +84,55 @@ export class RegisterComponent {
   ].join('\n');
 
   /** STATE */
-  isLoading = signal<boolean>(false);
   isPasswordVisible = signal<boolean>(false);
   isConfirmPasswordVisible = signal<boolean>(false);
 
   /** FORM */
-  registerForm = new FormGroup(
-    {
-      firstName: new FormControl('', {
-        nonNullable: true,
-        validators: [
-          v.required,
-          v.minLength(2),
-          v.maxLength(50),
-          v.pattern(/^[\p{L}]+(?:[\s'-][\p{L}]+)*$/u),
-        ],
-      }),
-      lastName: new FormControl('', {
-        nonNullable: true,
-        validators: [
-          v.required,
-          v.minLength(2),
-          v.maxLength(50),
-          v.pattern(/^[\p{L}]+(?:[\s'-][\p{L}]+)*$/u),
-        ],
-      }),
-      email: new FormControl('', {
-        nonNullable: true,
-        validators: [v.required, v.email],
-      }),
-      phone: new FormControl('', {
-        nonNullable: true,
-        validators: [v.required, v.minLength(7), v.maxLength(20), v.pattern(/^\+?\d+$/)],
-      }),
-      password: new FormControl('', {
-        nonNullable: true,
-        validators: [
-          v.required,
-          v.minLength(8),
-          v.pattern(/^(?=.*[A-Z])(?=.*[@#$%^&+=!])[A-Za-z0-9@#$%^&+=!]+$/),
-        ],
-      }),
-      confirmPassword: new FormControl('', {
-        nonNullable: true,
-        validators: [v.required],
-      }),
-      type: new FormControl(UserType.CLIENT, {
-        nonNullable: true,
-        validators: [v.required],
-      }),
+  registerModel = signal({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    type: UserType.CLIENT as UserType,
+  });
+  registerForm = form(
+    this.registerModel,
+    s => {
+      personNameRules(s.firstName);
+      personNameRules(s.lastName);
+      required(s.email);
+      email(s.email);
+      phoneRules(s.phone);
+      newPasswordRules(s.password);
+      required(s.confirmPassword);
+      validate(s.confirmPassword, ({ value, valueOf }) =>
+        value() && valueOf(s.password) && value() !== valueOf(s.password)
+          ? { kind: 'passwordMismatch', message: "Passwords don't match" }
+          : undefined,
+      );
+      required(s.type);
     },
     {
-      validators: [this.passwordComparator()],
+      submission: {
+        action: async field => {
+          this.isPasswordVisible.set(false);
+          this.isConfirmPasswordVisible.set(false);
+
+          try {
+            await firstValueFrom(
+              this.authService.register(getRegisterPayload(this.registerModel())),
+            );
+            this.router.navigateByUrl(routePaths.login);
+          } catch (err) {
+            return handleSubmitError(field, err, 'Registration failed.', message =>
+              this.snackbarService.error(message),
+            );
+          }
+          return undefined;
+        },
+      },
     },
   );
-
-  /** ACTIONS */
-  onSubmit(): void {
-    this.isPasswordVisible.set(false);
-    this.isConfirmPasswordVisible.set(false);
-    clearServerErrors(this.registerForm);
-
-    if (this.registerForm.invalid) {
-      this.registerForm.markAllAsTouched();
-      return;
-    }
-
-    this.isLoading.set(true);
-    this.authService
-      .register(getRegisterPayload(this.registerForm.getRawValue()))
-      .pipe(
-        finalize(() => {
-          this.isLoading.set(false);
-        }),
-      )
-      .subscribe({
-        next: () => {
-          this.router.navigateByUrl(routePaths.login);
-        },
-        error: (err: HttpErrorResponse) => {
-          const apiError = err.error as ApiError;
-          if (apiError.errors) {
-            applyServerErrors(this.registerForm, apiError.errors);
-          } else {
-            this.snackbarService.error(apiError.detail ?? 'Registration failed.');
-          }
-        },
-      });
-  }
-
-  /** HELPERS */
-  passwordComparator(): ValidatorFn {
-    return (group: AbstractControl): ValidationErrors | null => {
-      const { password, confirmPassword } = group.value;
-      if (!password || !confirmPassword) return null;
-      return password === confirmPassword ? null : { passwordMismatch: true };
-    };
-  }
-}
-
-class ConfirmPasswordErrorMatcher implements ErrorStateMatcher {
-  isErrorState(
-    control: AbstractControl | null,
-    form: FormGroupDirective | NgForm | null,
-  ): boolean {
-    if (!control) return false;
-    const isInteracted = control.touched || !!form?.submitted;
-    return (
-      isInteracted && (control.invalid || !!control.parent?.hasError('passwordMismatch'))
-    );
-  }
 }

@@ -15,7 +15,7 @@ Frontend domain: `https://citeria.sunfeax.com`.
 ## Product: must have
 
 ### Avatars
-- [ ] Upload, replace and delete in the profile page. Refresh the session user afterwards so `avatarVersion` changes.
+- [x] Upload, replace and delete in the profile page. Refresh the session user afterwards so `avatarVersion` changes.
 
 ### Booking flow
 - [ ] Specialist page: profile, active offerings, working hours. `GET /specialist-detail/{id}`
