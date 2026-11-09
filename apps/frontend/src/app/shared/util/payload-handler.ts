@@ -20,7 +20,9 @@ export function getUserUpdatePayload(raw: UserUpdateRequest): UserUpdateRequest 
     phone: raw.phone?.trim(),
   };
 }
-export function getChangePasswordPayload(raw: ChangePasswordRequest): ChangePasswordRequest {
+export function getChangePasswordPayload(
+  raw: ChangePasswordRequest,
+): ChangePasswordRequest {
   return {
     currentPassword: raw.currentPassword.trim(),
     newPassword: raw.newPassword.trim(),
