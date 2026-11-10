@@ -48,7 +48,6 @@ export class OfferingComponent {
 
   protected readonly avatarUrl = avatarUrl;
   protected readonly routePaths = routePaths;
-  protected readonly user = this.sessionStore.user;
 
   readonly search = signal('');
   readonly priceSlider = { min: 0, max: 500, step: 10 } as const;

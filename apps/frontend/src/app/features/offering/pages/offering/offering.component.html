@@ -83,7 +83,15 @@
                   alt=""
                 />
                 <div class="specialist-card__identity">
-                  <h2>{{ specialist.specialistName }}</h2>
+                  <h2>
+                    <a
+                      class="specialist-card__link"
+                      [routerLink]="[routePaths.specialists, specialist.specialistId]"
+                      [queryParams]="{ offering: specialist.id }"
+                    >
+                      {{ specialist.specialistName }}
+                    </a>
+                  </h2>
                   <p class="specialist-card__category">{{ specialist.name }}</p>
                 </div>
               </div>
@@ -95,18 +103,14 @@
                   <strong>{{ specialist.priceAmount }} {{ specialist.currency }}</strong>
                   <small>/ {{ specialist.durationMinutes }} min</small>
                 </span>
-                @if (user()) {
-                  <button matButton="filled" type="button">Book</button>
-                } @else {
-                  <a
-                    matButton="filled"
-                    [routerLink]="routePaths.login"
-                    [queryParams]="{ returnUrl: routePaths.offerings }"
-                    [attr.aria-label]="'Sign in to book ' + specialist.name"
-                  >
-                    Book
-                  </a>
-                }
+                <a
+                  matButton="filled"
+                  [routerLink]="[routePaths.specialists, specialist.specialistId]"
+                  [queryParams]="{ offering: specialist.id }"
+                  [attr.aria-label]="'Book ' + specialist.name"
+                >
+                  Book
+                </a>
               </div>
             </div>
           </article>
