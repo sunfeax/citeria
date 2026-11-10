@@ -18,6 +18,7 @@ public class UserMapper {
             userEntity.getLastName(),
             userEntity.getEmail(),
             userEntity.getPhone(),
+            userEntity.getAbout(),
             userEntity.getRole(),
             userEntity.getType(),
             userEntity.isActive(),
@@ -54,6 +55,9 @@ public class UserMapper {
         if (request.phone() != null) {
             entity.setPhone(request.phone().isEmpty() ? null : request.phone());
         }
+        if (request.about() != null) {
+            entity.setAbout(request.about().isEmpty() ? null : request.about());
+        }
 
         return entity;
     }
@@ -62,6 +66,7 @@ public class UserMapper {
         return request.firstName() != null
             || request.lastName() != null
             || request.email() != null
-            || request.phone() != null;
+            || request.phone() != null
+            || request.about() != null;
     }
 }

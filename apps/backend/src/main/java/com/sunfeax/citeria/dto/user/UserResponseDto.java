@@ -12,6 +12,7 @@ public record UserResponseDto(
     String lastName,
     String email,
     String phone,
+    String about,
     UserRole role,
     UserType type,
     Boolean isActive,

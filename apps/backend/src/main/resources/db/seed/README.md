@@ -21,3 +21,5 @@ Additional Pexels portraits, cropped to 256 × 256 JPEG:
 - Marcus: [Pexels photo 2379004](https://www.pexels.com/photo/2379004/).
 - Sofia: [Pexels photo 733872](https://www.pexels.com/photo/733872/).
 - Tomas: [Pexels photo 91227](https://www.pexels.com/photo/91227/).
+
+`V20261110130000__add_demo_about_and_hours.sql` adds About texts for all eight demo specialists and working hours for the six that had none, so every demo profile has bookable slots. Texts and hours edited by hand are preserved.

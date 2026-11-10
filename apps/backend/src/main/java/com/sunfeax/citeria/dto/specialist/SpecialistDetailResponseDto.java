@@ -10,7 +10,10 @@ public record SpecialistDetailResponseDto(
     UUID id,
     String firstName,
     String lastName,
+    String about,
+    Long avatarVersion,
     Boolean isActive,
     List<OfferingResponseDto> offerings,
-    List<WorkingHoursResponseDto> workingHours
+    List<WorkingHoursResponseDto> workingHours,
+    String timeZone
 ) {}

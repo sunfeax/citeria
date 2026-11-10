@@ -29,5 +29,9 @@ public record UserUpdateRequestDto(
 
     @Nullable
     @Pattern(regexp = "^$|^.{7,20}$", message = "Phone must be between 7 and 20 characters")
-    String phone
+    String phone,
+
+    @Nullable
+    @Size(max = 1000, message = "About must be at most 1000 characters")
+    String about
 ) {}

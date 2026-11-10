@@ -26,7 +26,8 @@ public class UserFieldNormalizer {
             normalizeName(request.firstName()),
             normalizeName(request.lastName()),
             normalizeEmail(request.email()),
-            normalizePhone(request.phone())
+            normalizePhone(request.phone()),
+            normalizeAbout(request.about())
         );
     }
 
@@ -44,6 +45,10 @@ public class UserFieldNormalizer {
 
     public String normalizePhone(String value) {
         return value == null ? null : value.replaceAll("[+()\\s\\p{Pd}]", "");
+    }
+
+    public String normalizeAbout(String value) {
+        return value == null ? null : value.strip().replaceAll("\\R", "\n").replaceAll("\n{3,}", "\n\n");
     }
 
     private String emptyToNull(String value) {

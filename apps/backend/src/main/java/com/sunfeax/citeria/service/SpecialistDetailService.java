@@ -3,6 +3,7 @@ package com.sunfeax.citeria.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,9 @@ public class SpecialistDetailService {
     private final OfferingMapper offeringMapper;
     private final WorkingHoursMapper workingHoursMapper;
 
+    @Value("${app.booking.zone:UTC}")
+    private String bookingZone;
+
     @Transactional(readOnly = true)
     public SpecialistDetailResponseDto getDetail(UUID specialistId) {
         UserEntity specialist = userRepository.findById(specialistId)
@@ -50,9 +54,12 @@ public class SpecialistDetailService {
             specialist.getId(),
             specialist.getFirstName(),
             specialist.getLastName(),
+            specialist.getAbout(),
+            specialist.getAvatarVersion(),
             specialist.isActive(),
             offerings,
-            workingHours
+            workingHours,
+            bookingZone
         );
     }
 }

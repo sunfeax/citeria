@@ -55,6 +55,9 @@ public class UserEntity {
     @Column(name = "google_id", unique = true)
     private String googleId;
 
+    @Column(name = "about", length = 1000)
+    private String about;
+
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.USER;

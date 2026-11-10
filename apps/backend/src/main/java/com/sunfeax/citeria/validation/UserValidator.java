@@ -9,6 +9,7 @@ import com.sunfeax.citeria.dto.auth.RegisterRequestDto;
 import com.sunfeax.citeria.dto.user.UserChangePasswordRequestDto;
 import com.sunfeax.citeria.dto.user.UserUpdateRequestDto;
 import com.sunfeax.citeria.entity.UserEntity;
+import com.sunfeax.citeria.enums.UserType;
 import com.sunfeax.citeria.mapper.UserMapper;
 import com.sunfeax.citeria.repository.UserRepository;
 
@@ -60,6 +61,12 @@ public class UserValidator {
                 request.phone() != null && userRepository.existsByPhoneAndIdNot(targetPhone, id),
                 "phone",
                 "Phone " + targetPhone + " is already busy"
+            )
+            .addErrorIf(
+                request.about() != null && !request.about().isEmpty()
+                    && existingEntity.getType() != UserType.SPECIALIST,
+                "about",
+                "Only specialists can have an About text"
             )
             .throwIfHasErrors();
     }
