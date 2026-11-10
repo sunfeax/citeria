@@ -73,6 +73,8 @@ components:
   dialog: { use: DialogService + MatDialog, radius: 24 }
   snackbar: { use: SnackbarService, variants: success, error, warning, info }
   tabs: { active: --color-primary text + 2px inset underline }
+  faq: { use: 'mat-accordion displayMode="flat" inside a card', shadow: none, divider: --color-border-soft, question: 16px / 500, answer: '14px text-soft, aligned with the question' }
+  choice-toggle: { use: 'mat-button-toggle-group + @include choice-toggle.styles', option: { height: 44px, radius: 12 }, selected: 'primary 8% tint + 1px primary outline' }  # single choice: account type, day, time
   nav-header: guests and marketing pages
   nav-sidebar: { signed-in pages, width: 280px, collapsed: 80px, item: 48px high, radius full }
   loading: { list: mat-progress-bar 3px above content, stale content opacity 0.55 }
@@ -93,11 +95,13 @@ components:
 - Put component dimensions (avatar, sidebar, grid tracks) in a local custom property, e.g. `--avatar-size`.
 - Tints are `color-mix(in srgb, var(--color-x) N%, var(--color-surface))`, never a new hex.
 - Reuse a pattern from another feature by extracting it to `shared/components/` on its second use.
+- Clickable card: the title is the link and its `::after` covers the card (`position: absolute; inset: 0`); other controls in the card sit above it with `position: relative`. On hover the title turns `--color-primary`; the focus ring outlines the whole card via `:has(:focus-visible)`.
 
 ## Don'ts
 - No hex, rgb or named colors outside `tokens-source`.
 - No px literals for spacing, font-size, radius, border, shadow or icon size in component SCSS.
 - No `max-width` media queries; no breakpoint values other than those in `breakpoints`.
+- No `max-width: 100%` on Material's fixed-size SVGs (`mat-select` arrow, `mat-expansion-panel` indicator): exclude them from the global `svg` reset in `styles.scss`.
 - No `::ng-deep`, `!important`, inline `style` for visuals, or `.mdc-*` overrides in components.
 - No shadows on cards or static surfaces; gradients only as a photo scrim or a line pattern, never as a fill.
 - No `--color-secondary` in custom components.
@@ -109,6 +113,7 @@ components:
 - Base styles target phones (< 600px): single column, header nav wraps under the brand row.
 - `bp.up(600px)`: two-column forms, inline header nav, page padding switches to `--page-gutter`.
 - `bp.up(960px)`: split layouts (hero, auth, register photo), tables, horizontal danger zones.
+- Action pages (specialist profile + booking): one column below 960px with the action panel after the info; from `bp.up(960px)` two columns, the right one fixed (`--booking-width: 400px`) and `position: sticky`.
 - `bp.up(1280px)`: side column layouts (profile avatar column), three-column forms.
 - Page container: `width: min(100%, var(--page-width))` with `--page-gutter` inline padding.
 - Raw `@media` is allowed only for `hover`, `prefers-reduced-motion` and `max-height`.
@@ -124,7 +129,7 @@ components:
 - Tokens: `apps/frontend/src/styles.scss` (`:root` for light, `:root[data-theme='dark']` overrides).
 - Breakpoints: `@use 'breakpoints' as bp;` then `@include bp.up(960px) { ... }`.
 - Global Material config and shared classes (`.btn-block`, `.btn-lg`, `.app-snack-bar--*`): `styles.scss`.
-- Page-level shared styles: `apps/frontend/src/styles/_page.scss`, `auth-page.scss`.
+- Page-level shared styles: `apps/frontend/src/styles/_page.scss`, `auth-page.scss`; the choice-toggle mixin is in `_choice-toggle.scss`.
 - Shared UI: `shared/components/` (brand), `shared/dialogs/` (confirm-dialog), `shared/layout/` (header, footer, sidebar, layouts).
 - Services: `DialogService`, `SnackbarService`, `ThemeService` in `shared/services/`.
 - Component SCSS holds layout only: grid/flex, placement and token references.

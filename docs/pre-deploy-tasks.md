@@ -30,11 +30,11 @@ Domain: `https://citeria.sunfeax.com`, with the API at `https://citeria.sunfeax.
 
 ## 1. Booking
 
-- [ ] Optional `About` field for specialists: database, API and profile settings.
-- [ ] Public specialist page `/specialists/:id`: photo, name, About, offerings, working hours. Add it to the public routes, security rules and `isOnPublicPage`. Catalog `Book` opens this page.
-- [ ] Booking panel on that page: offering, day strip, free times. `GET /offerings/{id}/slots?from&to`
-- [ ] Create a booking; login is required at this step. `POST /appointments`
-- [ ] Hide booking actions from specialists. The backend already limits booking to clients.
+- [x] Optional `About` field for specialists: database, API and profile settings.
+- [x] Public specialist page `/specialists/:id`: photo, name, About, offerings, working hours. Add it to the public routes, security rules and `isOnPublicPage`. Catalog `Book` opens this page.
+- [x] Booking panel on that page: offering, day strip, free times. `GET /offerings/{id}/slots?from&to`
+- [x] Create a booking; login is required at this step. `POST /appointments`
+- [x] Hide booking actions from specialists. The backend already limits booking to clients.
 
 ## 2. My bookings
 
@@ -125,7 +125,7 @@ Out of scope: attachments, group chats, typing indicators, email notifications.
 
 ## 11. Help
 
-- [ ] Static FAQ describing the working flow, with a support email link.
+- [x] Static FAQ describing the working flow, with a support email link.
 
 # Done
 

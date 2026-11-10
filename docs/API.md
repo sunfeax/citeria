@@ -181,7 +181,7 @@ Authorization: Bearer <token>
 
 { "firstName": "Clara", "phone": "+3725550102" }
 ```
-Send `"phone": ""` to remove the phone number.
+Send `"phone": ""` to remove the phone number. `about` (up to 1000 characters) is for specialists only; send `"about": ""` to clear it.
 
 ```http
 PATCH /api/users/{id}/password
@@ -267,11 +267,14 @@ GET /api/specialist-detail/22222222-2222-2222-2222-222222222222
 Response `200`:
 ```json
 {
-  "id": "2222...", "firstName": "Anna", "lastName": "Specialist", "isActive": true,
+  "id": "2222...", "firstName": "Anna", "lastName": "Specialist",
+  "about": "Ten years of experience…", "avatarVersion": 1762790400000, "isActive": true,
   "offerings": [ { "id": "aaaa...1", "name": "Consultation", "durationMinutes": 60, "priceAmount": 60.00, "currency": "EUR", "isActive": true } ],
-  "workingHours": [ { "id": "…", "dayOfWeek": "MONDAY", "startTime": "09:00", "endTime": "17:00", "isActive": true } ]
+  "workingHours": [ { "id": "…", "dayOfWeek": "MONDAY", "startTime": "09:00", "endTime": "17:00", "isActive": true } ],
+  "timeZone": "UTC"
 }
 ```
+`timeZone` is the booking zone (`APP_BOOKING_ZONE`): working hours and slot days are in this zone.
 
 ---
 
