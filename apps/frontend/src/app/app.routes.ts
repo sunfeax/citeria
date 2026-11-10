@@ -37,6 +37,12 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'help',
+        title: 'Help — Citeria',
+        loadComponent: () =>
+          import('./features/help/pages/help/help.component').then(m => m.HelpComponent),
+      },
+      {
         path: 'specialists/:id',
         loadComponent: () =>
           import('./features/specialist/pages/specialist/specialist.component').then(

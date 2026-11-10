@@ -312,8 +312,14 @@ mat-form-field {
   }
 }
 
-.mat-mdc-select-arrow svg {
+.mat-mdc-select-arrow svg,
+.mat-expansion-indicator svg,
+mat-progress-spinner svg {
   max-width: none;
+}
+
+.faq-section .mat-expansion-panel-body {
+  padding: 0 0 var(--space-16);
 }
 
 mat-paginator {
