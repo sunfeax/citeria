@@ -1,4 +1,5 @@
 @use 'breakpoints' as bp;
+@use 'choice-toggle';
 
 .register-page {
   display: grid;
@@ -108,34 +109,11 @@ mat-form-field {
 }
 
 .type-toggle {
+  @include choice-toggle.styles;
   width: 100%;
-  gap: var(--space-8);
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  --mat-button-toggle-height: 44px;
-  --mat-button-toggle-divider-color: transparent;
-  --mat-button-toggle-shape: var(--radius-12);
-  --mat-button-toggle-label-text-size: var(--font-size-14);
-  --mat-button-toggle-label-text-weight: var(--font-weight-semibold);
-  --mat-button-toggle-label-text-tracking: normal;
-  --mat-button-toggle-text-color: var(--color-text-soft);
-  --mat-button-toggle-selected-state-background-color: color-mix(
-    in srgb,
-    var(--color-primary) 8%,
-    var(--color-surface)
-  );
-  --mat-button-toggle-selected-state-text-color: var(--color-primary);
 
   mat-button-toggle {
     flex: 1;
-    border: 0;
-    border-radius: var(--radius-12);
-    box-shadow: inset 0 0 0 var(--border-width-1) var(--color-border);
-
-    &.mat-button-toggle-checked {
-      box-shadow: inset 0 0 0 var(--border-width-1) var(--color-primary);
-    }
   }
 }
 

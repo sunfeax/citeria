@@ -1,0 +1,29 @@
+@mixin styles {
+  gap: var(--space-8);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  --mat-button-toggle-height: 44px;
+  --mat-button-toggle-divider-color: transparent;
+  --mat-button-toggle-shape: var(--radius-12);
+  --mat-button-toggle-label-text-size: var(--font-size-14);
+  --mat-button-toggle-label-text-weight: var(--font-weight-semibold);
+  --mat-button-toggle-label-text-tracking: normal;
+  --mat-button-toggle-text-color: var(--color-text-soft);
+  --mat-button-toggle-selected-state-background-color: color-mix(
+    in srgb,
+    var(--color-primary) 8%,
+    var(--color-surface)
+  );
+  --mat-button-toggle-selected-state-text-color: var(--color-primary);
+
+  mat-button-toggle {
+    border: 0;
+    border-radius: var(--radius-12);
+    box-shadow: inset 0 0 0 var(--border-width-1) var(--color-border);
+
+    &.mat-button-toggle-checked {
+      box-shadow: inset 0 0 0 var(--border-width-1) var(--color-primary);
+    }
+  }
+}
