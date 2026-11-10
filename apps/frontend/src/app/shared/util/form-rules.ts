@@ -19,6 +19,12 @@ export function phoneRules(path: SchemaPath<string>): void {
   pattern(path, /^\+?\d+$/);
 }
 
+export const ABOUT_MAX_LENGTH = 1000;
+
+export function aboutRules(path: SchemaPath<string>): void {
+  maxLength(path, ABOUT_MAX_LENGTH);
+}
+
 export function newPasswordRules(path: SchemaPath<string>): void {
   required(path);
   minLength(path, 8);

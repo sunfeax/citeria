@@ -213,6 +213,10 @@ mat-form-field {
   width: 100%;
 }
 
+.profile-form__wide {
+  grid-column: 1 / -1;
+}
+
 .profile-form__actions {
   display: flex;
   flex-wrap: wrap;
@@ -271,7 +275,8 @@ mat-form-field {
 
 @include bp.up(600px) {
   .profile-page {
-    padding: clamp(var(--space-40), 5vw, var(--space-64)) var(--page-gutter) var(--space-80);
+    padding: clamp(var(--space-40), 5vw, var(--space-64)) var(--page-gutter)
+      var(--space-80);
   }
 
   .profile-page__header {

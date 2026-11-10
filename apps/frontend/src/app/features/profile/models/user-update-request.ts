@@ -3,4 +3,5 @@ export interface UserUpdateRequest {
   lastName?: string;
   email?: string;
   phone?: string;
+  about?: string;
 }

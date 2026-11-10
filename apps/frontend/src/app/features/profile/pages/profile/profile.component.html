@@ -122,6 +122,22 @@
               />
               <mat-error>{{ getFieldError(profileForm.phone()) }}</mat-error>
             </mat-form-field>
+
+            @if (isSpecialist()) {
+              <mat-form-field class="profile-form__wide">
+                <mat-label>About (optional)</mat-label>
+                <textarea
+                  matInput
+                  rows="5"
+                  [formField]="profileForm.about"
+                  placeholder="Tell clients about your experience and approach"
+                ></textarea>
+                <mat-hint align="end">
+                  {{ profileModel().about.length }} / {{ aboutMaxLength }}
+                </mat-hint>
+                <mat-error>{{ getFieldError(profileForm.about()) }}</mat-error>
+              </mat-form-field>
+            }
           </div>
 
           <div class="profile-form__actions">

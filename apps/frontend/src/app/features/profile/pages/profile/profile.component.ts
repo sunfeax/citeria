@@ -12,6 +12,7 @@ import { MatButton, MatIconButton } from '@angular/material/button';
 import {
   MatError,
   MatFormField,
+  MatHint,
   MatLabel,
   MatSuffix,
 } from '@angular/material/form-field';
@@ -27,10 +28,13 @@ import { avatarUrl } from '../../../../shared/util/avatar-url';
 import { routePaths } from '../../../../shared/util/route-paths';
 import { getFieldError, handleSubmitError } from '../../../../shared/util/form-errors';
 import {
+  ABOUT_MAX_LENGTH,
+  aboutRules,
   newPasswordRules,
   personNameRules,
   phoneRules,
 } from '../../../../shared/util/form-rules';
+import { UserType } from '../../../auth/models/user-type';
 import { SessionStore } from '../../../auth/session.store';
 import { ProfileService } from '../../services/profile.service';
 import { DialogService } from './../../../../shared/services/dialog.service';
@@ -54,6 +58,7 @@ type SettingsSection = 'profile' | 'security' | 'account';
     MatIconButton,
     MatFormField,
     MatLabel,
+    MatHint,
     MatError,
     MatSuffix,
     MatInput,
@@ -79,6 +84,8 @@ export class ProfileComponent {
   /** DATA */
   readonly user = computed(() => this.sessionStore.requireUser());
   readonly hasPassword = computed(() => this.user().hasPassword !== false);
+  readonly isSpecialist = computed(() => this.user().type === UserType.SPECIALIST);
+  readonly aboutMaxLength = ABOUT_MAX_LENGTH;
   readonly avatarSrc = computed(() =>
     avatarUrl(this.user().id, this.user().avatarVersion),
   );
@@ -102,6 +109,7 @@ export class ProfileComponent {
     lastName: this.user().lastName,
     email: this.user().email,
     phone: this.user().phone ?? '',
+    about: this.user().about ?? '',
   });
   profileForm = form(
     this.profileModel,
@@ -111,6 +119,7 @@ export class ProfileComponent {
       required(s.email);
       email(s.email);
       phoneRules(s.phone);
+      aboutRules(s.about);
     },
     {
       submission: {
@@ -119,7 +128,10 @@ export class ProfileComponent {
             const user = await firstValueFrom(
               this.profileService.update(
                 this.user().id,
-                getUserUpdatePayload(this.profileModel()),
+                getUserUpdatePayload({
+                  ...this.profileModel(),
+                  about: this.isSpecialist() ? this.profileModel().about : undefined,
+                }),
               ),
             );
             this.sessionStore.setUser(user);

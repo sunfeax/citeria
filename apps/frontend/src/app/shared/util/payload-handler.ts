@@ -18,6 +18,7 @@ export function getUserUpdatePayload(raw: UserUpdateRequest): UserUpdateRequest 
     lastName: raw.lastName?.trim(),
     email: raw.email?.trim(),
     phone: raw.phone?.trim(),
+    about: raw.about?.trim(),
   };
 }
 export function getChangePasswordPayload(

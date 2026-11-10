@@ -7,6 +7,7 @@ export interface User {
   lastName: string;
   email: string;
   phone: string | null;
+  about: string | null;
   role: UserRole;
   type: UserType;
   isActive: boolean;
