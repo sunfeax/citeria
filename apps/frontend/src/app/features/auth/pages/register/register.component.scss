@@ -1,10 +1,12 @@
+@use 'breakpoints' as bp;
+
 .register-page {
   display: grid;
   min-height: 100vh;
   min-height: 100svh;
   background: var(--color-surface);
 
-  @media (min-width: 960px) {
+  @include bp.up(960px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -13,44 +15,40 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  padding: var(--space-6);
+  padding: var(--space-24);
 
-  @media (min-width: 600px) {
-    padding: var(--space-8) var(--space-10);
+  @include bp.up(600px) {
+    padding: var(--space-32) var(--space-40);
   }
 }
 
 .register-panel__inner {
   width: min(100%, 440px);
   margin: auto;
-  padding-block: var(--space-6);
+  padding-block: var(--space-24);
 }
 
 .register-panel__header {
   display: grid;
   justify-items: start;
-  gap: var(--space-5);
-  margin-bottom: var(--space-8);
+  gap: var(--space-20);
+  margin-bottom: var(--space-32);
 }
 
 .register-panel__title {
   margin: 0;
   color: var(--color-text);
-  font-size: 40px;
+  font-size: var(--font-size-40);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: -0.045em;
-  line-height: 1.05;
+  line-height: var(--line-height-display);
+  letter-spacing: var(--letter-spacing-display);
 }
 
 .register-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
-  gap: var(--space-4);
-
-  @media (min-width: 360px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  gap: var(--space-16);
 }
 
 .auth-divider {
@@ -58,7 +56,7 @@
 }
 
 .auth-divider__text {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-12);
   font-weight: var(--font-weight-regular);
   letter-spacing: normal;
 }
@@ -69,7 +67,7 @@
 
 .auth-link {
   color: var(--color-primary);
-  text-underline-offset: var(--space-1);
+  text-underline-offset: var(--space-4);
 
   &:hover,
   &:focus-visible {
@@ -87,7 +85,7 @@ mat-form-field {
 }
 
 .register-form__contact {
-  @media (min-width: 600px) {
+  @include bp.up(600px) {
     grid-column: auto;
   }
 }
@@ -95,7 +93,7 @@ mat-form-field {
 .register-form__account-type {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-2);
+  gap: var(--space-8);
 
   .form-error {
     grid-column: 1 / -1;
@@ -105,20 +103,20 @@ mat-form-field {
 .form-label {
   display: block;
   color: var(--color-text);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-14);
   font-weight: var(--font-weight-semibold);
 }
 
 .type-toggle {
   width: 100%;
-  gap: var(--space-2);
+  gap: var(--space-8);
   border: 0;
   border-radius: 0;
   background: transparent;
   --mat-button-toggle-height: 44px;
   --mat-button-toggle-divider-color: transparent;
-  --mat-button-toggle-shape: var(--radius-xl);
-  --mat-button-toggle-label-text-size: var(--font-size-sm);
+  --mat-button-toggle-shape: var(--radius-12);
+  --mat-button-toggle-label-text-size: var(--font-size-14);
   --mat-button-toggle-label-text-weight: var(--font-weight-semibold);
   --mat-button-toggle-label-text-tracking: normal;
   --mat-button-toggle-text-color: var(--color-text-soft);
@@ -132,11 +130,11 @@ mat-form-field {
   mat-button-toggle {
     flex: 1;
     border: 0;
-    border-radius: var(--radius-xl);
-    box-shadow: inset 0 0 0 var(--border-width-sm) var(--color-border);
+    border-radius: var(--radius-12);
+    box-shadow: inset 0 0 0 var(--border-width-1) var(--color-border);
 
     &.mat-button-toggle-checked {
-      box-shadow: inset 0 0 0 var(--border-width-sm) var(--color-primary);
+      box-shadow: inset 0 0 0 var(--border-width-1) var(--color-primary);
     }
   }
 }
@@ -153,7 +151,7 @@ mat-form-field {
   height: 100vh;
   height: 100svh;
   align-items: flex-end;
-  padding: clamp(var(--space-10), 5vw, 80px);
+  padding: clamp(var(--space-40), 5vw, var(--space-80));
   background-color: var(--color-black);
   background-image:
     linear-gradient(
@@ -166,7 +164,7 @@ mat-form-field {
   background-size: cover;
   color: var(--color-on-hero);
 
-  @media (min-width: 960px) {
+  @include bp.up(960px) {
     display: flex;
   }
 }
@@ -177,22 +175,22 @@ mat-form-field {
 
 .register-hero__title {
   margin: 0;
-  font-size: clamp(44px, 4.5vw, 72px);
+  font-size: var(--font-size-headline);
   font-weight: var(--font-weight-medium);
-  letter-spacing: -2px;
-  line-height: 1.08;
+  line-height: var(--line-height-display);
+  letter-spacing: var(--letter-spacing-display);
 }
 
 .register-hero__text {
-  margin: var(--space-6) 0 0;
+  margin: var(--space-24) 0 0;
   color: color-mix(in srgb, var(--color-on-hero) 85%, transparent);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-16);
   line-height: var(--line-height-relaxed);
 }
 
 @media (max-height: 850px) {
   .register-panel {
-    padding-block: var(--space-2);
+    padding-block: var(--space-8);
   }
 
   .register-panel__inner {
@@ -200,7 +198,7 @@ mat-form-field {
   }
 
   .register-panel__header {
-    gap: var(--space-1);
-    margin-bottom: var(--space-4);
+    gap: var(--space-4);
+    margin-bottom: var(--space-16);
   }
 }

@@ -23,19 +23,21 @@
   с поднятым бэкендом.
 - Коммитить только по просьбе.
 
+## Дизайн
+
+- Перед любой работой над UI прочитай `docs/DESIGN.md` и следуй ему.
+- Используй только токены из файла токенов (`apps/frontend/src/styles.scss`) и общие компоненты. Не вводи свои цвета, радиусы и отступы.
+- Если задача требует решения, которого нет в DESIGN.md (новый компонент, вариант, состояние, токен), сначала проверь, нельзя ли обойтись существующим. Если нельзя, сделай минимально необходимое.
+- НЕ редактируй DESIGN.md сам. В конце задачи напиши отдельным блоком «Предлагаю добавить в DESIGN.md» с точной формулировкой правила и жди моего подтверждения.
+- Если решение в коде расходится с DESIGN.md, сообщи об этом, а не подгоняй молча одно под другое.
+- Значения с пометкой `provisional` не считай окончательными: если они мешают, предложи заменить.
+
 ## Технический контекст
 
 - **Angular 22**, standalone, **zoneless** (zone.js нет ни в зависимостях, ни в polyfills).
 - TypeScript `~6.0`, RxJS `~7.8`, тесты — Vitest.
-- **UI — Angular Material** (`@angular/material`, версия в линию с ядром `^22.2.x`): компоненты,
-  диалоги (`MatDialog`), уведомления (`MatSnackBar`), пагинация (`MatPaginator`). Свой виджет —
-  только если в Material нет аналога. Цвета Material задаются через `--mat-sys-*`, привязанные к
-  нашим `--color-*` в `apps/frontend/src/styles.scss`.
-- **Дизайн**: нейтральная гамма в духе ChatGPT. Тёмная тема — графит, светлая — белая. Акцент —
-  зелёный из логотипа (`#1a6c29`, `#42cd5a`): `--color-primary` и `--color-secondary` (кнопки, слайдеры, фокус полей); остальное
-  монохромное, плюс цвета статусов (success, error, warning, info). Обе темы — через одни и те же
-  токены в `apps/frontend/src/styles.scss`.
-- **Иконки** — Material Symbols через `mat-icon`.
+- **UI — Angular Material** (`@angular/material`, версия в линию с ядром `^22.2.x`). Темы, токены,
+  компоненты, иконки и адаптивность — в `docs/DESIGN.md`.
 - **Вход через Google** — Claude пишет и бэкенд-часть в `apps/backend`; OAuth client ID в Google Cloud
   Console создаёт пользователь.
 - Фронтенд, из `apps/frontend`: запуск `npm start`, сборка `npm run build`, тесты `npm test`.
@@ -47,15 +49,13 @@
 
 - `apps/frontend/src/app/core/` — сквозное: `config/`, `guards/`, `interceptors/`, `services/`
 - `apps/frontend/src/app/features/<feature>/` — фича: `pages/`, `services/`, `models/`
-- `apps/frontend/src/app/shared/` — переиспользуемое: `layout/`, `ui/`, `dialogs/`, `services/`, `models/`, `util/`
+- `apps/frontend/src/app/shared/` — переиспользуемое: `layout/`, `components/`, `dialogs/`, `services/`, `models/`, `util/`
 
 ### Конвенции кода
 
 - Типы, интерфейсы и enum'ы — без префиксов, в PascalCase (`User`, `UserRole`, `RegisterResponse`).
 - Инжектируемые сервисы — поле с суффиксом `Service` (`authService`, `dialogService`).
 - Утилиты — функции-модули, не классы-неймспейсы.
-- Стили — только через CSS-токены из `apps/frontend/src/styles.scss` (`--color-*`, `--space-*` и т. д.), без
-  захардкоженных цветов в компонентах.
 - Шаблоны — self-closing теги, новый control flow.
 - **Состояние — на signals** (приватные `WritableSignal` + публичный read-only доступ, производное —
   через `computed`/`linkedSignal`). RxJS — для событий во времени: отмена, гонки, ретраи,

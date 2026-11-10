@@ -1,0 +1,13 @@
+@use 'sass:list';
+
+$widths: (600px, 960px, 1280px);
+
+@mixin up($width) {
+  @if not list.index($widths, $width) {
+    @error 'Unknown breakpoint #{$width}. Use one of: #{$widths}.';
+  }
+
+  @media (min-width: $width) {
+    @content;
+  }
+}

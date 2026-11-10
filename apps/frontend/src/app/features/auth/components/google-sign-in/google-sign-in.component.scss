@@ -21,15 +21,15 @@
 }
 
 .google-sign-in:focus-within {
-  outline: var(--border-width-md) solid var(--color-focus-ring);
-  outline-offset: calc(var(--border-width-md) * -1);
+  outline: var(--border-width-2) solid var(--color-focus-ring);
+  outline-offset: calc(var(--border-width-2) * -1);
 }
 
 .google-sign-in__logo {
   display: inline-block;
   width: 18px;
   height: 18px;
-  margin-right: var(--space-2);
+  margin-right: var(--space-8);
   vertical-align: text-bottom;
 }
 
@@ -51,6 +51,6 @@
 .google-sign-in__error {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-14);
   text-align: center;
 }

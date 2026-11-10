@@ -40,53 +40,63 @@ html {
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
     sans-serif;
 
-  --font-size-2xs: 10px;
-  --font-size-xs: 12px;
-  --font-size-sm: 14px;
-  --font-size-base: 16px;
-  --font-size-lg: 18px;
-  --font-size-3xl: 30px;
-  --icon-size-input: 20px;
+  --font-size-display: clamp(50px, 7.4vw, 104px);
+  --font-size-headline: clamp(40px, 5vw, 68px);
+  --font-size-40: 40px;
+  --font-size-30: 30px;
+  --font-size-24: 24px;
+  --font-size-20: 20px;
+  --font-size-18: 18px;
+  --font-size-16: 16px;
+  --font-size-14: 14px;
+  --font-size-12: 12px;
 
-  --line-height-tight: 1.25;
+  --icon-size-20: 20px;
+  --icon-size-24: 24px;
+  --icon-size-48: 48px;
+  --icon-size-72: 72px;
+
+  --line-height-display: 1;
+  --line-height-heading: 1.25;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.625;
+
+  --letter-spacing-display: -0.05em;
+  --letter-spacing-heading: -0.03em;
 
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  --space-0: 0;
-  --space-1: 4px;
-  --space-1-5: 6px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-
-  --gap-xs: var(--space-1-5);
-  --gap-sm: var(--space-2);
-  --gap-md: var(--space-3);
-  --gap-lg: var(--space-4);
-  --gap-xl: var(--space-6);
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-64: 64px;
+  --space-80: 80px;
+  --space-96: 96px;
 
   --page-width: 1160px;
-  --page-gutter: clamp(24px, 4vw, 56px);
+  --page-gutter: clamp(var(--space-24), 4vw, 56px);
 
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
-  --radius-3xl: 24px;
+  --radius-8: 8px;
+  --radius-12: 12px;
+  --radius-24: 24px;
   --radius-full: 9999px;
 
-  --border-width-sm: 1px;
-  --border-width-md: 2px;
-  --border-width-lg: 4px;
+  --border-width-1: 1px;
+  --border-width-2: 2px;
+  --border-width-4: 4px;
+
+  --focus-ring-width: var(--border-width-2);
+  --focus-ring-offset: 2px;
 
   --color-white: #ffffff;
   --color-black: #0d0d0d;
@@ -156,17 +166,12 @@ html {
   --mat-sys-inverse-on-surface: var(--color-text);
   --mat-sys-inverse-primary: var(--color-text);
 
-  --shadow-sm: 0 2px 4px rgb(20 40 25 / 0.08), 0 5px 14px rgb(20 40 25 / 0.06);
-  --shadow-md: 0 3px 6px -2px rgb(20 40 25 / 0.1), 0 14px 30px -8px rgb(20 40 25 / 0.2);
-  --shadow-lg:
+  --shadow-bar: 0 2px 4px rgb(20 40 25 / 0.08), 0 5px 14px rgb(20 40 25 / 0.06);
+  --shadow-overlay:
     0 6px 14px -4px rgb(20 40 25 / 0.12), 0 24px 48px -12px rgb(20 40 25 / 0.24);
 
   --transition-fast: 140ms ease;
   --transition-base: 200ms ease;
-
-  --container-sm: 448px;
-  --container-5xl: 1024px;
-  --z-snackbar: 1000;
 }
 
 :root[data-theme='dark'] {
@@ -205,9 +210,8 @@ html {
   --color-info: #60a5fa;
   --color-info-soft: rgb(96 165 250 / 0.12);
 
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 16px rgb(0 0 0 / 0.35);
-  --shadow-lg: 0 10px 30px -6px rgb(0 0 0 / 0.5), 0 4px 8px -4px rgb(0 0 0 / 0.4);
+  --shadow-bar: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-overlay: 0 10px 30px -6px rgb(0 0 0 / 0.5), 0 4px 8px -4px rgb(0 0 0 / 0.4);
 }
 
 *,
@@ -227,7 +231,7 @@ body {
   background: var(--color-background);
   color: var(--color-text);
   font-family: var(--font-family-sans);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-16);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-normal);
   text-rendering: optimizeLegibility;
@@ -273,37 +277,38 @@ input {
 @include page.styles;
 
 :root {
-  --mat-select-trigger-text-size: var(--font-size-sm);
-  --mat-option-label-text-size: var(--font-size-sm);
-  --mat-paginator-select-trigger-text-size: var(--font-size-sm);
+  --mat-select-trigger-text-size: var(--font-size-14);
+  --mat-option-label-text-size: var(--font-size-14);
+  --mat-paginator-select-trigger-text-size: var(--font-size-14);
+  --mat-dialog-container-shape: var(--radius-24);
 }
 
 mat-form-field {
   min-width: 0;
   align-self: start;
   --mat-form-field-container-height: 48px;
-  --mat-form-field-container-vertical-padding: 12px;
-  --mat-form-field-container-text-size: var(--font-size-sm);
+  --mat-form-field-container-vertical-padding: var(--space-12);
+  --mat-form-field-container-text-size: var(--font-size-14);
   --mat-form-field-container-text-tracking: normal;
-  --mat-form-field-outlined-label-text-size: var(--font-size-sm);
+  --mat-form-field-outlined-label-text-size: var(--font-size-14);
   --mat-form-field-outlined-label-text-tracking: normal;
-  --mat-form-field-subscript-text-line-height: var(--space-4);
+  --mat-form-field-subscript-text-line-height: var(--space-16);
   --mat-form-field-subscript-text-tracking: normal;
-  --mat-select-trigger-text-size: var(--font-size-sm);
+  --mat-select-trigger-text-size: var(--font-size-14);
   --mat-select-trigger-text-tracking: normal;
-  --mat-form-field-outlined-container-shape: var(--radius-xl);
+  --mat-form-field-outlined-container-shape: var(--radius-12);
   --mat-form-field-outlined-outline-color: var(--color-border);
   --mat-form-field-outlined-hover-outline-color: var(--color-border-strong);
   --mat-form-field-outlined-focus-outline-color: var(--color-primary);
 
   .mat-mdc-icon-button {
-    --mat-icon-button-icon-size: var(--icon-size-input);
+    --mat-icon-button-icon-size: var(--icon-size-20);
   }
 
   .mat-icon {
-    width: var(--icon-size-input);
-    height: var(--icon-size-input);
-    font-size: var(--icon-size-input);
+    width: var(--icon-size-20);
+    height: var(--icon-size-20);
+    font-size: var(--icon-size-20);
   }
 }
 
@@ -312,7 +317,7 @@ mat-form-field {
 }
 
 mat-paginator {
-  margin-top: 20px;
+  margin-top: var(--space-20);
   --mat-paginator-container-background-color: transparent;
   --mat-paginator-container-text-color: var(--color-text-muted);
   --mat-paginator-enabled-icon-color: var(--color-text-soft);
@@ -337,7 +342,7 @@ mat-paginator {
   mat-form-field {
     align-self: center;
     --mat-form-field-container-height: 32px;
-    --mat-form-field-container-vertical-padding: 4px;
+    --mat-form-field-container-vertical-padding: var(--space-4);
   }
 }
 
@@ -357,7 +362,7 @@ button.mat-mdc-button {
 }
 
 button mat-progress-spinner {
-  margin-right: var(--space-2);
+  margin-right: var(--space-8);
   --mat-progress-spinner-active-indicator-color: currentColor;
 }
 
@@ -369,13 +374,13 @@ button mat-progress-spinner {
   --mat-snack-bar-container-color: var(--color-surface);
   --mat-snack-bar-supporting-text-color: var(--color-text);
   --mat-snack-bar-button-color: var(--color-text);
-  --mat-snack-bar-container-shape: var(--radius-xl);
+  --mat-snack-bar-container-shape: var(--radius-12);
   --snack-bar-accent: var(--color-primary);
 
   .mdc-snackbar__surface {
-    border: var(--border-width-sm) solid var(--color-border-soft);
-    border-left: var(--border-width-lg) solid var(--snack-bar-accent);
-    box-shadow: var(--shadow-lg);
+    border: var(--border-width-1) solid var(--color-border-soft);
+    border-left: var(--border-width-4) solid var(--snack-bar-accent);
+    box-shadow: var(--shadow-overlay);
   }
 }
 
