@@ -4,7 +4,7 @@
 }
 
 .brand {
-  --brand-logo-size: 36px;
+  --brand-logo-height: 22px;
   display: inline-flex;
   align-items: center;
   gap: var(--space-8);
@@ -14,10 +14,9 @@
 }
 
 .brand img {
-  width: var(--brand-logo-size);
-  height: var(--brand-logo-size);
-  flex: 0 0 var(--brand-logo-size);
-  object-fit: contain;
+  width: auto;
+  height: var(--brand-logo-height);
+  flex: 0 0 auto;
 }
 
 .brand-name {
