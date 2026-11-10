@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { HomeFaqComponent } from '../../components/home-faq/home-faq.component';
 import { SessionStore } from '../../../auth/session.store';
 import { routePaths } from '../../../../shared/util/route-paths';
 
@@ -23,7 +24,7 @@ function formatSlot(halfHours: number): string {
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink],
+  imports: [RouterLink, HomeFaqComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })

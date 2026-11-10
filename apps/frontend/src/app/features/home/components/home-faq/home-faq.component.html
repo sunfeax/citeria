@@ -1,0 +1,26 @@
+<section class="faq" aria-labelledby="faq-title">
+  <div class="faq__inner">
+    <div class="faq__intro">
+      <h2 id="faq-title" class="faq__title">Questions, answered</h2>
+      <p class="faq__text">The short version of how booking and payment work.</p>
+      <a class="faq__link" [routerLink]="routePaths.help">
+        See all questions
+        <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+      </a>
+    </div>
+
+    <mat-accordion class="faq__list faq-section" displayMode="flat">
+      @for (item of faq; track item.question) {
+        <mat-expansion-panel class="faq__item">
+          <mat-expansion-panel-header>
+            <mat-panel-title>{{ item.question }}</mat-panel-title>
+            <span class="faq__toggle" aria-hidden="true">
+              <mat-icon>add</mat-icon>
+            </span>
+          </mat-expansion-panel-header>
+          <p class="faq__answer">{{ item.answer }}</p>
+        </mat-expansion-panel>
+      }
+    </mat-accordion>
+  </div>
+</section>
