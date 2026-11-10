@@ -1,0 +1,118 @@
+<section class="specialist" aria-labelledby="specialist-title">
+  <div class="specialist__container">
+    <a matButton="text" class="specialist__back" [routerLink]="routePaths.offerings">
+      <mat-icon aria-hidden="true">arrow_back</mat-icon>
+      All services
+    </a>
+
+    <div class="specialist__progress">
+      @if (detail.isLoading()) {
+        <mat-progress-bar mode="indeterminate" aria-label="Loading specialist" />
+      }
+    </div>
+
+    @if (detail.error()) {
+      <div class="specialist__state" role="alert">
+        <mat-icon aria-hidden="true">
+          {{ isNotFound() ? 'person_off' : 'cloud_off' }}
+        </mat-icon>
+        @if (isNotFound()) {
+          <h1 id="specialist-title">Specialist not found</h1>
+          <p>This profile is no longer available.</p>
+          <a matButton="outlined" [routerLink]="routePaths.offerings">Browse services</a>
+        } @else {
+          <h1 id="specialist-title">Unable to load this profile</h1>
+          <button matButton="outlined" type="button" (click)="detail.reload()">
+            Retry
+          </button>
+        }
+      </div>
+    } @else if (specialist(); as specialist) {
+      <div class="specialist__layout">
+        <div class="specialist__info">
+          <header class="specialist-card specialist__profile">
+            @if (avatarSrc(); as src) {
+              <img class="specialist__avatar" [src]="src" alt="" />
+            } @else {
+              <span class="specialist__avatar specialist__avatar--empty">
+                <mat-icon aria-hidden="true">person</mat-icon>
+              </span>
+            }
+            <div class="specialist__identity">
+              <h1 id="specialist-title">{{ fullName() }}</h1>
+              <p>
+                {{ specialist.offerings.length }}
+                {{ specialist.offerings.length === 1 ? 'service' : 'services' }}
+              </p>
+            </div>
+            @if (specialist.about) {
+              <p class="specialist__about">{{ specialist.about }}</p>
+            }
+          </header>
+
+          <section class="specialist-card" aria-labelledby="services-title">
+            <h2 id="services-title">Services</h2>
+            @if (specialist.offerings.length) {
+              <ul class="specialist__services">
+                @for (offering of specialist.offerings; track offering.id) {
+                  <li
+                    class="service"
+                    [class.service--selected]="offering.id === selectedOfferingId()"
+                  >
+                    <div class="service__main">
+                      <h3>{{ offering.name }}</h3>
+                      @if (offering.description) {
+                        <p class="service__description">{{ offering.description }}</p>
+                      }
+                    </div>
+                    <div class="service__side">
+                      <span class="service__price">
+                        <strong>
+                          {{ offering.priceAmount }} {{ offering.currency }}
+                        </strong>
+                        <small>{{ offering.durationMinutes }} min</small>
+                      </span>
+                      <button
+                        matButton="outlined"
+                        type="button"
+                        [attr.aria-pressed]="offering.id === selectedOfferingId()"
+                        (click)="chooseOffering(offering.id, bookingPanel)"
+                      >
+                        {{ offering.id === selectedOfferingId() ? 'Selected' : 'Select' }}
+                      </button>
+                    </div>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="specialist__muted">No services yet.</p>
+            }
+          </section>
+
+          <section class="specialist-card" aria-labelledby="hours-title">
+            <h2 id="hours-title">Working hours</h2>
+            <dl class="specialist__hours">
+              @for (day of schedule(); track day.label) {
+                <div [class.is-closed]="!day.windows.length">
+                  <dt>{{ day.label }}</dt>
+                  <dd>{{ day.windows.length ? day.windows.join(', ') : 'Closed' }}</dd>
+                </div>
+              }
+            </dl>
+            <p class="specialist__muted">Time zone: {{ specialist.timeZone }}</p>
+          </section>
+        </div>
+
+        <aside #bookingPanel class="specialist__booking" aria-label="Booking">
+          <app-booking-panel
+            [specialistId]="specialist.id"
+            [offerings]="specialist.offerings"
+            [timeZone]="specialist.timeZone"
+            [initialStart]="initialStart"
+            [selectedOfferingId]="selectedOfferingId()"
+          />
+        </aside>
+      </div>
+    }
+  </div>
+</section>

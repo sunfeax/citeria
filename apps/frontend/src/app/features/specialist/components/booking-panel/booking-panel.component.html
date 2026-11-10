@@ -1,0 +1,123 @@
+<section class="booking" aria-labelledby="booking-title">
+  <h2 id="booking-title" class="booking__title">Book a visit</h2>
+
+  @if (createdAppointment(); as appointment) {
+    <div class="booking__done" role="status">
+      <mat-icon class="booking__done-icon" aria-hidden="true">check_circle</mat-icon>
+      <h3>Request sent</h3>
+      <p>
+        {{ appointment.offeringName }} on {{ formatAppointmentDate(appointment) }} at
+        {{ formatTime(appointment.startTime) }}.
+      </p>
+      <p class="booking__note">
+        The specialist will review your request. Once it is accepted, you pay online to
+        confirm the visit.
+      </p>
+      <button matButton="outlined" type="button" (click)="bookAnother()">
+        Book another time
+      </button>
+    </div>
+  } @else if (offerings().length === 0) {
+    <p class="booking__empty">This specialist has no services available right now.</p>
+  } @else {
+    @if (selectedOffering(); as offering) {
+      <div class="booking__summary">
+        <p class="booking__service">{{ offering.name }}</p>
+        <p class="booking__meta">
+          {{ offering.durationMinutes }} min · {{ offering.priceAmount }}
+          {{ offering.currency }}
+        </p>
+      </div>
+    }
+
+    @if (viewer() === 'specialist') {
+      <p class="booking__notice">
+        <mat-icon aria-hidden="true">info</mat-icon>
+        Booking is available for client accounts.
+      </p>
+    } @else {
+      <div class="booking__progress">
+        @if (slots.isLoading()) {
+          <mat-progress-bar mode="indeterminate" aria-label="Loading available times" />
+        }
+      </div>
+
+      @if (slots.error()) {
+        <div class="booking__empty" role="alert">
+          <p>Unable to load available times.</p>
+          <button matButton="outlined" type="button" (click)="slots.reload()">
+            Retry
+          </button>
+        </div>
+      } @else if (slots.hasValue() && slotsByDay().size === 0) {
+        <p class="booking__empty">No free times in the next {{ days().length }} days.</p>
+      } @else {
+        <div class="booking__group">
+          <h3 class="booking__label" id="booking-day-label">
+            Day
+            <span>{{ daysRange() }}</span>
+          </h3>
+          <mat-button-toggle-group
+            class="booking__days"
+            hideSingleSelectionIndicator
+            aria-labelledby="booking-day-label"
+            [value]="selectedDay()"
+            (change)="selectDay($event.value)"
+          >
+            @for (day of days(); track day.key) {
+              <mat-button-toggle
+                [value]="day.key"
+                [disabled]="!slotsByDay().has(day.key)"
+                [aria-label]="day.label"
+              >
+                <span class="booking__date">
+                  <span class="booking__weekday">{{ day.weekday }}</span>
+                  <span>{{ day.day }}</span>
+                </span>
+              </mat-button-toggle>
+            }
+          </mat-button-toggle-group>
+        </div>
+
+        <div class="booking__group">
+          <h3 class="booking__label" id="booking-time-label">
+            Time
+            @if (selectedDayLabel()) {
+              <span>{{ selectedDayLabel() }}</span>
+            }
+          </h3>
+          <mat-button-toggle-group
+            class="booking__times"
+            hideSingleSelectionIndicator
+            aria-labelledby="booking-time-label"
+            [value]="selectedSlot()?.startTime ?? null"
+            (change)="selectStart($event.value)"
+          >
+            @for (slot of daySlots(); track slot.startTime) {
+              <mat-button-toggle [value]="slot.startTime">
+                {{ formatTime(slot.startTime) }}
+              </mat-button-toggle>
+            }
+          </mat-button-toggle-group>
+          <p class="booking__caption">Times are shown in {{ timeZone() }}.</p>
+        </div>
+      }
+
+      <button
+        matButton="filled"
+        type="button"
+        class="btn-block btn-lg"
+        [disabled]="!selectedSlot() || isSubmitting()"
+        (click)="book()"
+      >
+        @if (isSubmitting()) {
+          <mat-progress-spinner mode="indeterminate" diameter="20" />
+        }
+        {{ viewer() === 'guest' ? 'Sign in to book' : 'Book' }}
+      </button>
+      <p class="booking__caption">
+        No payment now. You pay after the specialist accepts the request.
+      </p>
+    }
+  }
+</section>

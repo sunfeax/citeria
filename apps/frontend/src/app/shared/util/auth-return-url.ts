@@ -10,7 +10,9 @@ export function authReturnUrl(value: string | null): string {
   }
 
   const path = value.split(/[?#]/, 1)[0];
-  return path === routePaths.offerings || path === routePaths.profile
+  return path === routePaths.offerings ||
+    path === routePaths.profile ||
+    path.startsWith(`${routePaths.specialists}/`)
     ? value
     : routePaths.offerings;
 }

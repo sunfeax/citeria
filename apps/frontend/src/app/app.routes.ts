@@ -36,6 +36,13 @@ export const routes: Routes = [
             m => m.OfferingComponent,
           ),
       },
+      {
+        path: 'specialists/:id',
+        loadComponent: () =>
+          import('./features/specialist/pages/specialist/specialist.component').then(
+            m => m.SpecialistComponent,
+          ),
+      },
     ],
   },
   {

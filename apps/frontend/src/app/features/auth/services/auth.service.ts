@@ -13,7 +13,7 @@ import {
   throwError,
 } from 'rxjs';
 import { TabSyncService } from '../../../core/services/tab-sync.service';
-import { routePaths } from '../../../shared/util/route-paths';
+import { publicRoutePaths, routePaths } from '../../../shared/util/route-paths';
 import { GoogleLoginRequest } from '../models/google-login';
 import { LoginRequest, LoginResponse } from '../models/login';
 import { RefreshResponse } from '../models/refresh';
@@ -125,6 +125,8 @@ export class AuthService {
 
   private isOnPublicPage(): boolean {
     const path = this.router.url.split(/[?#]/, 1)[0];
-    return path === routePaths.home || path === routePaths.offerings;
+    return (
+      publicRoutePaths.includes(path) || path.startsWith(`${routePaths.specialists}/`)
+    );
   }
 }
