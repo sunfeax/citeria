@@ -1,13 +1,9 @@
+@use 'breakpoints' as bp;
+
 .sidebar-layout {
+  --bottom-nav-height: 56px;
   display: flex;
   min-height: 100vh;
-
-  app-sidebar {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    flex-shrink: 0;
-  }
 
   main {
     flex: 1;
@@ -15,6 +11,25 @@
   }
 }
 
+.sidebar-layout:not(.sidebar-layout--guest) main {
+  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+}
+
 .sidebar-layout--guest {
   flex-direction: column;
+}
+
+@include bp.up(600px) {
+  .sidebar-layout {
+    app-sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      flex-shrink: 0;
+    }
+  }
+
+  .sidebar-layout:not(.sidebar-layout--guest) main {
+    padding-bottom: 0;
+  }
 }

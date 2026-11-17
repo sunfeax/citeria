@@ -180,7 +180,9 @@ mat-progress-bar {
 
 .booking-card__side {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--space-12);
 }
 
@@ -227,6 +229,9 @@ mat-progress-bar {
   }
 
   .booking-card__side {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
     align-items: flex-end;
     flex: 0 0 auto;
   }

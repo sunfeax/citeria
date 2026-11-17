@@ -1,5 +1,11 @@
 import { routePaths } from './route-paths';
 
+const returnPaths: readonly string[] = [
+  routePaths.offerings,
+  routePaths.profile,
+  routePaths.bookings,
+];
+
 export function authReturnUrl(value: string | null): string {
   if (
     !value ||
@@ -10,9 +16,7 @@ export function authReturnUrl(value: string | null): string {
   }
 
   const path = value.split(/[?#]/, 1)[0];
-  return path === routePaths.offerings ||
-    path === routePaths.profile ||
-    path.startsWith(`${routePaths.specialists}/`)
+  return returnPaths.includes(path) || path.startsWith(`${routePaths.specialists}/`)
     ? value
     : routePaths.offerings;
 }

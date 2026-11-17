@@ -22,6 +22,7 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { exhaustMap, finalize, firstValueFrom, switchMap } from 'rxjs';
+import { ThemeService } from '../../../../shared/services/theme.service';
 import { ApiError } from '../../../../shared/models/api-error';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { avatarUrl } from '../../../../shared/util/avatar-url';
@@ -76,6 +77,7 @@ export class ProfileComponent {
   private readonly snackbarService = inject(SnackbarService);
   private readonly dialogService = inject(DialogService);
   private readonly authService = inject(AuthService);
+  protected readonly themeService = inject(ThemeService);
 
   /** TEMPLATE HELPERS */
   readonly getFieldError = getFieldError;
@@ -258,6 +260,18 @@ export class ProfileComponent {
         },
         error: () => this.snackbarService.error('Unable to remove the photo.'),
       });
+  }
+
+  logout(): void {
+    this.dialogService
+      .confirm({
+        title: 'Logout',
+        message: 'Do you want to sign out?',
+        confirmText: 'Logout',
+        variant: 'danger',
+      })
+      .pipe(exhaustMap(() => this.authService.logout()))
+      .subscribe();
   }
 
   deleteAccount(): void {

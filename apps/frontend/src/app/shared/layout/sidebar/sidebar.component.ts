@@ -2,7 +2,7 @@ import { BrandComponent } from '../../components/brand/brand.component';
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { exhaustMap } from 'rxjs';
 import { BookingBadgeStore } from '../../../features/appointment/services/booking-badge.store';
 import { SessionStore } from '../../../features/auth/session.store';
@@ -15,7 +15,7 @@ import { AuthService } from './../../../features/auth/services/auth.service';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [BrandComponent, MatIcon, MatIconButton, RouterLink],
+  imports: [BrandComponent, MatIcon, MatIconButton, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })

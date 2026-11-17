@@ -2,6 +2,7 @@
 @use './styles/theme-colors' as theme;
 @use './styles/auth-page' as auth;
 @use './styles/page' as page;
+@use './styles/breakpoints' as bp;
 
 html {
   @include mat.theme(
@@ -341,8 +342,30 @@ mat-paginator {
     align-items: center;
   }
 
+  .mat-mdc-paginator-page-size,
+  .mat-mdc-paginator-range-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .mat-mdc-paginator-page-size-label {
     margin-left: 0;
+  }
+
+  .mat-mdc-paginator-range-label {
+    margin-inline: 0;
+  }
+
+  @include bp.up(600px) {
+    .mat-mdc-paginator-page-size,
+    .mat-mdc-paginator-range-actions {
+      width: auto;
+      justify-content: normal;
+    }
+
+    .mat-mdc-paginator-range-label {
+      margin-inline: var(--space-24) var(--space-32);
+    }
   }
 
   mat-form-field {

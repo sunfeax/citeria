@@ -20,8 +20,10 @@
     @for (item of sidebarData; track item.label) {
       <a
         [routerLink]="item.path"
+        routerLinkActive="active"
         [class.disabled]="item.disabled"
-        [attr.aria-label]="!isExpandedSidebar() ? item.label : null"
+        [class.desktop-only]="item.desktopOnly"
+        [attr.aria-label]="item.label"
         [attr.title]="!isExpandedSidebar() ? item.label : null"
       >
         <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
@@ -38,6 +40,15 @@
         }
       </a>
     }
+    <a
+      class="nav-settings"
+      aria-label="User settings"
+      [routerLink]="routePaths.profile"
+      routerLinkActive="active"
+    >
+      <mat-icon aria-hidden="true">person</mat-icon>
+      <span>User settings</span>
+    </a>
   </nav>
   <footer>
     <a

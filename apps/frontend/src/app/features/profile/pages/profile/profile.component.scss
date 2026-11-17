@@ -273,7 +273,21 @@ mat-form-field {
   );
 }
 
+.mobile-actions {
+  display: grid;
+  gap: var(--space-8);
+  margin-top: var(--space-16);
+
+  a {
+    --mat-button-outlined-label-text-color: var(--color-text);
+  }
+}
+
 @include bp.up(600px) {
+  .mobile-actions {
+    display: none;
+  }
+
   .profile-page {
     padding: clamp(var(--space-40), 5vw, var(--space-64)) var(--page-gutter)
       var(--space-80);

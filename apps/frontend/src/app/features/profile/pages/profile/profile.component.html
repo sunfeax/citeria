@@ -313,4 +313,21 @@
       </div>
     </section>
   </div>
+
+  <div class="mobile-actions">
+    <button matButton="outlined" type="button" (click)="themeService.toggle()">
+      <mat-icon aria-hidden="true">
+        {{ themeService.theme() === 'dark' ? 'light_mode' : 'dark_mode' }}
+      </mat-icon>
+      {{ themeService.theme() === 'dark' ? 'Light theme' : 'Dark theme' }}
+    </button>
+    <a matButton="outlined" [routerLink]="routePaths.help">
+      <mat-icon aria-hidden="true">help</mat-icon>
+      Help
+    </a>
+    <button matButton="outlined" type="button" (click)="logout()">
+      <mat-icon aria-hidden="true">logout</mat-icon>
+      Logout
+    </button>
+  </div>
 </section>
