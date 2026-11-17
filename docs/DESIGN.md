@@ -28,7 +28,7 @@ colors:
   border-strong: --color-border-strong  # outline on hover
   focus-ring: --color-focus-ring
   status: --color-{success|danger|warning|info} + -soft
-  danger-solid: --color-danger-solid / --color-on-solid  # destructive confirm button
+  status-solid: --color-{success|danger|warning|info}-solid / --color-on-solid  # destructive confirm button (danger, warning) and snackbar fill
 
 booking-status:                         # provisional
   PENDING: warning
@@ -53,7 +53,7 @@ typography:
 
 spacing: --space-{4,6,8,12,16,20,24,32,40,48,64,80,96}   # 6 only for icon-to-label gaps
 radius: --radius-{8,12,24,full}
-border-width: --border-width-{1,2,4}    # 1 outlines/dividers, 2 focus and active underline, 4 snackbar accent
+border-width: --border-width-{1,2,4}    # 1 outlines/dividers, 2 focus and active underline, 4 slider track
 shadow: --shadow-bar (header, sidebar), --shadow-overlay (snackbar, menu, dialog, floating demo card)
 icon-size: --icon-size-{20,24,48,72}
 breakpoints: { 600px, 960px, 1280px }   # bp.up() only, mobile-first
@@ -71,7 +71,7 @@ components:
   inset-panel: { radius: 12, padding: --space-24 }       # e.g. danger zone inside a card
   badge: { bg: status -soft, text: status color, radius: full, font: 12px / 500 }
   dialog: { use: DialogService + MatDialog, radius: 24 }
-  snackbar: { use: SnackbarService, variants: success, error, warning, info }
+  snackbar: { use: SnackbarService, variants: 'success, error, warning, info', fill: 'solid --color-{status}-solid with --color-on-solid text, no border' }
   tabs: { active: --color-primary text + 2px inset underline }
   faq: { use: 'mat-accordion displayMode="flat" inside a card', shadow: none, divider: --color-border-soft, question: 16px / 500, answer: '14px text-soft, aligned with the question' }
   choice-toggle: { use: 'mat-button-toggle-group + @include choice-toggle.styles', option: { height: 44px, radius: 12 }, selected: 'primary 8% tint + 1px primary outline' }  # single choice: account type, day, time
@@ -80,7 +80,7 @@ components:
   mobile-actions: { use: 'outlined buttons stacked under the settings card: theme, Help, Logout', shown: below 600px only, reason: 'these controls are not in the bottom bar' }
   loading: { list: mat-progress-bar 3px above content, stale content opacity 0.55 }
   empty-error-state: { card, padding: --space-48, centered icon + text + one action }
-  booking-card: { use: 'li in a ul, one per appointment', bg: surface, radius: 24, padding: --space-24, content: 'badge on its own first line, title, meta rows with 20px icons (person, event), optional caption, price + actions', date: 'EEE, d MMM · HH:mm–HH:mm, year only when not current', layout: 'column below 600px with price left and actions right in a row separated by a --color-border-soft 1px line; from 600px a row with details on the left and price + actions on the right', badge: booking-status tone, actions: 'one filled primary action, the rest outlined' }
+  booking-card: { use: 'li in a ul, one per appointment', bg: surface, radius: 24, padding: --space-24, content: 'heading row (title + status badge, wraps), meta rows with 20px icons (person, event), optional caption, price + actions (the actions block is rendered only when there are actions)', date: 'EEE, d MMM · HH:mm–HH:mm, year only when not current', layout: 'column below 960px with price left and actions right in a row separated by a --color-border-soft 1px line; from 960px a row with details on the left (meta items in one line) and price + actions on the right', badge: booking-status tone, actions: 'one filled primary action, the rest outlined' }
   nav-badge: { bg: --color-primary, text: --color-on-primary, size: --icon-size-20, radius: full, font: 12px / 500, use: 'count of items waiting for the user, hidden at 0', collapsed sidebar: 'absolute on the icon corner' }
   date-range: { use: 'mat-date-range-input + mat-date-range-picker inside a filter-field', behavior: 'one click on a day filters by that day, a second click completes a range; opens on click of the field or the icon', display: 'd MMM y via provideAppDateAdapter() and MAT_DATE_FORMATS (shared/util/app-date-adapter.ts)', separator: em dash, start and end share the field width equally, empty: no placeholder }
   table: { use: card list, mat-table is not used until a screen needs sortable columns }
