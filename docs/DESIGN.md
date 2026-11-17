@@ -80,7 +80,7 @@ components:
   mobile-actions: { use: 'outlined buttons stacked under the settings card: theme, Help, Logout', shown: below 600px only, reason: 'these controls are not in the bottom bar' }
   loading: { list: mat-progress-bar 3px above content, stale content opacity 0.55 }
   empty-error-state: { card, padding: --space-48, centered icon + text + one action }
-  booking-card: { use: 'li in a ul, one per appointment', bg: surface, radius: 24, padding: --space-24, layout: 'column below 600px; from 600px row with details on the left and price + actions on the right', badge: booking-status tone, actions: 'one filled primary action, the rest outlined' }
+  booking-card: { use: 'li in a ul, one per appointment', bg: surface, radius: 24, padding: --space-24, content: 'badge on its own first line, title, meta rows with 20px icons (person, event), optional caption, price + actions', date: 'EEE, d MMM · HH:mm–HH:mm, year only when not current', layout: 'column below 600px with price left and actions right in a row separated by a --color-border-soft 1px line; from 600px a row with details on the left and price + actions on the right', badge: booking-status tone, actions: 'one filled primary action, the rest outlined' }
   nav-badge: { bg: --color-primary, text: --color-on-primary, size: --icon-size-20, radius: full, font: 12px / 500, use: 'count of items waiting for the user, hidden at 0', collapsed sidebar: 'absolute on the icon corner' }
   date-range: { use: 'mat-date-range-input + mat-date-range-picker inside a filter-field', behavior: 'one click on a day filters by that day, a second click completes a range; opens on click of the field or the icon', display: 'd MMM y via provideAppDateAdapter() and MAT_DATE_FORMATS (shared/util/app-date-adapter.ts)', separator: em dash, start and end share the field width equally, empty: no placeholder }
   table: { use: card list, mat-table is not used until a screen needs sortable columns }
@@ -99,6 +99,7 @@ components:
 - Put component dimensions (avatar, sidebar, grid tracks) in a local custom property, e.g. `--avatar-size`.
 - Tints are `color-mix(in srgb, var(--color-x) N%, var(--color-surface))`, never a new hex.
 - Reuse a pattern from another feature by extracting it to `shared/components/` on its second use.
+- List filters on phones: two controls share a row in two columns, the date range takes the full width below; from `bp.up(600px)` they sit in one auto-fit row.
 - Clickable card: the title is the link and its `::after` covers the card (`position: absolute; inset: 0`); other controls in the card sit above it with `position: relative`. On hover the title turns `--color-primary`; the focus ring outlines the whole card via `:has(:focus-visible)`.
 
 ## Don'ts
