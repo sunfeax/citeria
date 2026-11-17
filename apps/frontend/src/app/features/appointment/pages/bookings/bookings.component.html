@@ -57,35 +57,36 @@
           @let view = statusView(appointment);
           <li class="booking-card">
             <div class="booking-card__main">
-              <div class="booking-card__heading">
-                <h2>{{ appointment.offeringName }}</h2>
-                <span class="booking-card__badge booking-card__badge--{{ view.tone }}">
-                  {{ view.label }}
-                </span>
+              <span class="booking-card__badge booking-card__badge--{{ view.tone }}">
+                {{ view.label }}
+              </span>
+              <h2 class="booking-card__title">{{ appointment.offeringName }}</h2>
+              <div class="booking-card__meta">
+                <p>
+                  <mat-icon aria-hidden="true">person</mat-icon>
+                  @if (counterpartyRole(appointment) === 'Specialist') {
+                    <a [routerLink]="[routePaths.specialists, appointment.specialistId]">
+                      {{ counterparty(appointment) }}
+                    </a>
+                  } @else {
+                    <span>{{ counterparty(appointment) }}</span>
+                  }
+                </p>
+                <p class="booking-card__when">
+                  <mat-icon aria-hidden="true">event</mat-icon>
+                  <span>
+                    {{ dayLabel(appointment) }} ·
+                    {{ appointment.startTime | date: 'HH:mm' }}–{{
+                      appointment.endTime | date: 'HH:mm'
+                    }}
+                  </span>
+                </p>
               </div>
-              <p class="booking-card__person">
-                {{ counterpartyRole(appointment) }}:
-                @if (counterpartyRole(appointment) === 'Specialist') {
-                  <a [routerLink]="[routePaths.specialists, appointment.specialistId]">
-                    {{ counterparty(appointment) }}
-                  </a>
-                } @else {
-                  {{ counterparty(appointment) }}
-                }
-              </p>
-              <p class="booking-card__time">
-                <mat-icon aria-hidden="true">event</mat-icon>
-                {{ appointment.startTime | date: 'EEE, d MMM y' }},
-                {{ appointment.startTime | date: 'HH:mm' }}–{{
-                  appointment.endTime | date: 'HH:mm'
-                }}
-              </p>
               @if (
                 appointment.status === 'AWAITING_PAYMENT' && appointment.paymentDeadline
               ) {
                 <p class="booking-card__note">
-                  Pay before {{ appointment.paymentDeadline | date: 'd MMM, HH:mm' }} or
-                  the time is released.
+                  Pay by {{ appointment.paymentDeadline | date: 'd MMM, HH:mm' }}
                 </p>
               }
             </div>

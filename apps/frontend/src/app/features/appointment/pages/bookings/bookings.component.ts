@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, formatDate } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
@@ -167,6 +167,12 @@ export class BookingsComponent {
 
   statusView(appointment: Appointment): { label: string; tone: StatusTone } {
     return STATUS_VIEW[appointment.status];
+  }
+
+  dayLabel(appointment: Appointment): string {
+    const start = new Date(appointment.startTime);
+    const sameYear = start.getFullYear() === new Date().getFullYear();
+    return formatDate(start, sameYear ? 'EEE, d MMM' : 'EEE, d MMM y', 'en-US');
   }
 
   counterparty(appointment: Appointment): string {
