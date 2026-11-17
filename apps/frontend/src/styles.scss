@@ -390,6 +390,25 @@ button mat-progress-spinner {
   }
 }
 
+.mat-date-range-input {
+  display: block;
+  width: 100%;
+}
+
+.mat-date-range-input-container {
+  width: 100%;
+
+  .mat-date-range-input-wrapper {
+    flex: 1 1 0;
+    max-width: none;
+  }
+
+  .mat-date-range-input-separator {
+    margin-inline: var(--space-12);
+    color: var(--color-text-muted);
+  }
+}
+
 .app-snack-bar--success {
   --snack-bar-accent: var(--color-success);
 }

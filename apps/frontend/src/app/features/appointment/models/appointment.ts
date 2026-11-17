@@ -28,3 +28,10 @@ export interface AppointmentCreateRequest {
   offeringId: string;
   startTime: string;
 }
+
+export interface AppointmentFilters {
+  status: AppointmentStatus | '';
+  from: string;
+  to: string;
+  sort: string;
+}

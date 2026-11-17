@@ -44,7 +44,7 @@ typography:
     headline: --font-size-headline / 600 / --line-height-display / --letter-spacing-display  # .page-title, marketing section titles
     work-page-title: --font-size-30 / 600 / --line-height-heading / --letter-spacing-heading  # provisional
     section-title: --font-size-20 / 600 / --line-height-heading / --letter-spacing-heading
-    list-item-title: --font-size-16 / 600 / --line-height-normal   # provisional
+    list-item-title: --font-size-16 / 600 / --line-height-normal   # booking card title
     lede: --font-size-18 / 400 / --line-height-relaxed
     body: --font-size-16 / 400 / --line-height-normal
     ui: --font-size-14 / 500              # buttons, nav, labels, fields, selects
@@ -79,7 +79,10 @@ components:
   nav-sidebar: { signed-in pages, width: 280px, collapsed: 80px, item: 48px high, radius full }
   loading: { list: mat-progress-bar 3px above content, stale content opacity 0.55 }
   empty-error-state: { card, padding: --space-48, centered icon + text + one action }
-  table: { use: mat-table from 960px, card list below }  # provisional
+  booking-card: { use: 'li in a ul, one per appointment', bg: surface, radius: 24, padding: --space-24, layout: 'column below 600px; from 600px row with details on the left and price + actions on the right', badge: booking-status tone, actions: 'one filled primary action, the rest outlined' }
+  nav-badge: { bg: --color-primary, text: --color-on-primary, size: --icon-size-20, radius: full, font: 12px / 500, use: 'count of items waiting for the user, hidden at 0', collapsed sidebar: 'absolute on the icon corner' }
+  date-range: { use: 'mat-date-range-input + mat-date-range-picker inside a filter-field', behavior: 'one click on a day filters by that day, a second click completes a range; opens on click of the field or the icon', display: 'd MMM y via provideAppDateAdapter() and MAT_DATE_FORMATS (shared/util/app-date-adapter.ts)', separator: em dash, start and end share the field width equally, empty: no placeholder }
+  table: { use: card list, mat-table is not used until a screen needs sortable columns }
 ---
 
 ## Rules
@@ -135,7 +138,6 @@ components:
 - Component SCSS holds layout only: grid/flex, placement and token references.
 
 ## Open questions
-- Work-page title (30px) and list-item title (16px) sizes are provisional until bookings and the specialist cabinet exist.
+- Work-page title (30px) size is provisional until the specialist cabinet exists.
 - Booking status colors are provisional.
-- `mat-table` vs card list threshold (960px) is provisional.
 - Unused color tokens: `--color-overlay`, `--color-sidebar`, `--color-text-disabled`, `--color-danger-hover`. Keep or remove.

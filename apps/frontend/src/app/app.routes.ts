@@ -37,6 +37,15 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'bookings',
+        title: 'My bookings — Citeria',
+        canActivate: [accessGuard],
+        loadComponent: () =>
+          import('./features/appointment/pages/bookings/bookings.component').then(
+            m => m.BookingsComponent,
+          ),
+      },
+      {
         path: 'help',
         title: 'Help — Citeria',
         loadComponent: () =>

@@ -1,0 +1,148 @@
+<section class="bookings" aria-labelledby="bookings-title">
+  <div class="bookings__container">
+    <header class="bookings__header">
+      <h1 id="bookings-title" class="page-title">My bookings</h1>
+      <p class="page-lede">
+        Track requests, pay for accepted visits and manage your schedule.
+      </p>
+    </header>
+
+    <div class="bookings__filters" role="search">
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-select [(ngModel)]="status" aria-label="Status">
+          @for (option of statusOptions; track option.value) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="bookings__dates" subscriptSizing="dynamic">
+        <mat-date-range-input
+          separator="—"
+          [rangePicker]="rangePicker"
+          aria-label="Date or date range"
+          (click)="rangePicker.open()"
+        >
+          <input matStartDate [(ngModel)]="rangeStart" aria-label="Start date" />
+          <input matEndDate [(ngModel)]="rangeEnd" aria-label="End date" />
+        </mat-date-range-input>
+        <mat-datepicker-toggle matIconSuffix [for]="rangePicker" />
+        <mat-date-range-picker #rangePicker />
+      </mat-form-field>
+
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-select [(ngModel)]="sort" aria-label="Sort by">
+          @for (option of sortOptions; track option.value) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="bookings__progress">
+      @if (isLoading()) {
+        <mat-progress-bar mode="indeterminate" aria-label="Loading bookings" />
+      }
+    </div>
+
+    @if (loadFailed()) {
+      <div class="bookings__state" role="alert">
+        <mat-icon aria-hidden="true">cloud_off</mat-icon>
+        <p>Unable to load bookings right now.</p>
+        <button matButton="outlined" type="button" (click)="retry()">Retry</button>
+      </div>
+    } @else {
+      <ul class="bookings__list" [class.bookings__list--stale]="isLoading()">
+        @for (appointment of appointments(); track appointment.id) {
+          @let view = statusView(appointment);
+          <li class="booking-card">
+            <div class="booking-card__main">
+              <div class="booking-card__heading">
+                <h2>{{ appointment.offeringName }}</h2>
+                <span class="booking-card__badge booking-card__badge--{{ view.tone }}">
+                  {{ view.label }}
+                </span>
+              </div>
+              <p class="booking-card__person">
+                {{ counterpartyRole(appointment) }}:
+                @if (counterpartyRole(appointment) === 'Specialist') {
+                  <a [routerLink]="[routePaths.specialists, appointment.specialistId]">
+                    {{ counterparty(appointment) }}
+                  </a>
+                } @else {
+                  {{ counterparty(appointment) }}
+                }
+              </p>
+              <p class="booking-card__time">
+                <mat-icon aria-hidden="true">event</mat-icon>
+                {{ appointment.startTime | date: 'EEE, d MMM y' }},
+                {{ appointment.startTime | date: 'HH:mm' }}–{{
+                  appointment.endTime | date: 'HH:mm'
+                }}
+              </p>
+              @if (
+                appointment.status === 'AWAITING_PAYMENT' && appointment.paymentDeadline
+              ) {
+                <p class="booking-card__note">
+                  Pay before {{ appointment.paymentDeadline | date: 'd MMM, HH:mm' }} or
+                  the time is released.
+                </p>
+              }
+            </div>
+
+            <div class="booking-card__side">
+              <strong class="booking-card__price">
+                {{ appointment.priceAmount | currency: 'EUR' }}
+              </strong>
+              <div class="booking-card__actions">
+                @for (action of actionsFor(appointment); track action.key) {
+                  <button
+                    [matButton]="action.appearance"
+                    type="button"
+                    [disabled]="busyId() !== null"
+                    (click)="run(appointment, action.key)"
+                  >
+                    @if (busyId() === appointment.id) {
+                      <mat-progress-spinner
+                        diameter="18"
+                        mode="indeterminate"
+                        aria-label="Updating booking"
+                      />
+                    }
+                    {{ action.label }}
+                  </button>
+                }
+              </div>
+            </div>
+          </li>
+        } @empty {
+          @if (hasLoaded()) {
+            <li class="bookings__state">
+              @if (hasFilters()) {
+                <p>No bookings match your filters.</p>
+                <button matButton="outlined" type="button" (click)="clearFilters()">
+                  Clear filters
+                </button>
+              } @else {
+                <p>You have no bookings yet.</p>
+                <a matButton="filled" [routerLink]="routePaths.offerings">
+                  Find a specialist
+                </a>
+              }
+            </li>
+          }
+        }
+      </ul>
+    }
+
+    @if (totalElements() > 0) {
+      <mat-paginator
+        [length]="totalElements()"
+        [pageIndex]="page()"
+        [pageSize]="size()"
+        [pageSizeOptions]="sizeOptions"
+        (page)="onPage($event)"
+      />
+    }
+  </div>
+</section>

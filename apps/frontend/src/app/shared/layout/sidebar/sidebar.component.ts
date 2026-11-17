@@ -4,6 +4,7 @@ import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { exhaustMap } from 'rxjs';
+import { BookingBadgeStore } from '../../../features/appointment/services/booking-badge.store';
 import { SessionStore } from '../../../features/auth/session.store';
 import { DialogService } from '../../services/dialog.service';
 import { ThemeService } from '../../services/theme.service';
@@ -23,6 +24,7 @@ export class SidebarComponent {
   private readonly authService = inject(AuthService);
   private readonly sessionStore = inject(SessionStore);
   private readonly dialogService = inject(DialogService);
+  protected readonly bookingBadgeStore = inject(BookingBadgeStore);
   readonly themeService = inject(ThemeService);
 
   /** DATA */

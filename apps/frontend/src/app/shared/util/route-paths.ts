@@ -7,6 +7,7 @@ export const routePaths = {
   offerings: '/offerings',
   specialists: '/specialists',
   help: '/help',
+  bookings: '/bookings',
 };
 
 export const publicRoutePaths: readonly string[] = [
