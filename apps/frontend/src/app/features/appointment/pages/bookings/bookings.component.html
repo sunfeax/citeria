@@ -57,10 +57,12 @@
           @let view = statusView(appointment);
           <li class="booking-card">
             <div class="booking-card__main">
-              <span class="booking-card__badge booking-card__badge--{{ view.tone }}">
-                {{ view.label }}
-              </span>
-              <h2 class="booking-card__title">{{ appointment.offeringName }}</h2>
+              <div class="booking-card__heading">
+                <h2 class="booking-card__title">{{ appointment.offeringName }}</h2>
+                <span class="booking-card__badge booking-card__badge--{{ view.tone }}">
+                  {{ view.label }}
+                </span>
+              </div>
               <div class="booking-card__meta">
                 <p>
                   <mat-icon aria-hidden="true">person</mat-icon>
@@ -95,25 +97,28 @@
               <strong class="booking-card__price">
                 {{ appointment.priceAmount | currency: 'EUR' }}
               </strong>
-              <div class="booking-card__actions">
-                @for (action of actionsFor(appointment); track action.key) {
-                  <button
-                    [matButton]="action.appearance"
-                    type="button"
-                    [disabled]="busyId() !== null"
-                    (click)="run(appointment, action.key)"
-                  >
-                    @if (busyId() === appointment.id) {
-                      <mat-progress-spinner
-                        diameter="18"
-                        mode="indeterminate"
-                        aria-label="Updating booking"
-                      />
-                    }
-                    {{ action.label }}
-                  </button>
-                }
-              </div>
+              @let actions = actionsFor(appointment);
+              @if (actions.length) {
+                <div class="booking-card__actions">
+                  @for (action of actions; track action.key) {
+                    <button
+                      [matButton]="action.appearance"
+                      type="button"
+                      [disabled]="busyId() !== null"
+                      (click)="run(appointment, action.key)"
+                    >
+                      @if (busyId() === appointment.id) {
+                        <mat-progress-spinner
+                          diameter="18"
+                          mode="indeterminate"
+                          aria-label="Updating booking"
+                        />
+                      }
+                      {{ action.label }}
+                    </button>
+                  }
+                </div>
+              }
             </div>
           </li>
         } @empty {

@@ -92,6 +92,13 @@ mat-progress-bar {
   margin: 0;
 }
 
+.booking-card__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8) var(--space-12);
+}
+
 .booking-card__title {
   margin: 0;
   color: var(--color-text);
@@ -102,7 +109,8 @@ mat-progress-bar {
 }
 
 .booking-card__badge {
-  padding: var(--space-4) var(--space-12);
+  flex: none;
+  padding: var(--space-4) var(--space-8);
   border-radius: var(--radius-full);
   font-size: var(--font-size-12);
   font-weight: var(--font-weight-medium);
@@ -232,7 +240,9 @@ mat-progress-bar {
     grid-column: auto;
     order: 0;
   }
+}
 
+@include bp.up(960px) {
   .booking-card {
     flex-direction: row;
     align-items: center;
@@ -252,6 +262,11 @@ mat-progress-bar {
 
   .booking-card__actions {
     justify-content: flex-end;
+  }
+  .booking-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8) var(--space-20);
   }
 }
 
