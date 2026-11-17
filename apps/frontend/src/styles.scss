@@ -134,8 +134,10 @@ html {
   --color-warning-soft: #fffbeb;
   --color-info: #2563eb;
   --color-info-soft: #eff6ff;
+  --color-success-solid: #15803d;
   --color-danger-solid: #dc2626;
   --color-warning-solid: #b45309;
+  --color-info-solid: #1d4ed8;
   --color-on-solid: #ffffff;
 
   --color-on-hero: var(--color-white);
@@ -404,11 +406,8 @@ button mat-progress-spinner {
   --mat-snack-bar-supporting-text-color: var(--color-text);
   --mat-snack-bar-button-color: var(--color-text);
   --mat-snack-bar-container-shape: var(--radius-12);
-  --snack-bar-accent: var(--color-primary);
 
   .mdc-snackbar__surface {
-    border: var(--border-width-1) solid var(--color-border-soft);
-    border-left: var(--border-width-4) solid var(--snack-bar-accent);
     box-shadow: var(--shadow-overlay);
   }
 }
@@ -432,18 +431,27 @@ button mat-progress-spinner {
   }
 }
 
+%app-snack-bar-solid {
+  --mat-snack-bar-supporting-text-color: var(--color-on-solid);
+  --mat-snack-bar-button-color: var(--color-on-solid);
+}
+
 .app-snack-bar--success {
-  --snack-bar-accent: var(--color-success);
+  @extend %app-snack-bar-solid;
+  --mat-snack-bar-container-color: var(--color-success-solid);
 }
 
 .app-snack-bar--error {
-  --snack-bar-accent: var(--color-danger);
+  @extend %app-snack-bar-solid;
+  --mat-snack-bar-container-color: var(--color-danger-solid);
 }
 
 .app-snack-bar--warning {
-  --snack-bar-accent: var(--color-warning);
+  @extend %app-snack-bar-solid;
+  --mat-snack-bar-container-color: var(--color-warning-solid);
 }
 
 .app-snack-bar--info {
-  --snack-bar-accent: var(--color-info);
+  @extend %app-snack-bar-solid;
+  --mat-snack-bar-container-color: var(--color-info-solid);
 }
